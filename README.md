@@ -4,6 +4,8 @@ Mark's Research Blog
 
 Serving: `hugo serve`
 Serving with drafts: `hugo serve -d`
+Adding a new blog (start from base dir): `hugo new content post/newpost.md`
+Publishing: just use `hugo`
 
 Creation of this blog:
 ```
@@ -35,20 +37,9 @@ git submodule add https://github.com/halogenica/beautifulhugo.git themes/beautif
 # Copy the content from the example site
 cp -r themes/beautifulhugo/exampleSite/* . -iv
 
+and then update the theme in hugo.toml to "themes/beautifulhugo"
+
 5. Run 
 
 hugo serve
-
-
-
-
-
-
-
-
-
-
-
-h
-hugo
 ```
