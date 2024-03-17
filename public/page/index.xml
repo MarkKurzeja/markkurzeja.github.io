@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Pages on TensorTales</title>
+    <link>https://markkurzeja.github.io/page/</link>
+    <description>Recent content in Pages on TensorTales</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <atom:link href="https://markkurzeja.github.io/page/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>About me</title>
+      <link>https://markkurzeja.github.io/page/about/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://markkurzeja.github.io/page/about/</guid>
+      <description>I am a Senior Software Engineer at Google. My current focus is on using machine learning to combat malware on Android devices. I have my BBA from the Ross School of Business at the University of Michigan and a Masters in Statistics from the Racknam Graduate School at the University of Michigan. My research interests are in machine learning generally, including deep learning, business, and statistics.</description>
+    </item>
+  </channel>
+</rss>
