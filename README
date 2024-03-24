@@ -42,4 +42,10 @@ and then update the theme in hugo.toml to "themes/beautifulhugo"
 5. Run 
 
 hugo serve
+
+6. Linking to other content (still doesn't work yet)
+
+[Part I of this blog post]({{< ref "/content/post/rff_intro.md" >}})
 ```
+
+

@@ -13,7 +13,7 @@
       <link>https://markkurzeja.github.io/post/rff/</link>
       <pubDate>Sat, 23 Mar 2024 00:00:00 +0000</pubDate>
       <guid>https://markkurzeja.github.io/post/rff/</guid>
-      <description>&amp;ldquo;The pessimist says the glass is half-full. The optimist says the glass is half-empty. The engineer says its mearly 2x larger than it needs to be. \( \approx \) Thomas Cathcart&#xA;Aside: To the eager reader, if you haven&amp;rsquo;t read Part I of this blog post, I recommend you start there.&#xA;To spoil the punchline, there is a curious connection between the token-wise MLP projections of modern Transformer recipes and Random Fourier Features.</description>
+      <description>&amp;ldquo;The pessimist says the glass is half-full. The optimist says the glass is half-empty. The engineer says its mearly 2x larger than it needs to be. \( \approx \) Thomas Cathcart&#xA;To spoil the punchline, there is a curious connection between the token-wise MLP projections of modern Transformer recipes and Random Fourier Features.&#xA;Some adhoc experiments show a tiny tweak to MLPs allow them to train with far smaller batch sizes and dramatically reduce the number of parameters required to learn complex functions.</description>
     </item>
     <item>
       <title>Random Fourier Features are economic nonlinear regressors</title>

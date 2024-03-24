@@ -8,9 +8,6 @@ date = 2024-03-23
 > half-empty. The engineer says its mearly 2x larger than it needs to be. <br>
 > \\( \approx \\) Thomas Cathcart
 
-Aside: To the eager reader, if you haven't read [Part I of this blog post]({{< ref
-"/content/post/rff_intro.md" >}}), I recommend you start there.
-
 To spoil the punchline, there is a curious connection between the token-wise
 MLP projections of modern Transformer recipes and Random Fourier Features. 
 
