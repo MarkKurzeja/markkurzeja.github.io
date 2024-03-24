@@ -11,7 +11,8 @@
 
 
       <title>Posts - TensorTales Blog</title>
-<script type="application/ld+json">
+
+  <meta name="author" content="Mark Kurzeja"/><script type="application/ld+json">
 {
     "@context": "http://schema.org",
     "@type": "WebSite",
@@ -33,15 +34,15 @@
 </script>
 
 <meta property="og:title" content="Posts" />
-<meta property="og:image" content="https://markkurzeja.github.io/logo/logo.png" />
+<meta property="og:image" content="https://markkurzeja.github.io/logo/logo_close.png" />
 <meta property="og:url" content="https://markkurzeja.github.io/post/" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="TensorTales" />
 
   <meta name="twitter:title" content="Posts" />
-  <meta name="twitter:image" content="https://markkurzeja.github.io/logo/logo.png" />
+  <meta name="twitter:image" content="https://markkurzeja.github.io/logo/logo_close.png" />
   <meta name="twitter:card" content="summary_large_image" />
-  <link href='https://markkurzeja.github.io/img/favicon.ico' rel='icon' type='image/x-icon'/>
+  <link href='https://markkurzeja.github.io/logo/logo.ico' rel='icon' type='image/x-icon'/>
   <meta name="generator" content="Hugo 0.121.2">
   <link rel="alternate" href="https://markkurzeja.github.io/index.xml" type="application/rss+xml" title="TensorTales"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.7/dist/katex.min.css" integrity="sha384-3UiQGuEI4TTMaFmGIZumfRPtfKQ3trwQE2JgosJxCnGmQpL/lJdjpcHkaaFwHlcI" crossorigin="anonymous">
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
@@ -97,7 +98,7 @@
       <div class="avatar-container">
         <div class="avatar-img-border">
           <a title="TensorTales" href="https://markkurzeja.github.io">
-            <img class="avatar-img" src="https://markkurzeja.github.io/logo/logo.png" alt="TensorTales" />
+            <img class="avatar-img" src="https://markkurzeja.github.io/logo/logo_close.png" alt="TensorTales" />
           </a>
         </div>
       </div>
@@ -185,7 +186,7 @@
                 <span class="post-meta">
   
   
-  <i class="fas fa-calendar"></i>&nbsp;Posted on Mar 17, 2024
+  <i class="fas fa-calendar"></i>&nbsp;Posted on Mar 23, 2024
   
   
     &nbsp;|&nbsp;<i class="fas fa-clock"></i>&nbsp;0&nbsp;minutes
@@ -193,7 +194,7 @@
   
   
     
-      &nbsp;|&nbsp;<i class="fas fa-user"></i>&nbsp;
+      &nbsp;|&nbsp;<i class="fas fa-user"></i>&nbsp;Mark Kurzeja
     
   
   
@@ -218,8 +219,102 @@
         <div class="posts-list">
           
             <article class="post-preview">
+    <a href="https://markkurzeja.github.io/post/rff/">
+        <h2 class="post-title">Are Token-wise MLPs over-parameterized in Transformers?</h2>
+        
+        <h3 class="post-subtitle">
+            Part II of a two part series on RFFs
+        </h3>
+        
+        
+        
+    </a>
+
+    <p class="post-meta">
+        <span class="post-meta">
+  
+  
+  <i class="fas fa-calendar"></i>&nbsp;Posted on Mar 23, 2024
+  
+  
+    &nbsp;|&nbsp;<i class="fas fa-clock"></i>&nbsp;2&nbsp;minutes
+  
+  
+  
+    
+      &nbsp;|&nbsp;<i class="fas fa-user"></i>&nbsp;Mark Kurzeja
+    
+  
+  
+</span>
+
+
+    </p>
+    <div class="post-entry">
+        
+        &ldquo;The pessimist says the glass is half-full. The optimist says the glass is half-empty. The engineer says its mearly 2x larger than it needs to be. \( \approx \) Thomas Cathcart
+Aside: To the eager reader, if you haven&rsquo;t read Part I of this blog post, I recommend you start there.
+To spoil the punchline, there is a curious connection between the token-wise MLP projections of modern Transformer recipes and Random Fourier Features.
+        <a href="https://markkurzeja.github.io/post/rff/" class="post-read-more">[Read More]</a>
+        
+    </div>
+
+    
+
+</article>
+          
+            <article class="post-preview">
+    <a href="https://markkurzeja.github.io/post/rff_intro/">
+        <h2 class="post-title">Random Fourier Features are economic nonlinear regressors</h2>
+        
+        <h3 class="post-subtitle">
+            Part I of a two part series on RFFs
+        </h3>
+        
+        
+        
+    </a>
+
+    <p class="post-meta">
+        <span class="post-meta">
+  
+  
+  <i class="fas fa-calendar"></i>&nbsp;Posted on Mar 23, 2024
+  
+  
+    &nbsp;|&nbsp;<i class="fas fa-clock"></i>&nbsp;4&nbsp;minutes
+  
+  
+  
+    
+      &nbsp;|&nbsp;<i class="fas fa-user"></i>&nbsp;Mark Kurzeja
+    
+  
+  
+</span>
+
+
+    </p>
+    <div class="post-entry">
+        
+        Part I: Random Kitchen Sinks Random Fourier Features, at first glance, seems a little.. well.. mad..
+Take a feature set. Multi-dimensional ? Nonlinear interactions ? Doesn&rsquo;t really matter. Linearly project it onto some noise distribution. Take a little cosine here&hellip; Add a little uniform noise over there&hellip; Fit a linear classifier to the strange little mix from (3) .. And out comes a reasonably performing, easy, economic regressor.
+But why?&hellip;
+        <a href="https://markkurzeja.github.io/post/rff_intro/" class="post-read-more">[Read More]</a>
+        
+    </div>
+
+    
+
+</article>
+          
+            <article class="post-preview">
     <a href="https://markkurzeja.github.io/post/tensor-tales/">
         <h2 class="post-title">TensorTales</h2>
+        
+        <h3 class="post-subtitle">
+            Introducing TensorTales
+        </h3>
         
         
         
@@ -232,12 +327,12 @@
   <i class="fas fa-calendar"></i>&nbsp;Posted on Mar 17, 2024
   
   
-    &nbsp;|&nbsp;<i class="fas fa-clock"></i>&nbsp;0&nbsp;minutes
+    &nbsp;|&nbsp;<i class="fas fa-clock"></i>&nbsp;3&nbsp;minutes
   
   
   
     
-      &nbsp;|&nbsp;<i class="fas fa-user"></i>&nbsp;
+      &nbsp;|&nbsp;<i class="fas fa-user"></i>&nbsp;Mark Kurzeja
     
   
   
@@ -247,7 +342,8 @@
     </p>
     <div class="post-entry">
         
-        
+        I&rsquo;ve always loved machine learning. Something about it has always felt like magic. When I first learned about prediction machines, in high school, to me, they always conjured images of The Oracle of Delphi or one of those old cartoons with a group of magicians huddled around a crystal ball. Ask the right questions, cast the right spells in the right order, and the seemingly impossible, a glimpse of the future, could be yours.
+        <a href="https://markkurzeja.github.io/post/tensor-tales/" class="post-read-more">[Read More]</a>
         
     </div>
 
@@ -291,6 +387,10 @@
           
         </ul>
         <p class="credits copyright text-muted">
+          
+            
+              Mark Kurzeja
+            
           
 
           &nbsp;&bull;&nbsp;&copy;

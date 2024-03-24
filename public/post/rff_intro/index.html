@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/WebPage">
+  <head>
+    
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+ 
+
+
+      <title>Random Fourier Features are economic nonlinear regressors - TensorTales Blog</title>
+
+  <meta name="description" content="Part I of a two part series on RFFs">
+  <meta name="author" content="Mark Kurzeja"/><script type="application/ld+json">
+{
+    "@context": "http://schema.org",
+    "@type": "WebSite",
+    "name": "TensorTales",
+    
+    "url": "https:\/\/markkurzeja.github.io"
+}
+</script><script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "Organization",
+  "name": "",
+  "url": "https:\/\/markkurzeja.github.io"
+  
+  
+  
+  
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [{
+        "@type": "ListItem",
+        "position": 1,
+        "item": {
+          "@id": "https:\/\/markkurzeja.github.io",
+          "name": "home"
+        }
+    },{
+        "@type": "ListItem",
+        "position": 3,
+        "item": {
+          "@id": "https:\/\/markkurzeja.github.io\/post\/rff_intro\/",
+          "name": "Random fourier features are economic nonlinear regressors"
+        }
+    }]
+}
+</script><script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "Article",
+  "author": {
+    "name" : "Mark Kurzeja"
+  },
+  "headline": "Random Fourier Features are economic nonlinear regressors",
+  "description" : "Part I: Random Kitchen Sinks Random Fourier Features, at first glance, seems a little.. well.. mad..\nTake a feature set. Multi-dimensional ? Nonlinear interactions ? Doesn\u0026rsquo;t really matter. Linearly project it onto some noise distribution. Take a little cosine here\u0026hellip; Add a little uniform noise over there\u0026hellip; Fit a linear classifier to the strange little mix from (3) .. And out comes a reasonably performing, easy, economic regressor.\nBut why?\u0026hellip;",
+  "inLanguage" : "en",
+  "wordCount":  739 ,
+  "datePublished" : "2024-03-23T00:00:00",
+  "dateModified" : "2024-03-23T00:00:00",
+  "image" : "https:\/\/markkurzeja.github.io\/logo\/logo_close.png",
+  "keywords" : [ "" ],
+  "mainEntityOfPage" : "https:\/\/markkurzeja.github.io\/post\/rff_intro\/",
+  "publisher" : {
+    "@type": "Organization",
+    "name" : "https:\/\/markkurzeja.github.io",
+    "logo" : {
+        "@type" : "ImageObject",
+        "url" : "https:\/\/markkurzeja.github.io\/logo\/logo_close.png",
+        "height" :  60 ,
+        "width" :  60
+    }
+  }
+}
+</script>
+
+<meta property="og:title" content="Random Fourier Features are economic nonlinear regressors" />
+<meta property="og:description" content="Part I of a two part series on RFFs">
+<meta property="og:image" content="https://markkurzeja.github.io/logo/logo_close.png" />
+<meta property="og:url" content="https://markkurzeja.github.io/post/rff_intro/" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="TensorTales" />
+
+  <meta name="twitter:title" content="Random Fourier Features are economic nonlinear regressors" />
+  <meta name="twitter:description" content="Part I of a two part series on RFFs">
+  <meta name="twitter:image" content="https://markkurzeja.github.io/logo/logo_close.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link href='https://markkurzeja.github.io/logo/logo.ico' rel='icon' type='image/x-icon'/>
+  <meta name="generator" content="Hugo 0.121.2">
+  <link rel="alternate" href="https://markkurzeja.github.io/index.xml" type="application/rss+xml" title="TensorTales"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.7/dist/katex.min.css" integrity="sha384-3UiQGuEI4TTMaFmGIZumfRPtfKQ3trwQE2JgosJxCnGmQpL/lJdjpcHkaaFwHlcI" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous"><link rel="stylesheet" href="https://markkurzeja.github.io/css/main.css" /><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" />
+  <link rel="stylesheet" href="https://markkurzeja.github.io/css/highlight.min.css" /><link rel="stylesheet" href="https://markkurzeja.github.io/css/codeblock.css" /><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.2/photoswipe.min.css" integrity="sha384-h/L2W9KefUClHWaty3SLE5F/qvc4djlyR4qY3NUV5HGQBBW7stbcfff1+I/vmsHh" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.2/default-skin/default-skin.min.css" integrity="sha384-iD0dNku6PYSIQLyfTOpB06F2KCZJAKLOThS5HRe8b3ibhdEQ6eKsFf/EeFxdOt5R" crossorigin="anonymous">
+
+
+  </head>
+  <body>
+    <nav class="navbar navbar-default navbar-fixed-top navbar-custom">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#main-navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="https://markkurzeja.github.io">TensorTales</a>
+    </div>
+
+    <div class="collapse navbar-collapse" id="main-navbar">
+      <ul class="nav navbar-nav navbar-right">
+        
+          
+            <li>
+              <a title="Blog" href="/">Blog</a>
+            </li>
+          
+        
+          
+            <li>
+              <a title="About" href="/page/about/">About</a>
+            </li>
+          
+        
+          
+            <li>
+              <a title="Tags" href="/tags">Tags</a>
+            </li>
+          
+        
+
+        
+
+        
+      </ul>
+    </div>
+
+    
+      <div class="avatar-container">
+        <div class="avatar-img-border">
+          <a title="TensorTales" href="https://markkurzeja.github.io">
+            <img class="avatar-img" src="https://markkurzeja.github.io/logo/logo_close.png" alt="TensorTales" />
+          </a>
+        </div>
+      </div>
+    
+
+  </div>
+</nav>
+
+
+
+
+    
+
+
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+<div class="pswp__bg"></div>
+
+<div class="pswp__scroll-wrap">
+    
+    <div class="pswp__container">
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+    </div>
+    
+    <div class="pswp__ui pswp__ui--hidden">
+    <div class="pswp__top-bar">
+      
+      <div class="pswp__counter"></div>
+      <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+      <button class="pswp__button pswp__button--share" title="Share"></button>
+      <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+      <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+      
+      
+      <div class="pswp__preloader">
+        <div class="pswp__preloader__icn">
+          <div class="pswp__preloader__cut">
+            <div class="pswp__preloader__donut"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+      <div class="pswp__share-tooltip"></div>
+    </div>
+    <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+    </button>
+    <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+    </button>
+    <div class="pswp__caption">
+      <div class="pswp__caption__center"></div>
+    </div>
+    </div>
+    </div>
+</div>
+
+
+  
+  
+  
+
+
+
+
+
+
+  
+
+  <header class="header-section ">
+    
+    
+    <div class="intro-header no-img">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+            <div class="post-heading">
+              
+                <h1>Random Fourier Features are economic nonlinear regressors</h1>
+              
+              
+              
+                
+                  <h2 class="post-subheading">Part I of a two part series on RFFs</h2>
+                
+              
+              
+                <span class="post-meta">
+  
+  
+  <i class="fas fa-calendar"></i>&nbsp;Posted on Mar 23, 2024
+  
+  
+    &nbsp;|&nbsp;<i class="fas fa-clock"></i>&nbsp;4&nbsp;minutes
+  
+  
+  
+    
+      &nbsp;|&nbsp;<i class="fas fa-user"></i>&nbsp;Mark Kurzeja
+    
+  
+  
+</span>
+
+
+              
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+  </header>
+
+
+    
+<div class="container" role="main">
+  <div class="row">
+    <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+      <article role="main" class="blog-post">
+        <h3 id="part-i-random-kitchen-sinks">Part I: Random Kitchen Sinks</h3>
+<p>Random Fourier Features, at first glance, seems a little.. well.. mad..</p>
+<ol>
+<li>Take a feature set. Multi-dimensional ? Nonlinear interactions ? Doesn&rsquo;t
+really matter.</li>
+<li>Linearly project it onto some noise distribution.</li>
+<li>Take a little cosine here&hellip; Add a little uniform noise over there&hellip;</li>
+<li>Fit a linear classifier to the strange little mix from (3)</li>
+</ol>
+<p>.. And out comes a reasonably performing, easy, economic regressor.</p>
+<p>But why?&hellip;</p>
+<p>In <a href="https://archives.argmin.net/2017/12/05/kitchen-sinks/">Reflections on Random Kitchen
+Sinks</a>, Ali Rahimi and
+Ben Recht&rsquo;s talk on Random Fourier Features, they provide the intuition behind
+the method and how their thinking about RFF has grown over the years. No matter
+how many times I&rsquo;ve seen the explanations, read the code, read the math,
+derived the math&hellip; I couldn&rsquo;t quite &ldquo;feel&rdquo; why this should work. When I learn
+something new, I like to think about putting that new thing &ldquo;on a hook&rdquo; of my
+existing knoweldge. RFF seemed alien, however. I knew about kernel methods.
+I knew about regression. But random regression? Why cosine? The code was
+strange too&hellip; It felt too simple and seemed to work decently well for a whole
+host of problems. Trying to find some way to convince myself it
+<code>{can|could|should|must}</code> work, I began coding.</p>
+<p>Note: This post <em>will not</em> be about the <em>Why</em> of RFF. Instead, it will be about
+a curious connection I found when coding with it. I highly recommend reading
+Gregory Gundersen&rsquo;s <a href="https://gregorygundersen.com/blog/2019/12/23/random-fourier-features/">blog
+post</a>
+for more background if you need it.</p>
+<h3 id="part-ii-five-little-lines">Part II: Five Little Lines</h3>
+<p>On it&rsquo;s face, RFF is only five lines of Numpy code. To avoid any mystery, I When I code, I want
+everything to be easy to copy-paste, so I include the setup code as well.
+Translating the matlab code more or less directly from their blog:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">import numpy as np
+</span></span><span class="line"><span class="cl">import matplotlib.pyplot as plt
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"># Setup:
+</span></span><span class="line"><span class="cl">R = 10            # Number of RFF samples
+</span></span><span class="line"><span class="cl">gamma = 1         # Kernel &#34;width&#34; parameter
+</span></span><span class="line"><span class="cl">lambda_reg = 0.1  # Regularization parameter
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"># Data:
+</span></span><span class="line"><span class="cl">N = 1000
+</span></span><span class="line"><span class="cl">np.random.seed(0)
+</span></span><span class="line"><span class="cl">X = np.linspace(-np.pi, np.pi, N).reshape(N, 1)
+</span></span><span class="line"><span class="cl">y = (X * np.sin(2 * X) + np.random.normal(size=(N, 1), scale = 0.25)).reshape(N, 1)
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"># Here is RFF, in all it&#39;s glory...
+</span></span><span class="line"><span class="cl">kernel = np.random.normal(size=(R, 1))
+</span></span><span class="line"><span class="cl">bias = 2 * np.pi * np.random.rand(R, 1)
+</span></span><span class="line"><span class="cl">rff_projection = np.cos(gamma * (X @ kernel.T) + bias.T)
+</span></span><span class="line"><span class="cl">weights = np.linalg.solve(rff_projection.T @ rff_projection + lambda_reg * np.eye(R), rff_projection.T @ y)
+</span></span><span class="line"><span class="cl">y_hat = rff_projection @ weights
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"># Plot it out.
+</span></span><span class="line"><span class="cl">plt.figure(figsize=(10, 6))
+</span></span><span class="line"><span class="cl">plt.scatter(X, y, label=&#39;Data&#39;)
+</span></span><span class="line"><span class="cl">plt.plot(X, y_hat, label=&#39;RFF Approximation&#39;, linestyle=&#39;-&#39;, color = &#34;orange&#34;, lw= 5)
+</span></span><span class="line"><span class="cl">plt.legend()
+</span></span><span class="line"><span class="cl">plt.xlabel(&#39;x&#39;)
+</span></span><span class="line"><span class="cl">plt.ylabel(&#39;y&#39;)
+</span></span><span class="line"><span class="cl">plt.suptitle(f&#39;RFF Approximation R={R}&#39;)
+</span></span><span class="line"><span class="cl">plt.title(f&#39;Total Learnable Parameters = {np.prod(weights.shape)}&#39;)
+</span></span><span class="line"><span class="cl">plt.show()
+</span></span></code></pre></div><p>The <code>gamma</code> and <code>lambda_reg</code> parameters determine specific properties of the
+kernel fit. <code>gamma</code> roughly controls the &lsquo;width&rsquo; or &lsquo;frequency&rsquo; of the kernel
+and <code>lambda_reg</code> roughly controls the amount of potential over-fitting (using
+a mechanism similar to ridge regressions).</p>
+<p>In RFF, the parameter <code>R</code> sets the number of random projections used to build
+the kernel estimator. Larger values of <code>R</code> yield better approximations, on
+average, at the cost of more compute. For example, we can plot the function we
+are approximating for a few choices of <code>R</code> to get a feel for how <code>R</code> increases
+the complexity of the fit.</p>
+<p><img src="/posts/rff/rff_1.png" alt="">
+<img src="/posts/rff/rff_2.png" alt="">
+<img src="/posts/rff/rff_10.png" alt="">
+<img src="/posts/rff/rff_100.png" alt=""></p>
+<h3 id="part-iii-multidimensional-generalizations">Part III: Multidimensional Generalizations</h3>
+<p>Being a linear regression method (in the parameters), RFF naturally scales to
+multidimensional data. For example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="n">import</span> <span class="n">numpy</span> <span class="n">as</span> <span class="n">np</span>
+</span></span><span class="line"><span class="cl"><span class="n">import</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">pyplot</span> <span class="n">as</span> <span class="n">plt</span>
+</span></span><span class="line"><span class="cl"><span class="n">from</span> <span class="n">mpl_toolkits</span><span class="o">.</span><span class="n">mplot3d</span> <span class="n">import</span> <span class="n">Axes3D</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Adjust parameters for the multivariate case</span>
+</span></span><span class="line"><span class="cl"><span class="n">R</span> <span class="o">=</span> <span class="mi">200</span>  <span class="c1"># Dimensionality of random feature space</span>
+</span></span><span class="line"><span class="cl"><span class="n">gamma</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># Kernel parameter</span>
+</span></span><span class="line"><span class="cl"><span class="n">lambda_reg</span> <span class="o">=</span> <span class="mf">0.1</span>  <span class="c1"># Regularization parameter</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Generate multivariate data for y = 2 * sin(x1) + 4 * sin(x1 * x2)</span>
+</span></span><span class="line"><span class="cl"><span class="n">N</span> <span class="o">=</span> <span class="mi">1000</span>  <span class="c1"># Number of data points along each axis</span>
+</span></span><span class="line"><span class="cl"><span class="n">x1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">x2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">X1</span><span class="p">,</span> <span class="n">X2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">Y</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">X1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">X1</span> <span class="o">*</span> <span class="n">X2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Flatten the inputs and outputs</span>
+</span></span><span class="line"><span class="cl"><span class="n">X1_flat</span> <span class="o">=</span> <span class="n">X1</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">X2_flat</span> <span class="o">=</span> <span class="n">X2</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">X_flat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">X1_flat</span><span class="p">,</span> <span class="n">X2_flat</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="n">Y_flat</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Random Fourier feature mapping for Gaussian kernel</span>
+</span></span><span class="line"><span class="cl"><span class="n">kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="n">bias</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">rff_projection</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">gamma</span> <span class="o">*</span> <span class="p">(</span><span class="n">X_flat</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">kernel</span><span class="o">.</span><span class="n">T</span><span class="p">))</span> <span class="o">+</span> <span class="n">bias</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">  <span class="n">rff_projection</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rff_projection</span><span class="p">)</span> <span class="o">+</span> <span class="n">lambda_reg</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">R</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">  <span class="n">rff_projection</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Y_flat</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">y_hat</span> <span class="o">=</span> <span class="n">rff_projection</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Plotting</span>
+</span></span><span class="line"><span class="cl"><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">121</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">ax</span><span class="o">.</span><span class="n">plot_surface</span><span class="p">(</span><span class="n">X1</span><span class="p">,</span> <span class="n">X2</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;$y=2 \sin(x_1) + 4 \sin(x_1 x_2)$&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">ax2</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">122</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">ax2</span><span class="o">.</span><span class="n">plot_surface</span><span class="p">(</span><span class="n">X1</span><span class="p">,</span> <span class="n">X2</span><span class="p">,</span> <span class="n">y_hat</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;RFF Approximation; R={R}; param_count={np.prod(weights.shape)}&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></span></code></pre></div><p>Produces:</p>
+<p><img src="/posts/rff/rff_2d.png" alt=""></p>
+
+
+        
+
+        
+            <hr/>
+            <section id="social-share">
+              <div class="list-inline footer-links">
+                
+
+<div class="share-box" aria-hidden="true">
+    <ul class="share">
+      
+      <li>
+        <a href="//twitter.com/share?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2frff_intro%2f&amp;text=Random%20Fourier%20Features%20are%20economic%20nonlinear%20regressors&amp;via=" target="_blank" title="Share on Twitter">
+          <i class="fab fa-twitter"></i>
+        </a>
+      </li>
+  
+      
+      <li>
+        <a href="//www.facebook.com/sharer/sharer.php?u=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2frff_intro%2f" target="_blank" title="Share on Facebook">
+          <i class="fab fa-facebook"></i>
+        </a>
+      </li>
+  
+      
+      <li>
+        <a href="//reddit.com/submit?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2frff_intro%2f&amp;title=Random%20Fourier%20Features%20are%20economic%20nonlinear%20regressors" target="_blank" title="Share on Reddit">
+          <i class="fab fa-reddit"></i>
+        </a>
+      </li>
+  
+      
+      <li>
+        <a href="//www.linkedin.com/shareArticle?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2frff_intro%2f&amp;title=Random%20Fourier%20Features%20are%20economic%20nonlinear%20regressors" target="_blank" title="Share on LinkedIn">
+          <i class="fab fa-linkedin"></i>
+        </a>
+      </li>
+  
+      
+      <li>
+        <a href="//www.stumbleupon.com/submit?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2frff_intro%2f&amp;title=Random%20Fourier%20Features%20are%20economic%20nonlinear%20regressors" target="_blank" title="Share on StumbleUpon">
+          <i class="fab fa-stumbleupon"></i>
+        </a>
+      </li>
+  
+      
+      <li>
+        <a href="//www.pinterest.com/pin/create/button/?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2frff_intro%2f&amp;description=Random%20Fourier%20Features%20are%20economic%20nonlinear%20regressors" target="_blank" title="Share on Pinterest">
+          <i class="fab fa-pinterest"></i>
+        </a>
+      </li>
+    </ul>
+  </div>
+  
+
+              </div>
+            </section>
+        
+
+        
+          
+
+          
+        
+      </article>
+
+      
+        <ul class="pager blog-pager">
+          
+            <li class="previous">
+              <a href="https://markkurzeja.github.io/post/tensor-tales/" data-toggle="tooltip" data-placement="top" title="TensorTales">&larr; Previous Post</a>
+            </li>
+          
+          
+            <li class="next">
+              <a href="https://markkurzeja.github.io/post/rff/" data-toggle="tooltip" data-placement="top" title="Are Token-wise MLPs over-parameterized in Transformers?">Next Post &rarr;</a>
+            </li>
+          
+        </ul>
+      
+
+
+      
+        
+        
+      
+
+    </div>
+  </div>
+</div>
+
+      
+<footer>
+  <div class="container">
+    
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <ul class="list-inline text-center footer-links">
+          
+              <li>
+		
+		  <a href="https://github.com/MarkKurzeja" title="GitHub">
+		
+                  <span class="fa-stack fa-lg">
+                    <i class="fas fa-circle fa-stack-2x"></i>
+                    <i class="fab fa-github fa-stack-1x fa-inverse"></i>
+                  </span>
+                </a>
+              </li>
+          
+          <li>
+            <a href="" title="RSS">
+              <span class="fa-stack fa-lg">
+                <i class="fas fa-circle fa-stack-2x"></i>
+                <i class="fas fa-rss fa-stack-1x fa-inverse"></i>
+              </span>
+            </a>
+          </li>
+          
+        </ul>
+        <p class="credits copyright text-muted">
+          
+            
+              Mark Kurzeja
+            
+          
+
+          &nbsp;&bull;&nbsp;&copy;
+          
+            2024
+          
+
+          
+            &nbsp;&bull;&nbsp;
+            <a href="https://markkurzeja.github.io">TensorTales</a>
+          
+        </p>
+        
+        <p class="credits theme-by text-muted">
+          <a href="https://gohugo.io">Hugo v0.121.2</a> powered &nbsp;&bull;&nbsp; Theme <a href="https://github.com/halogenica/beautifulhugo">Beautiful Hugo</a> adapted from <a href="https://deanattali.com/beautiful-jekyll/">Beautiful Jekyll</a>
+          
+        </p>
+      </div>
+    </div>
+  </div>
+</footer><script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.7/dist/katex.min.js" integrity="sha384-G0zcxDFp5LWZtDuRMnBkk3EphCK1lhEf4UEyEM693ka574TZGwo4IWwS6QLzM/2t" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.7/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+<script src="https://code.jquery.com/jquery-3.7.0.slim.min.js" integrity="sha384-w5y/xIeYixWvfM+A1cEbmHPURnvyqmVg5eVENruEdDjcyRLUSNej7512JQGspFUr" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
+
+<script src="https://markkurzeja.github.io/js/main.js"></script>
+<script src="https://markkurzeja.github.io/js/highlight.min.js"></script>
+<script> hljs.initHighlightingOnLoad(); </script>
+<script> $(document).ready(function() {$("pre.chroma").css("padding","0");}); </script><script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.2/photoswipe.min.js" integrity="sha384-QELNnmcmU8IR9ZAykt67vGr9/rZJdHbiWi64V88fCPaOohUlHCqUD/unNN0BXSqy" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.2/photoswipe-ui-default.min.js" integrity="sha384-m67o7SkQ1ALzKZIFh4CiTA8tmadaujiTa9Vu+nqPSwDOqHrDmxLezTdFln8077+q" crossorigin="anonymous"></script><script src="https://markkurzeja.github.io/js/load-photoswipe.js"></script>
+
+
+
+
+
+
+
+
+
+    
+  </body>
+</html>
+

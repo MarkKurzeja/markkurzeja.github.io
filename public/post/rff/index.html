@@ -10,8 +10,9 @@
  
 
 
-      <title>Pages - TensorTales Blog</title>
+      <title>Are Token-wise MLPs over-parameterized in Transformers? - TensorTales Blog</title>
 
+  <meta name="description" content="Part II of a two part series on RFFs">
   <meta name="author" content="Mark Kurzeja"/><script type="application/ld+json">
 {
     "@context": "http://schema.org",
@@ -32,14 +33,64 @@
   
 }
 </script>
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [{
+        "@type": "ListItem",
+        "position": 1,
+        "item": {
+          "@id": "https:\/\/markkurzeja.github.io",
+          "name": "home"
+        }
+    },{
+        "@type": "ListItem",
+        "position": 3,
+        "item": {
+          "@id": "https:\/\/markkurzeja.github.io\/post\/rff\/",
+          "name": "Are token wise mlps over parameterized in transformers?"
+        }
+    }]
+}
+</script><script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "Article",
+  "author": {
+    "name" : "Mark Kurzeja"
+  },
+  "headline": "Are Token-wise MLPs over-parameterized in Transformers?",
+  "description" : "\u0026ldquo;The pessimist says the glass is half-full. The optimist says the glass is half-empty. The engineer says its mearly 2x larger than it needs to be. \\( \\approx \\) Thomas Cathcart\nAside: To the eager reader, if you haven\u0026rsquo;t read Part I of this blog post, I recommend you start there.\nTo spoil the punchline, there is a curious connection between the token-wise MLP projections of modern Transformer recipes and Random Fourier Features.",
+  "inLanguage" : "en",
+  "wordCount":  410 ,
+  "datePublished" : "2024-03-23T00:00:00",
+  "dateModified" : "2024-03-23T00:00:00",
+  "image" : "https:\/\/markkurzeja.github.io\/logo\/logo_close.png",
+  "keywords" : [ "" ],
+  "mainEntityOfPage" : "https:\/\/markkurzeja.github.io\/post\/rff\/",
+  "publisher" : {
+    "@type": "Organization",
+    "name" : "https:\/\/markkurzeja.github.io",
+    "logo" : {
+        "@type" : "ImageObject",
+        "url" : "https:\/\/markkurzeja.github.io\/logo\/logo_close.png",
+        "height" :  60 ,
+        "width" :  60
+    }
+  }
+}
+</script>
 
-<meta property="og:title" content="Pages" />
+<meta property="og:title" content="Are Token-wise MLPs over-parameterized in Transformers?" />
+<meta property="og:description" content="Part II of a two part series on RFFs">
 <meta property="og:image" content="https://markkurzeja.github.io/logo/logo_close.png" />
-<meta property="og:url" content="https://markkurzeja.github.io/page/" />
+<meta property="og:url" content="https://markkurzeja.github.io/post/rff/" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="TensorTales" />
 
-  <meta name="twitter:title" content="Pages" />
+  <meta name="twitter:title" content="Are Token-wise MLPs over-parameterized in Transformers?" />
+  <meta name="twitter:description" content="Part II of a two part series on RFFs">
   <meta name="twitter:image" content="https://markkurzeja.github.io/logo/logo_close.png" />
   <meta name="twitter:card" content="summary_large_image" />
   <link href='https://markkurzeja.github.io/logo/logo.ico' rel='icon' type='image/x-icon'/>
@@ -176,47 +227,24 @@
       <div class="container">
         <div class="row">
           <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
-            <div class="page-heading">
+            <div class="post-heading">
               
-                <h1>Pages</h1>
-              
-              
-                <hr class="small">
+                <h1>Are Token-wise MLPs over-parameterized in Transformers?</h1>
               
               
               
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  
-  </header>
-
-
-    
-  <div class="container" role="main">
-    <div class="row">
-      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
-        
-        <div class="posts-list">
-          
-            <article class="post-preview">
-    <a href="https://markkurzeja.github.io/page/about/">
-        <h2 class="post-title">About me</h2>
-        
-        
-        
-    </a>
-
-    <p class="post-meta">
-        <span class="post-meta">
+                
+                  <h2 class="post-subheading">Part II of a two part series on RFFs</h2>
+                
+              
+              
+                <span class="post-meta">
   
   
-  <i class="fas fa-calendar"></i>&nbsp;Posted on Jan 1, 0001
+  <i class="fas fa-calendar"></i>&nbsp;Posted on Mar 23, 2024
   
   
-    &nbsp;|&nbsp;<i class="fas fa-clock"></i>&nbsp;1&nbsp;minutes
+    &nbsp;|&nbsp;<i class="fas fa-clock"></i>&nbsp;2&nbsp;minutes
   
   
   
@@ -228,38 +256,216 @@
 </span>
 
 
-    </p>
-    <div class="post-entry">
-        
-        <p>I am a Senior Software Engineer at Google. My current focus is on using machine
-learning to combat malware on Android devices. I have my BBA from the Ross
-School of Business at the University of Michigan and a Masters in Statistics
-from the Racknam Graduate School at the University of Michigan. My research
-interests are in machine learning generally, including deep learning, business,
-and statistics.</p>
-
-        
-    </div>
-
-    
-
-</article>
-          
+              
+            </div>
+          </div>
         </div>
-        
       </div>
     </div>
+  
+  </header>
+
+
+    
+<div class="container" role="main">
+  <div class="row">
+    <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+      <article role="main" class="blog-post">
+        <blockquote>
+<p>&ldquo;The pessimist says the glass is half-full. The optimist says the glass is
+half-empty. The engineer says its mearly 2x larger than it needs to be. <!-- raw HTML omitted -->
+\( \approx \) Thomas Cathcart</p>
+</blockquote>
+<p>Aside: To the eager reader, if you haven&rsquo;t read <a href="https://markkurzeja.github.io/post/rff_intro/">Part I of this blog post</a>, I recommend you start there.</p>
+<p>To spoil the punchline, there is a curious connection between the token-wise
+MLP projections of modern Transformer recipes and Random Fourier Features.</p>
+<p>Some adhoc experiments show a tiny tweak to MLPs allow them to train with far
+smaller batch sizes and dramatically reduce the number of parameters required
+to learn complex functions.</p>
+<h3 id="domain-and-range">Domain and Range</h3>
+<p>Random Fourier Features (RFF), like an MLP, maps an input vector \(X\) of dimension \(l_x\)
+and to a vector \(Y\) of dimension \(l_y\).</p>
+<p>\[
+X \in \mathbb{R}^{l_x}
+\hspace{0.2cm}
+\underset{RFF}{\rightarrow}
+\hspace{0.2cm}
+Y \in \mathbb{R}^{l_y}
+\]</p>
+<h3 id="data">Data</h3>
+<p>In the learning problem, we are given input-output mappings:
+\( \lbrace X \in \mathbb{R}^{l_x}, Y \in \mathbb{R}^{l_y} \rbrace_{i = 1}^{N_{data}} \).
+In standard RFF, it is assumed the data fits
+in memory. In modern deep-learning stacks, mappings are learned via SGD. We will
+assume the data fits in memory to begin and generalize shortly.</p>
+<h3 id="rffs-classic-formulation">RFF&rsquo;s classic formulation</h3>
+<p>Given some data,
+\( \lbrace X, Y \rbrace_{i = 1}^{N_{data}} \)
+we want to learn a functional which approximates the data.</p>
+<p>RFF requires us to specify some parameters:</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Rank</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\( R \)</td>
+<td>\( \mathbb{R} \)</td>
+<td>Number of &ldquo;features&rdquo;. The more features, the better the approximation, at the cost of more computational overhead</td>
+</tr>
+<tr>
+<td>\( \gamma \)</td>
+<td>\( \mathbb{R} \)</td>
+<td>\( \gamma \) acts as the &ldquo;width&rdquo; or &ldquo;frequency&rdquo; of the kernel approximation with larger values favoring more &ldquo;global&rdquo; approximations while smaller values of \( \gamma \) prefers more &ldquo;local&rdquo; approximations.</td>
+</tr>
+<tr>
+<td>\( \lambda \)</td>
+<td>\( \mathbb{R} \)</td>
+<td>\( \lambda \) acts as a regularization term with larger values favoring &ldquo;smoother&rdquo; approximations. \( \lambda \) has an intimate connection to Ridge Regression and the penalty terms it uses.</td>
+</tr>
+</tbody>
+</table>
+<p>Then the learning problem of RFF proceeds as follows:</p>
+<p>Algorithm:</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Shape</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S1: [Generate a kernel]</td>
+<td>\(\text{kernel} \in [R, l_x] \)</td>
+<td>\(\text{kernel} \sim \mathcal{N}(\mu=0,\sigma=1) \)</td>
+</tr>
+<tr>
+<td>S1: [Generate a kernel]</td>
+<td>\(\text{kernel} \in [R, l_x] \)</td>
+<td>\(\text{kernel} \sim \mathcal{N}(\mu=0,\sigma=1) \)</td>
+</tr>
+</tbody>
+</table>
+<p>We use \(R\) random
+fourier features to approximate the function.</p>
+<p>To put some dimensions on things:
+\[
+X \in [N, l_x] \newline
+Y \in [N, l_y] \newline
+\text{kernel} \in [R, l_x] \sim \mathcal{N}(\mu=0,\sigma=1) \newline
+\text{bias} \in [R, 1] \sim 2\pi\mathcal{U}(\min=0,\max=1) \newline
+\]</p>
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<p>\[
+\text{bias} \sim 2\pi\mathcal{U}(\min=0,\max=1);
+\]</p>
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+
+
+        
+
+        
+            <hr/>
+            <section id="social-share">
+              <div class="list-inline footer-links">
+                
+
+<div class="share-box" aria-hidden="true">
+    <ul class="share">
+      
+      <li>
+        <a href="//twitter.com/share?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2frff%2f&amp;text=Are%20Token-wise%20MLPs%20over-parameterized%20in%20Transformers%3f&amp;via=" target="_blank" title="Share on Twitter">
+          <i class="fab fa-twitter"></i>
+        </a>
+      </li>
+  
+      
+      <li>
+        <a href="//www.facebook.com/sharer/sharer.php?u=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2frff%2f" target="_blank" title="Share on Facebook">
+          <i class="fab fa-facebook"></i>
+        </a>
+      </li>
+  
+      
+      <li>
+        <a href="//reddit.com/submit?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2frff%2f&amp;title=Are%20Token-wise%20MLPs%20over-parameterized%20in%20Transformers%3f" target="_blank" title="Share on Reddit">
+          <i class="fab fa-reddit"></i>
+        </a>
+      </li>
+  
+      
+      <li>
+        <a href="//www.linkedin.com/shareArticle?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2frff%2f&amp;title=Are%20Token-wise%20MLPs%20over-parameterized%20in%20Transformers%3f" target="_blank" title="Share on LinkedIn">
+          <i class="fab fa-linkedin"></i>
+        </a>
+      </li>
+  
+      
+      <li>
+        <a href="//www.stumbleupon.com/submit?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2frff%2f&amp;title=Are%20Token-wise%20MLPs%20over-parameterized%20in%20Transformers%3f" target="_blank" title="Share on StumbleUpon">
+          <i class="fab fa-stumbleupon"></i>
+        </a>
+      </li>
+  
+      
+      <li>
+        <a href="//www.pinterest.com/pin/create/button/?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2frff%2f&amp;description=Are%20Token-wise%20MLPs%20over-parameterized%20in%20Transformers%3f" target="_blank" title="Share on Pinterest">
+          <i class="fab fa-pinterest"></i>
+        </a>
+      </li>
+    </ul>
   </div>
+  
+
+              </div>
+            </section>
+        
+
+        
+          
+
+          
+        
+      </article>
 
       
-    <div class="page-meta">
-  
-  
-  
+        <ul class="pager blog-pager">
+          
+            <li class="previous">
+              <a href="https://markkurzeja.github.io/post/rff_intro/" data-toggle="tooltip" data-placement="top" title="Random Fourier Features are economic nonlinear regressors">&larr; Previous Post</a>
+            </li>
+          
+          
+        </ul>
+      
+
+
+      
+        
+        
+      
+
+    </div>
+  </div>
 </div>
 
-
-  
+      
 <footer>
   <div class="container">
     
@@ -279,7 +485,7 @@ and statistics.</p>
               </li>
           
           <li>
-            <a href="/page/index.xml" title="RSS">
+            <a href="" title="RSS">
               <span class="fa-stack fa-lg">
                 <i class="fas fa-circle fa-stack-2x"></i>
                 <i class="fas fa-rss fa-stack-1x fa-inverse"></i>

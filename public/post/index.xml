@@ -6,14 +6,28 @@
     <description>Recent content in Posts on TensorTales</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Sun, 17 Mar 2024 14:48:38 -0500</lastBuildDate>
+    <lastBuildDate>Sat, 23 Mar 2024 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://markkurzeja.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Are Token-wise MLPs over-parameterized in Transformers?</title>
+      <link>https://markkurzeja.github.io/post/rff/</link>
+      <pubDate>Sat, 23 Mar 2024 00:00:00 +0000</pubDate>
+      <guid>https://markkurzeja.github.io/post/rff/</guid>
+      <description>&amp;ldquo;The pessimist says the glass is half-full. The optimist says the glass is half-empty. The engineer says its mearly 2x larger than it needs to be. \( \approx \) Thomas Cathcart&#xA;Aside: To the eager reader, if you haven&amp;rsquo;t read Part I of this blog post, I recommend you start there.&#xA;To spoil the punchline, there is a curious connection between the token-wise MLP projections of modern Transformer recipes and Random Fourier Features.</description>
+    </item>
+    <item>
+      <title>Random Fourier Features are economic nonlinear regressors</title>
+      <link>https://markkurzeja.github.io/post/rff_intro/</link>
+      <pubDate>Sat, 23 Mar 2024 00:00:00 +0000</pubDate>
+      <guid>https://markkurzeja.github.io/post/rff_intro/</guid>
+      <description>Part I: Random Kitchen Sinks Random Fourier Features, at first glance, seems a little.. well.. mad..&#xA;Take a feature set. Multi-dimensional ? Nonlinear interactions ? Doesn&amp;rsquo;t really matter. Linearly project it onto some noise distribution. Take a little cosine here&amp;hellip; Add a little uniform noise over there&amp;hellip; Fit a linear classifier to the strange little mix from (3) .. And out comes a reasonably performing, easy, economic regressor.&#xA;But why?&amp;hellip;</description>
+    </item>
     <item>
       <title>TensorTales</title>
       <link>https://markkurzeja.github.io/post/tensor-tales/</link>
       <pubDate>Sun, 17 Mar 2024 14:48:38 -0500</pubDate>
       <guid>https://markkurzeja.github.io/post/tensor-tales/</guid>
-      <description></description>
+      <description>I&amp;rsquo;ve always loved machine learning. Something about it has always felt like magic. When I first learned about prediction machines, in high school, to me, they always conjured images of The Oracle of Delphi or one of those old cartoons with a group of magicians huddled around a crystal ball. Ask the right questions, cast the right spells in the right order, and the seemingly impossible, a glimpse of the future, could be yours.</description>
     </item>
   </channel>
 </rss>
