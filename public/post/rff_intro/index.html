@@ -61,9 +61,9 @@
     "name" : "Mark Kurzeja"
   },
   "headline": "Random Fourier Features, Part I ",
-  "description" : "Random Fourier Features, in my opinion, have one of the best performance-to-cost tradeoffs in machine learning techniques today. Simple to code, cheap to fit, and unreasonably effective, they have been my bread-and-butter for small-to-medium learning tasks and serve as an amazing baseline for more complex systems.\nThis post will be the first of a three part series. To give you a roadmap:\nPost I: This post will be short and introduce RFF by example Post II: The next post will explore the connection between MLPs, used in Transformers, and RFF.",
+  "description" : "Random Fourier Features, in my opinion, have one of the best performance-to-cost tradeoffs in machine learning techniques today. Simple to code, cheap to fit, and unreasonably effective, they have been my bread-and-butter for small-to-medium multi-dimensional learning tasks and serve as an amazing baseline for more complex systems.\nThis post will be the first of a three part series. To give you a roadmap:\nPost I: This post will help to build intuition of RFF through low-dimensional examples and explain some of the code to come.",
   "inLanguage" : "en",
-  "wordCount":  1763 ,
+  "wordCount":  2175 ,
   "datePublished" : "2024-03-23T00:00:00",
   "dateModified" : "2024-03-23T00:00:00",
   "image" : "https:\/\/markkurzeja.github.io\/logo\/logo_close.png",
@@ -244,7 +244,7 @@
   <i class="fas fa-calendar"></i>&nbsp;Posted on Mar 23, 2024
   
   
-    &nbsp;|&nbsp;<i class="fas fa-clock"></i>&nbsp;9&nbsp;minutes
+    &nbsp;|&nbsp;<i class="fas fa-clock"></i>&nbsp;11&nbsp;minutes
   
   
   
@@ -274,21 +274,26 @@
         <p>Random Fourier Features, in my opinion, have one of the best
 performance-to-cost tradeoffs in machine learning techniques today. Simple to
 code, cheap to fit, and unreasonably effective, they have been my
-bread-and-butter for small-to-medium learning tasks and serve as an amazing
-baseline for more complex systems.</p>
+bread-and-butter for small-to-medium multi-dimensional learning tasks and serve
+as an amazing baseline for more complex systems.</p>
 <p>This post will be the first of a three part series. To give you a roadmap:</p>
 <ul>
-<li><strong>Post I</strong>: This post will be short and introduce RFF by example</li>
+<li><strong>Post I</strong>: This post will help to build intuition of RFF through
+low-dimensional examples and explain some of the code to come.</li>
 <li><strong>Post II</strong>: The next post will explore the connection between MLPs, used in
 Transformers, and RFF. I won&rsquo;t spoil the surprise just yet.</li>
-<li><strong>Post III</strong>: The final post will provide numerical examples comparing MLPs and
-RFFs. We will also explore their potential use in language modeling and deep
-learning stacks.</li>
+<li><strong>Post III</strong>: The final post will provide numerical examples comparing MLPs
+and RFFs in higher dimensional problems. We will also explore their potential
+use in language modeling and deep learning stacks.</li>
 </ul>
-<p>Note: This post <em>will not</em> be about the &ldquo;how&rdquo; of RFF. I highly recommend
-reading Gregory Gundersen&rsquo;s <a href="https://gregorygundersen.com/blog/2019/12/23/random-fourier-features/">blog
+<p>Note: This post intends to show how RFF works via examples, code, and visuals.
+Great tutorials of RFF, from a mathematical perspective exist and to summarize
+their findings here I feel would be a disservice to the topic.
+I highly recommend reading Gregory Gundersen&rsquo;s <a href="https://gregorygundersen.com/blog/2019/12/23/random-fourier-features/">blog
 post</a>
-for more background if you need it.</p>
+or Rahimi and Recht&rsquo;s <a href="https://archives.argmin.net/2017/12/05/kitchen-sinks/">Reflections on Random Kitchen
+Sinks</a> if you are
+curious about <em>how</em> these approximations work.</p>
 <h2 id="learning-by-example-one-dimensional-learning">Learning by Example: One Dimensional Learning</h2>
 <h4 id="function-definition">Function Definition</h4>
 <p>Our goal, today, will be to teach-via-example by fitting the following
@@ -301,7 +306,7 @@ x \sin(3x) &amp; \text{if } x &lt; 0, \\
 \end{cases}
 $$</p>
 <p>This functional is <em>intentionally</em> pathological to showcase the
-adaptability of RFF even under strange cases.</p>
+adaptability of RFF even with traditionally difficult functions.</p>
 <h4 id="plots">Plots</h4>
 <p>Let&rsquo;s see what we are working with:</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">import numpy as np
@@ -332,7 +337,7 @@ posts, we will address the case where this is not possible.</p>
 <h4 id="rff-is-five-lines-of-code">RFF is Five Lines of Code</h4>
 <p>The first amazing fact about RFF is that it is four lines of setup and five
 lines of &ldquo;modeling&rdquo; code.</p>
-<p>Let&rsquo;s define the parameters:</p>
+<p>There are three parameters which drive RFF:</p>
 <table>
 <thead>
 <tr>
@@ -350,7 +355,7 @@ lines of &ldquo;modeling&rdquo; code.</p>
 <tr>
 <td>$\gamma$</td>
 <td>$\mathbb{R} $</td>
-<td>$ \gamma $ acts as the &ldquo;width&rdquo; or &ldquo;frequency&rdquo; of the kernel approximation. Larger values  of $\gamma$ favor more &ldquo;global&rdquo; approximations while smaller values of $ \gamma $ prefer more &ldquo;local&rdquo; approximations. I&rsquo;ve heuristically found increasing $\gamma$ as a function</td>
+<td>$ \gamma $ acts as the &ldquo;width&rdquo; or &ldquo;frequency&rdquo; of the kernel approximation. Larger values  of $\gamma$ favor more &ldquo;local&rdquo; approximations while smaller values of $ \gamma $ prefer more &ldquo;global&rdquo; approximations. I&rsquo;ve heuristically found increasing $\gamma$ as a function of R can help with fitting fitting.</td>
 </tr>
 <tr>
 <td>$\lambda$</td>
@@ -359,18 +364,18 @@ lines of &ldquo;modeling&rdquo; code.</p>
 </tr>
 </tbody>
 </table>
-<p>To avoid the suspense:</p>
+<p>And now for it all put together:</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl"># Setup
 </span></span><span class="line"><span class="cl">np.random.seed(0)  # Set the random seed for reproducibility
 </span></span><span class="line"><span class="cl">R = 100            # Number of RFF samples
 </span></span><span class="line"><span class="cl">gamma = R / 10     # Kernel &#34;width&#34; parameter
-</span></span><span class="line"><span class="cl">lambda = 0.1       # Regularization parameter
+</span></span><span class="line"><span class="cl">llambda = 0.1      # Regularization parameter
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"># Here is RFF, in all it&#39;s glory...
 </span></span><span class="line"><span class="cl">kernel = np.random.normal(size=(R, 1))
 </span></span><span class="line"><span class="cl">bias = 2 * np.pi * np.random.rand(R, 1)
 </span></span><span class="line"><span class="cl">proj = np.cos(gamma * (X @ kernel.T) + bias.T)
-</span></span><span class="line"><span class="cl">weights = np.linalg.solve(proj.T @ proj + lambda * np.eye(R), proj.T @ y)
+</span></span><span class="line"><span class="cl">weights = np.linalg.solve(proj.T @ proj + llambda * np.eye(R), proj.T @ y)
 </span></span><span class="line"><span class="cl">y_hat = proj @ weights
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"># And plot the results.
@@ -378,7 +383,47 @@ lines of &ldquo;modeling&rdquo; code.</p>
 </span></span><span class="line"><span class="cl">plt.suptitle(f&#39;RFF Approximation R={R}&#39;)
 </span></span><span class="line"><span class="cl">plt.legend()
 </span></span><span class="line"><span class="cl">plt.show()
-</span></span></code></pre></div><h4 id="plot-the-fit-for-various-values-of-r">Plot the fit for various values of $R$</h4>
+</span></span></code></pre></div><p>To avoid code without explanation, the modeling code is roughly as
+follows. In general, $x$ and $y$ are not limited to scalars and be vectors. We
+will let $d_x$ and $d_y$ denote the dimensionality of $x$ and $y$ respectively.
+In the problem above, since $x$ and $y$ are scalar quantities, $d_x = d_y = 1$.</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Shape</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S1: [Sample a kernel, $K$]</td>
+<td>$K \in [R, d_x] $</td>
+<td>$K \sim \mathcal{N}(\mu=0,\sigma=1) $</td>
+</tr>
+<tr>
+<td>S2: [Sample a phase bias $B$]</td>
+<td>$B \in [R, 1] $</td>
+<td>$B\sim 2\pi\text{Uniform}(0, 1) $</td>
+</tr>
+<tr>
+<td>S3: [Project onto random map, $P$]</td>
+<td>$P \in [N_{data}, R] $</td>
+<td>$P \leftarrow \cos\left(\gamma XK^T + B^T\right) $</td>
+</tr>
+<tr>
+<td>S4: [Solve for weights, $W$]</td>
+<td>$W \in [R, d_y] $</td>
+<td>Solve for $W$: $$ \left( P^TP + \lambda I(R)\right)W = P^Ty$$</td>
+</tr>
+<tr>
+<td>S5: [Predict $\hat{y}$]</td>
+<td>$\hat{y} \in [N_{data}, d_y] $</td>
+<td>$\hat{y} = PW$</td>
+</tr>
+</tbody>
+</table>
+<h4 id="plot-the-fit-for-various-values-of-r">Plot the fit for various values of $R$</h4>
 <p>Another small miracle of RFF is the approximation improves by increasing $R$.
 Let&rsquo;s plot the fit for a few values of $R$.</p>
 
@@ -405,11 +450,11 @@ Let&rsquo;s plot the fit for a few values of $R$.</p>
     <div class="box" >
       <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
         <div class="img" style="background-image: url('https://markkurzeja.github.io/posts/rff/rff_5.png');">
-          <img itemprop="thumbnail" src="/posts/rff/rff_5.png" alt="R=10"/>
+          <img itemprop="thumbnail" src="/posts/rff/rff_5.png" alt="R=5"/>
         </div>
         <a href="/posts/rff/rff_5.png" itemprop="contentUrl"></a>
           <figcaption>
-              <p>R=10</p>
+              <p>R=5</p>
           </figcaption>
       </figure>
     </div>
@@ -433,11 +478,11 @@ Let&rsquo;s plot the fit for a few values of $R$.</p>
     <div class="box" >
       <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
         <div class="img" style="background-image: url('https://markkurzeja.github.io/posts/rff/rff_30.png');">
-          <img itemprop="thumbnail" src="/posts/rff/rff_30.png" alt="R=10"/>
+          <img itemprop="thumbnail" src="/posts/rff/rff_30.png" alt="R=30"/>
         </div>
         <a href="/posts/rff/rff_30.png" itemprop="contentUrl"></a>
           <figcaption>
-              <p>R=10</p>
+              <p>R=30</p>
           </figcaption>
       </figure>
     </div>
@@ -452,6 +497,344 @@ Let&rsquo;s plot the fit for a few values of $R$.</p>
         <a href="/posts/rff/rff_100.png" itemprop="contentUrl"></a>
           <figcaption>
               <p>R=100</p>
+          </figcaption>
+      </figure>
+    </div>
+
+
+</div>
+
+<p>We can see a minor ringing effect in the fit, akin to <a href="https://en.wikipedia.org/wiki/Gibbs_phenomenon">Gibbs
+Phenomenon</a> but the
+approximation fits decently well and handles the discontinuities easily.</p>
+<h2 id="underspecification">Underspecification</h2>
+<p>The function above was difficult to fit, but we had a large amount of data.
+What happens if we reduce the data significantly but keep the fit heavily over
+parameterized ? A good approximation should (a) become better with more
+parameters and (b) self-regularize when it is over-parameterized. This second
+point is important in practice: methods which fail to self-regularize can
+&ldquo;blow-up&rdquo; without other interventions. If you have ever fit a polynomial of
+large degree to data, you have likely experienced <a href="https://www.johndcook.com/blog/2017/11/18/runge-phenomena/">Runge
+phenomena</a> which is
+one such pathology.</p>
+<p>The second amazing fact of RFF is it has regularization built in. The
+parameters $\gamma$ and $\lambda$ jointly determine how flexible the fit will
+be in the limit. For a fixed $\gamma$ and $\lambda$ we can see this &ldquo;limiting&rdquo;
+effect by increasing $R$.</p>
+
+
+
+<div class="gallery caption-position-bottom caption-effect-fade hover-effect-zoom hover-transition" itemscope itemtype="http://schema.org/ImageGallery">
+	  
+    
+    
+    <div class="box" >
+      <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+        <div class="img" style="background-image: url('https://markkurzeja.github.io/posts/rff/rff_underspecified_2.png');">
+          <img itemprop="thumbnail" src="/posts/rff/rff_underspecified_2.png" alt="R=2"/>
+        </div>
+        <a href="/posts/rff/rff_underspecified_2.png" itemprop="contentUrl"></a>
+          <figcaption>
+              <p>R=2</p>
+          </figcaption>
+      </figure>
+    </div>
+
+    
+    
+    <div class="box" >
+      <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+        <div class="img" style="background-image: url('https://markkurzeja.github.io/posts/rff/rff_underspecified_5.png');">
+          <img itemprop="thumbnail" src="/posts/rff/rff_underspecified_5.png" alt="R=5"/>
+        </div>
+        <a href="/posts/rff/rff_underspecified_5.png" itemprop="contentUrl"></a>
+          <figcaption>
+              <p>R=5</p>
+          </figcaption>
+      </figure>
+    </div>
+
+    
+    
+    <div class="box" >
+      <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+        <div class="img" style="background-image: url('https://markkurzeja.github.io/posts/rff/rff_underspecified_30.png');">
+          <img itemprop="thumbnail" src="/posts/rff/rff_underspecified_30.png" alt="R=30"/>
+        </div>
+        <a href="/posts/rff/rff_underspecified_30.png" itemprop="contentUrl"></a>
+          <figcaption>
+              <p>R=30</p>
+          </figcaption>
+      </figure>
+    </div>
+
+    
+    
+    <div class="box" >
+      <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+        <div class="img" style="background-image: url('https://markkurzeja.github.io/posts/rff/rff_underspecified_100.png');">
+          <img itemprop="thumbnail" src="/posts/rff/rff_underspecified_100.png" alt="R=100"/>
+        </div>
+        <a href="/posts/rff/rff_underspecified_100.png" itemprop="contentUrl"></a>
+          <figcaption>
+              <p>R=100</p>
+          </figcaption>
+      </figure>
+    </div>
+
+    
+    
+    <div class="box" >
+      <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+        <div class="img" style="background-image: url('https://markkurzeja.github.io/posts/rff/rff_underspecified_500.png');">
+          <img itemprop="thumbnail" src="/posts/rff/rff_underspecified_500.png" alt="R=500"/>
+        </div>
+        <a href="/posts/rff/rff_underspecified_500.png" itemprop="contentUrl"></a>
+          <figcaption>
+              <p>R=500</p>
+          </figcaption>
+      </figure>
+    </div>
+
+
+</div>
+
+<p>Even with hundreds more interpolates than data points, the function naturally
+regularizes itself due to the $\gamma$ and $\lambda$ parameters. What happens
+if $\gamma$ or $\lambda$ are misspecified?</p>
+
+
+
+<div class="gallery caption-position-bottom caption-effect-fade hover-effect-zoom hover-transition" itemscope itemtype="http://schema.org/ImageGallery">
+	  
+    
+    
+    <div class="box" >
+      <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+        <div class="img" style="background-image: url('https://markkurzeja.github.io/posts/rff/rff_underspecified_small_gamma_small_lambda.png');">
+          <img itemprop="thumbnail" src="/posts/rff/rff_underspecified_small_gamma_small_lambda.png" alt="Small $\gamma$, Small $\lambda$"/>
+        </div>
+        <a href="/posts/rff/rff_underspecified_small_gamma_small_lambda.png" itemprop="contentUrl"></a>
+          <figcaption>
+              <p>Small $\gamma$, Small $\lambda$</p>
+          </figcaption>
+      </figure>
+    </div>
+
+    
+    
+    <div class="box" >
+      <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+        <div class="img" style="background-image: url('https://markkurzeja.github.io/posts/rff/rff_underspecified_big_gamma_small_lambda.png');">
+          <img itemprop="thumbnail" src="/posts/rff/rff_underspecified_big_gamma_small_lambda.png" alt="Big $\gamma$, Small $\lambda$"/>
+        </div>
+        <a href="/posts/rff/rff_underspecified_big_gamma_small_lambda.png" itemprop="contentUrl"></a>
+          <figcaption>
+              <p>Big $\gamma$, Small $\lambda$</p>
+          </figcaption>
+      </figure>
+    </div>
+
+    
+    
+    <div class="box" >
+      <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+        <div class="img" style="background-image: url('https://markkurzeja.github.io/posts/rff/rff_underspecified_big_gamma_big_lambda.png');">
+          <img itemprop="thumbnail" src="/posts/rff/rff_underspecified_big_gamma_big_lambda.png" alt="Big $\gamma$, Big $\lambda$"/>
+        </div>
+        <a href="/posts/rff/rff_underspecified_big_gamma_big_lambda.png" itemprop="contentUrl"></a>
+          <figcaption>
+              <p>Big $\gamma$, Big $\lambda$</p>
+          </figcaption>
+      </figure>
+    </div>
+
+    
+    
+    <div class="box" >
+      <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+        <div class="img" style="background-image: url('https://markkurzeja.github.io/posts/rff/rff_underspecified_small_gamma_big_lambda.png');">
+          <img itemprop="thumbnail" src="/posts/rff/rff_underspecified_small_gamma_big_lambda.png" alt="Small $\gamma$, Big $\lambda$"/>
+        </div>
+        <a href="/posts/rff/rff_underspecified_small_gamma_big_lambda.png" itemprop="contentUrl"></a>
+          <figcaption>
+              <p>Small $\gamma$, Big $\lambda$</p>
+          </figcaption>
+      </figure>
+    </div>
+
+    
+    
+    <div class="box" >
+      <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+        <div class="img" style="background-image: url('https://markkurzeja.github.io/posts/rff/rff_underspecified_small_gamma_zero_lambda.png');">
+          <img itemprop="thumbnail" src="/posts/rff/rff_underspecified_small_gamma_zero_lambda.png" alt="Small $\gamma$, Zero $\lambda$"/>
+        </div>
+        <a href="/posts/rff/rff_underspecified_small_gamma_zero_lambda.png" itemprop="contentUrl"></a>
+          <figcaption>
+              <p>Small $\gamma$, Zero $\lambda$</p>
+          </figcaption>
+      </figure>
+    </div>
+
+    
+    
+    <div class="box" >
+      <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+        <div class="img" style="background-image: url('https://markkurzeja.github.io/posts/rff/rff_underspecified_big_gamma_zero_lambda.png');">
+          <img itemprop="thumbnail" src="/posts/rff/rff_underspecified_big_gamma_zero_lambda.png" alt="Big $\gamma$, Zero $\lambda$"/>
+        </div>
+        <a href="/posts/rff/rff_underspecified_big_gamma_zero_lambda.png" itemprop="contentUrl"></a>
+          <figcaption>
+              <p>Big $\gamma$, Zero $\lambda$</p>
+          </figcaption>
+      </figure>
+    </div>
+
+
+</div>
+
+<p>The worst fits come when $\lambda \rightarrow 0$ and $\gamma$ is larger than
+the intrinsic variance of the function. $\lambda$ is a regularization term, so
+as $\lambda \rightarrow 0$, the functional is able to fit the data perfectly at
+the cost of larger variance.</p>
+<p>In practice, I typically start with somewhat larger values of $\lambda$ and
+somewhat smaller values of $\gamma$ and adjust them accordingly depending on
+the type of fit I want and how it performs on validation data.</p>
+<h2 id="higher-dimensions">Higher Dimensions</h2>
+<p>Most analytic methods of curve fits tend to be specified only for one dimension
+and quickly become unwieldy in higher dimensions. RFF&rsquo;s third amazing fact is
+that it works, just fine, for inputs <em>and</em> outputs which are multidimensional.
+The code changes are almost unnoticeable as well: where we used to have $d_x$
+implicitly specified as $d_x=1$, we now will explicitly parameterise it.</p>
+<h4 id="learn-by-example">Learn-By-Example</h4>
+<p>As before, we are going to learn-by-example and teach RFF to approximate the function:</p>
+<p>$$
+y = 2 \sin(x_1) + 4 \sin(x_1x_2)
+$$</p>
+<p>Unfortunately, we are limited by human biology in this example: with $d_x = 2$
+and $d_y = 1$, we exhaust the three dimensions our eyes are capable of seeing.
+The dimensions interact however, and the functional looks quite cool.</p>
+<p>The plotting code this time is only slightly more difficult:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="n">import</span> <span class="n">numpy</span> <span class="n">as</span> <span class="n">np</span>
+</span></span><span class="line"><span class="cl"><span class="n">import</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">pyplot</span> <span class="n">as</span> <span class="n">plt</span>
+</span></span><span class="line"><span class="cl"><span class="n">from</span> <span class="n">mpl_toolkits</span><span class="o">.</span><span class="n">mplot3d</span> <span class="n">import</span> <span class="n">Axes3D</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Generate multivariate data for y = 2 * sin(x1) + 4 * sin(x1 * x2)</span>
+</span></span><span class="line"><span class="cl"><span class="n">N</span> <span class="o">=</span> <span class="mi">1000</span>  <span class="c1"># Number of data points along each axis</span>
+</span></span><span class="line"><span class="cl"><span class="n">x1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">x2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">X1</span><span class="p">,</span> <span class="n">X2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">Y</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">X1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">X1</span> <span class="o">*</span> <span class="n">X2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Plotting</span>
+</span></span><span class="line"><span class="cl"><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">121</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">ax</span><span class="o">.</span><span class="n">plot_surface</span><span class="p">(</span><span class="n">X1</span><span class="p">,</span> <span class="n">X2</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;$y=2 \sin(x_1) + 4 \sin(x_1 x_2)$&#39;</span><span class="p">)</span>
+</span></span></code></pre></div><p><img src="/posts/rff/rff_2d.png" alt=""></p>
+<h4 id="fitting-with-rff">Fitting with RFF</h4>
+<p>The code for RFF is more-or-less the same as before except we have to &ldquo;flatten&rdquo;
+the $x$ and $y$ dimensions from a grid to a vector of examples.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl"># Setup
+</span></span><span class="line"><span class="cl">np.random.seed(0)  # Set the random seed for reproducability
+</span></span><span class="line"><span class="cl">R = 10             # Number of RFF samples
+</span></span><span class="line"><span class="cl">gamma = 1          # Kernel &#34;width&#34; parameter
+</span></span><span class="line"><span class="cl">llambda = 0.1      # Regularization parameter
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"># Flatten the inputs and outputs
+</span></span><span class="line"><span class="cl">X1_flat = X1.flatten().reshape(-1, 1)
+</span></span><span class="line"><span class="cl">X2_flat = X2.flatten().reshape(-1, 1)
+</span></span><span class="line"><span class="cl">X_flat = np.hstack((X1_flat, X2_flat))
+</span></span><span class="line"><span class="cl">Y_flat = Y.flatten()
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"># Random Fourier feature mapping for Gaussian kernel
+</span></span><span class="line"><span class="cl">kernel = np.random.normal(size=(R, 2))
+</span></span><span class="line"><span class="cl">bias = 2 * np.pi * np.random.rand(R, 1)
+</span></span><span class="line"><span class="cl">proj = np.cos(gamma * (X_flat.dot(kernel.T)) + bias.T)
+</span></span><span class="line"><span class="cl">weights = np.linalg.solve(
+</span></span><span class="line"><span class="cl">  proj.T.dot(proj) + llambda * np.eye(R),
+</span></span><span class="line"><span class="cl">  proj.T.dot(Y_flat),
+</span></span><span class="line"><span class="cl">)
+</span></span><span class="line"><span class="cl">y_hat = proj.dot(weights).reshape(N, N)
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">ax2 = fig.add_subplot(122, projection=&#39;3d&#39;)
+</span></span><span class="line"><span class="cl">ax2.plot_surface(X1, X2, y_hat, cmap=&#39;viridis&#39;, alpha=0.7)
+</span></span><span class="line"><span class="cl">ax2.set_title(f&#39;RFF Approximation; R={R}&#39;)
+</span></span><span class="line"><span class="cl">plt.show()
+</span></span></code></pre></div><p>which, for different values of $R$ yields:</p>
+
+
+
+<div class="gallery caption-position-bottom caption-effect-fade hover-effect-zoom hover-transition" itemscope itemtype="http://schema.org/ImageGallery">
+	  
+    
+    
+    <div class="box" >
+      <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+        <div class="img" style="background-image: url('https://markkurzeja.github.io/posts/rff/rff_2d_2.png');">
+          <img itemprop="thumbnail" src="/posts/rff/rff_2d_2.png" alt="R=2"/>
+        </div>
+        <a href="/posts/rff/rff_2d_2.png" itemprop="contentUrl"></a>
+          <figcaption>
+              <p>R=2</p>
+          </figcaption>
+      </figure>
+    </div>
+
+    
+    
+    <div class="box" >
+      <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+        <div class="img" style="background-image: url('https://markkurzeja.github.io/posts/rff/rff_2d_5.png');">
+          <img itemprop="thumbnail" src="/posts/rff/rff_2d_5.png" alt="R=5"/>
+        </div>
+        <a href="/posts/rff/rff_2d_5.png" itemprop="contentUrl"></a>
+          <figcaption>
+              <p>R=5</p>
+          </figcaption>
+      </figure>
+    </div>
+
+    
+    
+    <div class="box" >
+      <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+        <div class="img" style="background-image: url('https://markkurzeja.github.io/posts/rff/rff_2d_10.png');">
+          <img itemprop="thumbnail" src="/posts/rff/rff_2d_10.png" alt="R=10"/>
+        </div>
+        <a href="/posts/rff/rff_2d_10.png" itemprop="contentUrl"></a>
+          <figcaption>
+              <p>R=10</p>
+          </figcaption>
+      </figure>
+    </div>
+
+    
+    
+    <div class="box" >
+      <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+        <div class="img" style="background-image: url('https://markkurzeja.github.io/posts/rff/rff_2d_100.png');">
+          <img itemprop="thumbnail" src="/posts/rff/rff_2d_100.png" alt="R=100"/>
+        </div>
+        <a href="/posts/rff/rff_2d_100.png" itemprop="contentUrl"></a>
+          <figcaption>
+              <p>R=100</p>
+          </figcaption>
+      </figure>
+    </div>
+
+    
+    
+    <div class="box" >
+      <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+        <div class="img" style="background-image: url('https://markkurzeja.github.io/posts/rff/rff_2d_200.png');">
+          <img itemprop="thumbnail" src="/posts/rff/rff_2d_200.png" alt="R=200"/>
+        </div>
+        <a href="/posts/rff/rff_2d_200.png" itemprop="contentUrl"></a>
+          <figcaption>
+              <p>R=200</p>
           </figcaption>
       </figure>
     </div>
@@ -552,97 +935,6 @@ a curious connection I found when coding with it. I highly recommend reading
 Gregory Gundersen&rsquo;s <a href="https://gregorygundersen.com/blog/2019/12/23/random-fourier-features/">blog
 post</a>
 for more background if you need it.</p>
-<h3 id="part-ii-five-little-lines">Part II: Five Little Lines</h3>
-<p>On it&rsquo;s face, RFF is only five lines of Numpy code. To avoid any mystery, I When I code, I want
-everything to be easy to copy-paste, so I include the setup code as well.
-Translating the matlab code more or less directly from their blog:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">import numpy as np
-</span></span><span class="line"><span class="cl">import matplotlib.pyplot as plt
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"># Setup:
-</span></span><span class="line"><span class="cl">R = 10            # Number of RFF samples
-</span></span><span class="line"><span class="cl">gamma = 1         # Kernel &#34;width&#34; parameter
-</span></span><span class="line"><span class="cl">lambda_reg = 0.1  # Regularization parameter
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"># Data:
-</span></span><span class="line"><span class="cl">N = 1000
-</span></span><span class="line"><span class="cl">np.random.seed(0)
-</span></span><span class="line"><span class="cl">X = np.linspace(-np.pi, np.pi, N).reshape(N, 1)
-</span></span><span class="line"><span class="cl">y = (X * np.sin(2 * X) + np.random.normal(size=(N, 1), scale = 0.25)).reshape(N, 1)
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"># Here is RFF, in all it&#39;s glory...
-</span></span><span class="line"><span class="cl">kernel = np.random.normal(size=(R, 1))
-</span></span><span class="line"><span class="cl">bias = 2 * np.pi * np.random.rand(R, 1)
-</span></span><span class="line"><span class="cl">rff_projection = np.cos(gamma * (X @ kernel.T) + bias.T)
-</span></span><span class="line"><span class="cl">weights = np.linalg.solve(rff_projection.T @ rff_projection + lambda_reg * np.eye(R), rff_projection.T @ y)
-</span></span><span class="line"><span class="cl">y_hat = rff_projection @ weights
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"># Plot it out.
-</span></span><span class="line"><span class="cl">plt.figure(figsize=(10, 6))
-</span></span><span class="line"><span class="cl">plt.scatter(X, y, label=&#39;Data&#39;)
-</span></span><span class="line"><span class="cl">plt.plot(X, y_hat, label=&#39;RFF Approximation&#39;, linestyle=&#39;-&#39;, color = &#34;orange&#34;, lw= 5)
-</span></span><span class="line"><span class="cl">plt.legend()
-</span></span><span class="line"><span class="cl">plt.xlabel(&#39;x&#39;)
-</span></span><span class="line"><span class="cl">plt.ylabel(&#39;y&#39;)
-</span></span><span class="line"><span class="cl">plt.suptitle(f&#39;RFF Approximation R={R}&#39;)
-</span></span><span class="line"><span class="cl">plt.title(f&#39;Total Learnable Parameters = {np.prod(weights.shape)}&#39;)
-</span></span><span class="line"><span class="cl">plt.show()
-</span></span></code></pre></div><p>In RFF, the parameter <code>R</code> sets the number of random projections used to build
-the kernel estimator. Larger values of <code>R</code> yield better approximations, on
-average, at the cost of more compute. For example, we can plot the function we
-are approximating for a few choices of <code>R</code> to get a feel for how <code>R</code> increases
-the complexity of the fit.</p>
-<p><img src="/posts/rff/rff_1.png" alt="">
-<img src="/posts/rff/rff_2.png" alt="">
-<img src="/posts/rff/rff_10.png" alt="">
-<img src="/posts/rff/rff_100.png" alt=""></p>
-<h3 id="part-iii-multidimensional-generalizations">Part III: Multidimensional Generalizations</h3>
-<p>Being a linear regression method (in the parameters), RFF naturally scales to
-multidimensional data. For example:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="n">import</span> <span class="n">numpy</span> <span class="n">as</span> <span class="n">np</span>
-</span></span><span class="line"><span class="cl"><span class="n">import</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">pyplot</span> <span class="n">as</span> <span class="n">plt</span>
-</span></span><span class="line"><span class="cl"><span class="n">from</span> <span class="n">mpl_toolkits</span><span class="o">.</span><span class="n">mplot3d</span> <span class="n">import</span> <span class="n">Axes3D</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># Adjust parameters for the multivariate case</span>
-</span></span><span class="line"><span class="cl"><span class="n">R</span> <span class="o">=</span> <span class="mi">200</span>  <span class="c1"># Dimensionality of random feature space</span>
-</span></span><span class="line"><span class="cl"><span class="n">gamma</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># Kernel parameter</span>
-</span></span><span class="line"><span class="cl"><span class="n">lambda_reg</span> <span class="o">=</span> <span class="mf">0.1</span>  <span class="c1"># Regularization parameter</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># Generate multivariate data for y = 2 * sin(x1) + 4 * sin(x1 * x2)</span>
-</span></span><span class="line"><span class="cl"><span class="n">N</span> <span class="o">=</span> <span class="mi">1000</span>  <span class="c1"># Number of data points along each axis</span>
-</span></span><span class="line"><span class="cl"><span class="n">x1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">x2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">X1</span><span class="p">,</span> <span class="n">X2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">Y</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">X1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">X1</span> <span class="o">*</span> <span class="n">X2</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># Flatten the inputs and outputs</span>
-</span></span><span class="line"><span class="cl"><span class="n">X1_flat</span> <span class="o">=</span> <span class="n">X1</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">X2_flat</span> <span class="o">=</span> <span class="n">X2</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">X_flat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">X1_flat</span><span class="p">,</span> <span class="n">X2_flat</span><span class="p">))</span>
-</span></span><span class="line"><span class="cl"><span class="n">Y_flat</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># Random Fourier feature mapping for Gaussian kernel</span>
-</span></span><span class="line"><span class="cl"><span class="n">kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-</span></span><span class="line"><span class="cl"><span class="n">bias</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">rff_projection</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">gamma</span> <span class="o">*</span> <span class="p">(</span><span class="n">X_flat</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">kernel</span><span class="o">.</span><span class="n">T</span><span class="p">))</span> <span class="o">+</span> <span class="n">bias</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">  <span class="n">rff_projection</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rff_projection</span><span class="p">)</span> <span class="o">+</span> <span class="n">lambda_reg</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">R</span><span class="p">),</span>
-</span></span><span class="line"><span class="cl">  <span class="n">rff_projection</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Y_flat</span><span class="p">),</span>
-</span></span><span class="line"><span class="cl"><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">y_hat</span> <span class="o">=</span> <span class="n">rff_projection</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># Plotting</span>
-</span></span><span class="line"><span class="cl"><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
-</span></span><span class="line"><span class="cl"><span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">121</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">ax</span><span class="o">.</span><span class="n">plot_surface</span><span class="p">(</span><span class="n">X1</span><span class="p">,</span> <span class="n">X2</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;$y=2 \sin(x_1) + 4 \sin(x_1 x_2)$&#39;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">ax2</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">122</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">ax2</span><span class="o">.</span><span class="n">plot_surface</span><span class="p">(</span><span class="n">X1</span><span class="p">,</span> <span class="n">X2</span><span class="p">,</span> <span class="n">y_hat</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;RFF Approximation; R={R}; param_count={np.prod(weights.shape)}&#39;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span></span></code></pre></div><p>Produces:</p>
-<p><img src="/posts/rff/rff_2d.png" alt=""></p>
 
 
         

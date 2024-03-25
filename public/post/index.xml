@@ -20,7 +20,7 @@
       <link>https://markkurzeja.github.io/post/rff_intro/</link>
       <pubDate>Sat, 23 Mar 2024 00:00:00 +0000</pubDate>
       <guid>https://markkurzeja.github.io/post/rff_intro/</guid>
-      <description>Random Fourier Features, in my opinion, have one of the best performance-to-cost tradeoffs in machine learning techniques today. Simple to code, cheap to fit, and unreasonably effective, they have been my bread-and-butter for small-to-medium learning tasks and serve as an amazing baseline for more complex systems.&#xA;This post will be the first of a three part series. To give you a roadmap:&#xA;Post I: This post will be short and introduce RFF by example Post II: The next post will explore the connection between MLPs, used in Transformers, and RFF.</description>
+      <description>Random Fourier Features, in my opinion, have one of the best performance-to-cost tradeoffs in machine learning techniques today. Simple to code, cheap to fit, and unreasonably effective, they have been my bread-and-butter for small-to-medium multi-dimensional learning tasks and serve as an amazing baseline for more complex systems.&#xA;This post will be the first of a three part series. To give you a roadmap:&#xA;Post I: This post will help to build intuition of RFF through low-dimensional examples and explain some of the code to come.</description>
     </item>
     <item>
       <title>TensorTales</title>
