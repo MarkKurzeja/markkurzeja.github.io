@@ -16,11 +16,11 @@
       <description>&amp;ldquo;The pessimist says the glass is half-full. The optimist says the glass is half-empty. The engineer says its mearly 2x larger than it needs to be. \( \approx \) Thomas Cathcart&#xA;To spoil the punchline, there is a curious connection between the token-wise MLP projections of modern Transformer recipes and Random Fourier Features.&#xA;Some adhoc experiments show a tiny tweak to MLPs allow them to train with far smaller batch sizes and dramatically reduce the number of parameters required to learn complex functions.</description>
     </item>
     <item>
-      <title>Random Fourier Features are economic nonlinear regressors</title>
+      <title>Random Fourier Features, Part I </title>
       <link>https://markkurzeja.github.io/post/rff_intro/</link>
       <pubDate>Sat, 23 Mar 2024 00:00:00 +0000</pubDate>
       <guid>https://markkurzeja.github.io/post/rff_intro/</guid>
-      <description>Part I: Random Kitchen Sinks Random Fourier Features, at first glance, seems a little.. well.. mad..&#xA;Take a feature set. Multi-dimensional ? Nonlinear interactions ? Doesn&amp;rsquo;t really matter. Linearly project it onto some noise distribution. Take a little cosine here&amp;hellip; Add a little uniform noise over there&amp;hellip; Fit a linear classifier to the strange little mix from (3) .. And out comes a reasonably performing, easy, economic regressor.&#xA;But why?&amp;hellip;</description>
+      <description>Random Fourier Features, in my opinion, have one of the best performance-to-cost tradeoffs in machine learning techniques today. Simple to code, cheap to fit, and unreasonably effective, they have been my bread-and-butter for small-to-medium learning tasks and serve as an amazing baseline for more complex systems.&#xA;This post will be the first of a three part series. To give you a roadmap:&#xA;Post I: This post will be short and introduce RFF by example Post II: The next post will explore the connection between MLPs, used in Transformers, and RFF.</description>
     </item>
     <item>
       <title>TensorTales</title>

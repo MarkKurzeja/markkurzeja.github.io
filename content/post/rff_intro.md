@@ -1,10 +1,207 @@
 +++
-title = 'Random Fourier Features are economic nonlinear regressors'
-subtitle = 'Part I of a two part series on RFFs'
+title = 'Random Fourier Features, Part I '
+subtitle = 'RFFs deserve to be your method-of-choice for baselines'
 date = 2024-03-23
 +++
 
-### Part I: Random Kitchen Sinks
+Random Fourier Features, in my opinion, have one of the best
+performance-to-cost tradeoffs in machine learning techniques today. Simple to
+code, cheap to fit, and unreasonably effective, they have been my
+bread-and-butter for small-to-medium learning tasks and serve as an amazing
+baseline for more complex systems. 
+
+This post will be the first of a three part series. To give you a roadmap:
+
+* **Post I**: This post will be short and introduce RFF by example
+* **Post II**: The next post will explore the connection between MLPs, used in
+  Transformers, and RFF. I won't spoil the surprise just yet.
+* **Post III**: The final post will provide numerical examples comparing MLPs and
+  RFFs. We will also explore their potential use in language modeling and deep
+  learning stacks. 
+
+Note: This post _will not_ be about the "how" of RFF. I highly recommend
+reading Gregory Gundersen's [blog
+post](https://gregorygundersen.com/blog/2019/12/23/random-fourier-features/)
+for more background if you need it.
+
+## Learning by Example: One Dimensional Learning
+
+#### Function Definition
+
+Our goal, today, will be to teach-via-example by fitting the following
+(highly-nonlinear) function:
+
+$$
+y =
+\begin{cases}
+x \sin(3x) & \text{if } x < 0, \\\\
+1 + x & \text{otherwise}.
+\end{cases}
+$$
+
+This functional is *intentionally* pathological to showcase the
+adaptability of RFF even under strange cases.
+
+
+#### Plots
+
+Let's see what we are working with:
+
+```
+import numpy as np
+import matplotlib.pyplot as plt
+
+N_data = 1000
+X = np.linspace(-np.pi, np.pi, N_data).reshape(N_data, 1)
+y = [np.piecewise(x, x < 0, [x * np.sin(3 * x), 1 + x]) for x in X]
+
+# Plot it out.
+plt.figure(figsize=(10, 6))
+plt.scatter(X, y, label='Data')
+plt.xlabel('x')
+plt.ylabel('y')
+plt.title('$f(x) = I[X < 0](x \sin(3x)) + I[x\geq 0](1 + x)$')
+```
+
+Nothing special here. 
+1. We start with $N_{data}$ points
+2. Our input, $x$ has domain $x \in [-\pi, \pi]$.
+3. We set $y = \mathbb{I}\[X < 0\](x
+   \sin(3x)) + \mathbb{I}\[x \geq 0\](1 + x)$. 
+
+$\mathbb{I}[\cdot]$ is the [Iverson
+bracket](https://en.wikipedia.org/wiki/Iverson_bracket). For simplicity, in
+this blog post, we will assume all the data fits *in memory*. In future blog
+posts, we will address the case where this is not possible.
+
+![](/posts/rff/rff_goal.png)
+
+#### RFF is Five Lines of Code
+
+The first amazing fact about RFF is that it is four lines of setup and five
+lines of "modeling" code. 
+
+Let's define the parameters:
+
+| Parameter | Rank               | Description                                                                                                                                                                                                          |
+|-----------|--------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| $R$       | $\mathbb{R} $ | Number of "features" or "kernels" used by RFF. The more features, the better the approximation, at the cost of more computational overhead                                                                                                    |
+| $\gamma$  | $\mathbb{R} $ | $ \gamma $ acts as the "width" or "frequency" of the kernel approximation. Larger values  of $\gamma$ favor more "global" approximations while smaller values of $ \gamma $ prefer more "local" approximations. I've heuristically found increasing $\gamma$ as a function  |
+| $\lambda$ | $\mathbb{R} $ | $ \lambda $ acts as a regularization term. Larger values of $ \lambda $ favor simpler functions. | 
+
+To avoid the suspense:
+
+```
+# Setup
+np.random.seed(0)  # Set the random seed for reproducibility
+R = 100            # Number of RFF samples
+gamma = R / 10     # Kernel "width" parameter
+lambda = 0.1       # Regularization parameter
+
+# Here is RFF, in all it's glory...
+kernel = np.random.normal(size=(R, 1))
+bias = 2 * np.pi * np.random.rand(R, 1)
+proj = np.cos(gamma * (X @ kernel.T) + bias.T)
+weights = np.linalg.solve(proj.T @ proj + lambda * np.eye(R), proj.T @ y)
+y_hat = proj @ weights
+
+# And plot the results.
+plt.plot(X, y_hat, label='RFF Approximation', linestyle='-', color = "orange", lw= 5)
+plt.suptitle(f'RFF Approximation R={R}')
+plt.legend()
+plt.show()
+```
+
+#### Plot the fit for various values of $R$
+
+Another small miracle of RFF is the approximation improves by increasing $R$.
+Let's plot the fit for a few values of $R$.
+
+{{< gallery caption-effect="fade" >}}
+    {{< figure link="/posts/rff/rff_2.png" caption="R=2" >}}
+    {{< figure link="/posts/rff/rff_5.png" caption="R=10" >}}
+    {{< figure link="/posts/rff/rff_10.png" caption="R=10" >}}
+    {{< figure link="/posts/rff/rff_30.png" caption="R=10" >}}
+    {{< figure link="/posts/rff/rff_100.png" caption="R=100" >}}
+{{< /gallery >}}
+
+### This is Part-One of a Three-Part Series
+
+A few years ago, I stumbled on a short blog post: [Reflections on Random
+Kitchen Sinks](https://archives.argmin.net/2017/12/05/kitchen-sinks/). This
+blog post turned out to be a transcription of an awards speech: the NIPS 2017
+test-of-time award. 
+
+The post consumed a great deal of my mental space for quite some time. It
+changed the way I actually practice machine learning, how I think about
+baselines, and how I think about MLPs in the Transformer Architecture.  And my
+goal is to share this adventure with you. 
+
+My first posts on TensorTales will be about the road I traveled after reading
+this transcript. I will break this out across three blog posts since I have
+three main points I want to discuss. 
+
+#### How I Read Math
+
+A short digression: I developed a habit a long time ago when reading
+mathematics. I've found that when reading math, or any topic which can be
+highly technical, a "best-practice" is often to code up the idea for oneself.
+The goal of this practice is two fold:
+
+1. Programming requires precision: to code something which is abstract often
+   involves resolving a bunch of the hand-wavy details that traditional
+   mathematical notation can allow
+2. Programming an idea provides a grounding in reality: a lot of ideas are
+   "cool", few are "useful", and fewer still are "economic". Proving a concrete
+   manifestation of an idea, in code, helps to separate out ideas quickly and
+   get a decent proxy for their utility (at least in the context in which you
+   test them)
+
+Will this coding practice slow you down? With high probability, its slower than
+careful reading. However, to "feel" an idea, sometimes its best to poke it.
+Prod it. Find its rough edges... and programming advanced ideas can help one to
+do that in an economic way.
+
+### Random Fourier Features are Five Lines of Code
+
+I mention my practice of coding math to emphasize my shock when I learned the
+code economy of Random Fourier Features. Its five lines of "productive" code:
+
+```
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Setup:
+R = 10            # Number of RFF samples
+gamma = 1         # Kernel "width" parameter
+lambda_reg = 0.1  # Regularization parameter
+
+# Data:
+N = 1000
+np.random.seed(0)
+X = np.linspace(-np.pi, np.pi, N).reshape(N, 1)
+y = (X * np.sin(2 * X) + np.random.normal(size=(N, 1), scale = 0.25)).reshape(N, 1)
+
+# Here is RFF, in all it's glory...
+kernel = np.random.normal(size=(R, 1))
+bias = 2 * np.pi * np.random.rand(R, 1)
+rff_projection = np.cos(gamma * (X @ kernel.T) + bias.T)
+weights = np.linalg.solve(rff_projection.T @ rff_projection + lambda_reg * np.eye(R), rff_projection.T @ y)
+y_hat = rff_projection @ weights
+
+# Plot it out.
+plt.figure(figsize=(10, 6))
+plt.scatter(X, y, label='Data')
+plt.plot(X, y_hat, label='RFF Approximation', linestyle='-', color = "orange", lw= 5)
+plt.legend()
+plt.xlabel('x')
+plt.ylabel('y')
+plt.suptitle(f'RFF Approximation R={R}')
+plt.title(f'Total Learnable Parameters = {np.prod(weights.shape)}')
+plt.show()
+```
+
+### Random Kitchen Sinks
 
 Random Fourier Features, at first glance, seems a little.. well.. mad..
 
@@ -77,10 +274,7 @@ plt.title(f'Total Learnable Parameters = {np.prod(weights.shape)}')
 plt.show()
 ```
 
-The `gamma` and `lambda_reg` parameters determine specific properties of the
-kernel fit. `gamma` roughly controls the 'width' or 'frequency' of the kernel
-and `lambda_reg` roughly controls the amount of potential over-fitting (using
-a mechanism similar to ridge regressions).
+
 
 In RFF, the parameter `R` sets the number of random projections used to build
 the kernel estimator. Larger values of `R` yield better approximations, on

@@ -10,9 +10,9 @@
  
 
 
-      <title>Random Fourier Features are economic nonlinear regressors - TensorTales Blog</title>
+      <title>Random Fourier Features, Part I  - TensorTales Blog</title>
 
-  <meta name="description" content="Part I of a two part series on RFFs">
+  <meta name="description" content="RFFs deserve to be your method-of-choice for baselines">
   <meta name="author" content="Mark Kurzeja"/><script type="application/ld+json">
 {
     "@context": "http://schema.org",
@@ -49,7 +49,7 @@
         "position": 3,
         "item": {
           "@id": "https:\/\/markkurzeja.github.io\/post\/rff_intro\/",
-          "name": "Random fourier features are economic nonlinear regressors"
+          "name": "Random fourier features, part i"
         }
     }]
 }
@@ -60,10 +60,10 @@
   "author": {
     "name" : "Mark Kurzeja"
   },
-  "headline": "Random Fourier Features are economic nonlinear regressors",
-  "description" : "Part I: Random Kitchen Sinks Random Fourier Features, at first glance, seems a little.. well.. mad..\nTake a feature set. Multi-dimensional ? Nonlinear interactions ? Doesn\u0026rsquo;t really matter. Linearly project it onto some noise distribution. Take a little cosine here\u0026hellip; Add a little uniform noise over there\u0026hellip; Fit a linear classifier to the strange little mix from (3) .. And out comes a reasonably performing, easy, economic regressor.\nBut why?\u0026hellip;",
+  "headline": "Random Fourier Features, Part I ",
+  "description" : "Random Fourier Features, in my opinion, have one of the best performance-to-cost tradeoffs in machine learning techniques today. Simple to code, cheap to fit, and unreasonably effective, they have been my bread-and-butter for small-to-medium learning tasks and serve as an amazing baseline for more complex systems.\nThis post will be the first of a three part series. To give you a roadmap:\nPost I: This post will be short and introduce RFF by example Post II: The next post will explore the connection between MLPs, used in Transformers, and RFF.",
   "inLanguage" : "en",
-  "wordCount":  739 ,
+  "wordCount":  1763 ,
   "datePublished" : "2024-03-23T00:00:00",
   "dateModified" : "2024-03-23T00:00:00",
   "image" : "https:\/\/markkurzeja.github.io\/logo\/logo_close.png",
@@ -82,15 +82,15 @@
 }
 </script>
 
-<meta property="og:title" content="Random Fourier Features are economic nonlinear regressors" />
-<meta property="og:description" content="Part I of a two part series on RFFs">
+<meta property="og:title" content="Random Fourier Features, Part I " />
+<meta property="og:description" content="RFFs deserve to be your method-of-choice for baselines">
 <meta property="og:image" content="https://markkurzeja.github.io/logo/logo_close.png" />
 <meta property="og:url" content="https://markkurzeja.github.io/post/rff_intro/" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="TensorTales" />
 
-  <meta name="twitter:title" content="Random Fourier Features are economic nonlinear regressors" />
-  <meta name="twitter:description" content="Part I of a two part series on RFFs">
+  <meta name="twitter:title" content="Random Fourier Features, Part I " />
+  <meta name="twitter:description" content="RFFs deserve to be your method-of-choice for baselines">
   <meta name="twitter:image" content="https://markkurzeja.github.io/logo/logo_close.png" />
   <meta name="twitter:card" content="summary_large_image" />
   <link href='https://markkurzeja.github.io/logo/logo.ico' rel='icon' type='image/x-icon'/>
@@ -229,12 +229,12 @@
           <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
             <div class="post-heading">
               
-                <h1>Random Fourier Features are economic nonlinear regressors</h1>
+                <h1>Random Fourier Features, Part I </h1>
               
               
               
                 
-                  <h2 class="post-subheading">Part I of a two part series on RFFs</h2>
+                  <h2 class="post-subheading">RFFs deserve to be your method-of-choice for baselines</h2>
                 
               
               
@@ -244,7 +244,7 @@
   <i class="fas fa-calendar"></i>&nbsp;Posted on Mar 23, 2024
   
   
-    &nbsp;|&nbsp;<i class="fas fa-clock"></i>&nbsp;4&nbsp;minutes
+    &nbsp;|&nbsp;<i class="fas fa-clock"></i>&nbsp;9&nbsp;minutes
   
   
   
@@ -271,7 +271,260 @@
   <div class="row">
     <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
       <article role="main" class="blog-post">
-        <h3 id="part-i-random-kitchen-sinks">Part I: Random Kitchen Sinks</h3>
+        <p>Random Fourier Features, in my opinion, have one of the best
+performance-to-cost tradeoffs in machine learning techniques today. Simple to
+code, cheap to fit, and unreasonably effective, they have been my
+bread-and-butter for small-to-medium learning tasks and serve as an amazing
+baseline for more complex systems.</p>
+<p>This post will be the first of a three part series. To give you a roadmap:</p>
+<ul>
+<li><strong>Post I</strong>: This post will be short and introduce RFF by example</li>
+<li><strong>Post II</strong>: The next post will explore the connection between MLPs, used in
+Transformers, and RFF. I won&rsquo;t spoil the surprise just yet.</li>
+<li><strong>Post III</strong>: The final post will provide numerical examples comparing MLPs and
+RFFs. We will also explore their potential use in language modeling and deep
+learning stacks.</li>
+</ul>
+<p>Note: This post <em>will not</em> be about the &ldquo;how&rdquo; of RFF. I highly recommend
+reading Gregory Gundersen&rsquo;s <a href="https://gregorygundersen.com/blog/2019/12/23/random-fourier-features/">blog
+post</a>
+for more background if you need it.</p>
+<h2 id="learning-by-example-one-dimensional-learning">Learning by Example: One Dimensional Learning</h2>
+<h4 id="function-definition">Function Definition</h4>
+<p>Our goal, today, will be to teach-via-example by fitting the following
+(highly-nonlinear) function:</p>
+<p>$$
+y =
+\begin{cases}
+x \sin(3x) &amp; \text{if } x &lt; 0, \\
+1 + x &amp; \text{otherwise}.
+\end{cases}
+$$</p>
+<p>This functional is <em>intentionally</em> pathological to showcase the
+adaptability of RFF even under strange cases.</p>
+<h4 id="plots">Plots</h4>
+<p>Let&rsquo;s see what we are working with:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">import numpy as np
+</span></span><span class="line"><span class="cl">import matplotlib.pyplot as plt
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">N_data = 1000
+</span></span><span class="line"><span class="cl">X = np.linspace(-np.pi, np.pi, N_data).reshape(N_data, 1)
+</span></span><span class="line"><span class="cl">y = [np.piecewise(x, x &lt; 0, [x * np.sin(3 * x), 1 + x]) for x in X]
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"># Plot it out.
+</span></span><span class="line"><span class="cl">plt.figure(figsize=(10, 6))
+</span></span><span class="line"><span class="cl">plt.scatter(X, y, label=&#39;Data&#39;)
+</span></span><span class="line"><span class="cl">plt.xlabel(&#39;x&#39;)
+</span></span><span class="line"><span class="cl">plt.ylabel(&#39;y&#39;)
+</span></span><span class="line"><span class="cl">plt.title(&#39;$f(x) = I[X &lt; 0](x \sin(3x)) + I[x\geq 0](1 + x)$&#39;)
+</span></span></code></pre></div><p>Nothing special here.</p>
+<ol>
+<li>We start with $N_{data}$ points</li>
+<li>Our input, $x$ has domain $x \in [-\pi, \pi]$.</li>
+<li>We set $y = \mathbb{I}[X &lt; 0](x
+\sin(3x)) + \mathbb{I}[x \geq 0](1 + x)$.</li>
+</ol>
+<p>$\mathbb{I}[\cdot]$ is the <a href="https://en.wikipedia.org/wiki/Iverson_bracket">Iverson
+bracket</a>. For simplicity, in
+this blog post, we will assume all the data fits <em>in memory</em>. In future blog
+posts, we will address the case where this is not possible.</p>
+<p><img src="/posts/rff/rff_goal.png" alt=""></p>
+<h4 id="rff-is-five-lines-of-code">RFF is Five Lines of Code</h4>
+<p>The first amazing fact about RFF is that it is four lines of setup and five
+lines of &ldquo;modeling&rdquo; code.</p>
+<p>Let&rsquo;s define the parameters:</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Rank</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$R$</td>
+<td>$\mathbb{R} $</td>
+<td>Number of &ldquo;features&rdquo; or &ldquo;kernels&rdquo; used by RFF. The more features, the better the approximation, at the cost of more computational overhead</td>
+</tr>
+<tr>
+<td>$\gamma$</td>
+<td>$\mathbb{R} $</td>
+<td>$ \gamma $ acts as the &ldquo;width&rdquo; or &ldquo;frequency&rdquo; of the kernel approximation. Larger values  of $\gamma$ favor more &ldquo;global&rdquo; approximations while smaller values of $ \gamma $ prefer more &ldquo;local&rdquo; approximations. I&rsquo;ve heuristically found increasing $\gamma$ as a function</td>
+</tr>
+<tr>
+<td>$\lambda$</td>
+<td>$\mathbb{R} $</td>
+<td>$ \lambda $ acts as a regularization term. Larger values of $ \lambda $ favor simpler functions.</td>
+</tr>
+</tbody>
+</table>
+<p>To avoid the suspense:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl"># Setup
+</span></span><span class="line"><span class="cl">np.random.seed(0)  # Set the random seed for reproducibility
+</span></span><span class="line"><span class="cl">R = 100            # Number of RFF samples
+</span></span><span class="line"><span class="cl">gamma = R / 10     # Kernel &#34;width&#34; parameter
+</span></span><span class="line"><span class="cl">lambda = 0.1       # Regularization parameter
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"># Here is RFF, in all it&#39;s glory...
+</span></span><span class="line"><span class="cl">kernel = np.random.normal(size=(R, 1))
+</span></span><span class="line"><span class="cl">bias = 2 * np.pi * np.random.rand(R, 1)
+</span></span><span class="line"><span class="cl">proj = np.cos(gamma * (X @ kernel.T) + bias.T)
+</span></span><span class="line"><span class="cl">weights = np.linalg.solve(proj.T @ proj + lambda * np.eye(R), proj.T @ y)
+</span></span><span class="line"><span class="cl">y_hat = proj @ weights
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"># And plot the results.
+</span></span><span class="line"><span class="cl">plt.plot(X, y_hat, label=&#39;RFF Approximation&#39;, linestyle=&#39;-&#39;, color = &#34;orange&#34;, lw= 5)
+</span></span><span class="line"><span class="cl">plt.suptitle(f&#39;RFF Approximation R={R}&#39;)
+</span></span><span class="line"><span class="cl">plt.legend()
+</span></span><span class="line"><span class="cl">plt.show()
+</span></span></code></pre></div><h4 id="plot-the-fit-for-various-values-of-r">Plot the fit for various values of $R$</h4>
+<p>Another small miracle of RFF is the approximation improves by increasing $R$.
+Let&rsquo;s plot the fit for a few values of $R$.</p>
+
+
+
+<div class="gallery caption-position-bottom caption-effect-fade hover-effect-zoom hover-transition" itemscope itemtype="http://schema.org/ImageGallery">
+	  
+    
+    <link rel="stylesheet" href="https://markkurzeja.github.io/css/hugo-easy-gallery.css" />
+    <div class="box" >
+      <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+        <div class="img" style="background-image: url('https://markkurzeja.github.io/posts/rff/rff_2.png');">
+          <img itemprop="thumbnail" src="/posts/rff/rff_2.png" alt="R=2"/>
+        </div>
+        <a href="/posts/rff/rff_2.png" itemprop="contentUrl"></a>
+          <figcaption>
+              <p>R=2</p>
+          </figcaption>
+      </figure>
+    </div>
+
+    
+    
+    <div class="box" >
+      <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+        <div class="img" style="background-image: url('https://markkurzeja.github.io/posts/rff/rff_5.png');">
+          <img itemprop="thumbnail" src="/posts/rff/rff_5.png" alt="R=10"/>
+        </div>
+        <a href="/posts/rff/rff_5.png" itemprop="contentUrl"></a>
+          <figcaption>
+              <p>R=10</p>
+          </figcaption>
+      </figure>
+    </div>
+
+    
+    
+    <div class="box" >
+      <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+        <div class="img" style="background-image: url('https://markkurzeja.github.io/posts/rff/rff_10.png');">
+          <img itemprop="thumbnail" src="/posts/rff/rff_10.png" alt="R=10"/>
+        </div>
+        <a href="/posts/rff/rff_10.png" itemprop="contentUrl"></a>
+          <figcaption>
+              <p>R=10</p>
+          </figcaption>
+      </figure>
+    </div>
+
+    
+    
+    <div class="box" >
+      <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+        <div class="img" style="background-image: url('https://markkurzeja.github.io/posts/rff/rff_30.png');">
+          <img itemprop="thumbnail" src="/posts/rff/rff_30.png" alt="R=10"/>
+        </div>
+        <a href="/posts/rff/rff_30.png" itemprop="contentUrl"></a>
+          <figcaption>
+              <p>R=10</p>
+          </figcaption>
+      </figure>
+    </div>
+
+    
+    
+    <div class="box" >
+      <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+        <div class="img" style="background-image: url('https://markkurzeja.github.io/posts/rff/rff_100.png');">
+          <img itemprop="thumbnail" src="/posts/rff/rff_100.png" alt="R=100"/>
+        </div>
+        <a href="/posts/rff/rff_100.png" itemprop="contentUrl"></a>
+          <figcaption>
+              <p>R=100</p>
+          </figcaption>
+      </figure>
+    </div>
+
+
+</div>
+
+<h3 id="this-is-part-one-of-a-three-part-series">This is Part-One of a Three-Part Series</h3>
+<p>A few years ago, I stumbled on a short blog post: <a href="https://archives.argmin.net/2017/12/05/kitchen-sinks/">Reflections on Random
+Kitchen Sinks</a>. This
+blog post turned out to be a transcription of an awards speech: the NIPS 2017
+test-of-time award.</p>
+<p>The post consumed a great deal of my mental space for quite some time. It
+changed the way I actually practice machine learning, how I think about
+baselines, and how I think about MLPs in the Transformer Architecture.  And my
+goal is to share this adventure with you.</p>
+<p>My first posts on TensorTales will be about the road I traveled after reading
+this transcript. I will break this out across three blog posts since I have
+three main points I want to discuss.</p>
+<h4 id="how-i-read-math">How I Read Math</h4>
+<p>A short digression: I developed a habit a long time ago when reading
+mathematics. I&rsquo;ve found that when reading math, or any topic which can be
+highly technical, a &ldquo;best-practice&rdquo; is often to code up the idea for oneself.
+The goal of this practice is two fold:</p>
+<ol>
+<li>Programming requires precision: to code something which is abstract often
+involves resolving a bunch of the hand-wavy details that traditional
+mathematical notation can allow</li>
+<li>Programming an idea provides a grounding in reality: a lot of ideas are
+&ldquo;cool&rdquo;, few are &ldquo;useful&rdquo;, and fewer still are &ldquo;economic&rdquo;. Proving a concrete
+manifestation of an idea, in code, helps to separate out ideas quickly and
+get a decent proxy for their utility (at least in the context in which you
+test them)</li>
+</ol>
+<p>Will this coding practice slow you down? With high probability, its slower than
+careful reading. However, to &ldquo;feel&rdquo; an idea, sometimes its best to poke it.
+Prod it. Find its rough edges&hellip; and programming advanced ideas can help one to
+do that in an economic way.</p>
+<h3 id="random-fourier-features-are-five-lines-of-code">Random Fourier Features are Five Lines of Code</h3>
+<p>I mention my practice of coding math to emphasize my shock when I learned the
+code economy of Random Fourier Features. Its five lines of &ldquo;productive&rdquo; code:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">import numpy as np
+</span></span><span class="line"><span class="cl">import matplotlib.pyplot as plt
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"># Setup:
+</span></span><span class="line"><span class="cl">R = 10            # Number of RFF samples
+</span></span><span class="line"><span class="cl">gamma = 1         # Kernel &#34;width&#34; parameter
+</span></span><span class="line"><span class="cl">lambda_reg = 0.1  # Regularization parameter
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"># Data:
+</span></span><span class="line"><span class="cl">N = 1000
+</span></span><span class="line"><span class="cl">np.random.seed(0)
+</span></span><span class="line"><span class="cl">X = np.linspace(-np.pi, np.pi, N).reshape(N, 1)
+</span></span><span class="line"><span class="cl">y = (X * np.sin(2 * X) + np.random.normal(size=(N, 1), scale = 0.25)).reshape(N, 1)
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"># Here is RFF, in all it&#39;s glory...
+</span></span><span class="line"><span class="cl">kernel = np.random.normal(size=(R, 1))
+</span></span><span class="line"><span class="cl">bias = 2 * np.pi * np.random.rand(R, 1)
+</span></span><span class="line"><span class="cl">rff_projection = np.cos(gamma * (X @ kernel.T) + bias.T)
+</span></span><span class="line"><span class="cl">weights = np.linalg.solve(rff_projection.T @ rff_projection + lambda_reg * np.eye(R), rff_projection.T @ y)
+</span></span><span class="line"><span class="cl">y_hat = rff_projection @ weights
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"># Plot it out.
+</span></span><span class="line"><span class="cl">plt.figure(figsize=(10, 6))
+</span></span><span class="line"><span class="cl">plt.scatter(X, y, label=&#39;Data&#39;)
+</span></span><span class="line"><span class="cl">plt.plot(X, y_hat, label=&#39;RFF Approximation&#39;, linestyle=&#39;-&#39;, color = &#34;orange&#34;, lw= 5)
+</span></span><span class="line"><span class="cl">plt.legend()
+</span></span><span class="line"><span class="cl">plt.xlabel(&#39;x&#39;)
+</span></span><span class="line"><span class="cl">plt.ylabel(&#39;y&#39;)
+</span></span><span class="line"><span class="cl">plt.suptitle(f&#39;RFF Approximation R={R}&#39;)
+</span></span><span class="line"><span class="cl">plt.title(f&#39;Total Learnable Parameters = {np.prod(weights.shape)}&#39;)
+</span></span><span class="line"><span class="cl">plt.show()
+</span></span></code></pre></div><h3 id="random-kitchen-sinks">Random Kitchen Sinks</h3>
 <p>Random Fourier Features, at first glance, seems a little.. well.. mad..</p>
 <ol>
 <li>Take a feature set. Multi-dimensional ? Nonlinear interactions ? Doesn&rsquo;t
@@ -334,11 +587,7 @@ Translating the matlab code more or less directly from their blog:</p>
 </span></span><span class="line"><span class="cl">plt.suptitle(f&#39;RFF Approximation R={R}&#39;)
 </span></span><span class="line"><span class="cl">plt.title(f&#39;Total Learnable Parameters = {np.prod(weights.shape)}&#39;)
 </span></span><span class="line"><span class="cl">plt.show()
-</span></span></code></pre></div><p>The <code>gamma</code> and <code>lambda_reg</code> parameters determine specific properties of the
-kernel fit. <code>gamma</code> roughly controls the &lsquo;width&rsquo; or &lsquo;frequency&rsquo; of the kernel
-and <code>lambda_reg</code> roughly controls the amount of potential over-fitting (using
-a mechanism similar to ridge regressions).</p>
-<p>In RFF, the parameter <code>R</code> sets the number of random projections used to build
+</span></span></code></pre></div><p>In RFF, the parameter <code>R</code> sets the number of random projections used to build
 the kernel estimator. Larger values of <code>R</code> yield better approximations, on
 average, at the cost of more compute. For example, we can plot the function we
 are approximating for a few choices of <code>R</code> to get a feel for how <code>R</code> increases
@@ -408,7 +657,7 @@ multidimensional data. For example:</p>
     <ul class="share">
       
       <li>
-        <a href="//twitter.com/share?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2frff_intro%2f&amp;text=Random%20Fourier%20Features%20are%20economic%20nonlinear%20regressors&amp;via=" target="_blank" title="Share on Twitter">
+        <a href="//twitter.com/share?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2frff_intro%2f&amp;text=Random%20Fourier%20Features%2c%20Part%20I%20&amp;via=" target="_blank" title="Share on Twitter">
           <i class="fab fa-twitter"></i>
         </a>
       </li>
@@ -422,28 +671,28 @@ multidimensional data. For example:</p>
   
       
       <li>
-        <a href="//reddit.com/submit?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2frff_intro%2f&amp;title=Random%20Fourier%20Features%20are%20economic%20nonlinear%20regressors" target="_blank" title="Share on Reddit">
+        <a href="//reddit.com/submit?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2frff_intro%2f&amp;title=Random%20Fourier%20Features%2c%20Part%20I%20" target="_blank" title="Share on Reddit">
           <i class="fab fa-reddit"></i>
         </a>
       </li>
   
       
       <li>
-        <a href="//www.linkedin.com/shareArticle?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2frff_intro%2f&amp;title=Random%20Fourier%20Features%20are%20economic%20nonlinear%20regressors" target="_blank" title="Share on LinkedIn">
+        <a href="//www.linkedin.com/shareArticle?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2frff_intro%2f&amp;title=Random%20Fourier%20Features%2c%20Part%20I%20" target="_blank" title="Share on LinkedIn">
           <i class="fab fa-linkedin"></i>
         </a>
       </li>
   
       
       <li>
-        <a href="//www.stumbleupon.com/submit?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2frff_intro%2f&amp;title=Random%20Fourier%20Features%20are%20economic%20nonlinear%20regressors" target="_blank" title="Share on StumbleUpon">
+        <a href="//www.stumbleupon.com/submit?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2frff_intro%2f&amp;title=Random%20Fourier%20Features%2c%20Part%20I%20" target="_blank" title="Share on StumbleUpon">
           <i class="fab fa-stumbleupon"></i>
         </a>
       </li>
   
       
       <li>
-        <a href="//www.pinterest.com/pin/create/button/?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2frff_intro%2f&amp;description=Random%20Fourier%20Features%20are%20economic%20nonlinear%20regressors" target="_blank" title="Share on Pinterest">
+        <a href="//www.pinterest.com/pin/create/button/?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2frff_intro%2f&amp;description=Random%20Fourier%20Features%2c%20Part%20I%20" target="_blank" title="Share on Pinterest">
           <i class="fab fa-pinterest"></i>
         </a>
       </li>
@@ -558,6 +807,28 @@ multidimensional data. For example:</p>
 
 
 
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css" integrity="sha384-wcIxkf4k558AjM3Yz3BBFQUbk/zgIYC2R0QpeeYb+TwlBVMrlgLqwRjRtGZiK7ww" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js" integrity="sha384-hIoBPJpTUs74ddyc4bFZSM1TVlQDA60VBbJS0oA934VSz82sBx1X7kSx2ATBDIyd" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement(document.body, {
+          
+          
+          delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false},
+              {left: '\\(', right: '\\)', display: false},
+              {left: '\\[', right: '\\]', display: true}
+          ],
+          
+          throwOnError : false
+        });
+    });
+</script>
 
 
     

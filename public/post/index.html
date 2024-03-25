@@ -265,10 +265,10 @@ Some adhoc experiments show a tiny tweak to MLPs allow them to train with far sm
           
             <article class="post-preview">
     <a href="https://markkurzeja.github.io/post/rff_intro/">
-        <h2 class="post-title">Random Fourier Features are economic nonlinear regressors</h2>
+        <h2 class="post-title">Random Fourier Features, Part I </h2>
         
         <h3 class="post-subtitle">
-            Part I of a two part series on RFFs
+            RFFs deserve to be your method-of-choice for baselines
         </h3>
         
         
@@ -282,7 +282,7 @@ Some adhoc experiments show a tiny tweak to MLPs allow them to train with far sm
   <i class="fas fa-calendar"></i>&nbsp;Posted on Mar 23, 2024
   
   
-    &nbsp;|&nbsp;<i class="fas fa-clock"></i>&nbsp;4&nbsp;minutes
+    &nbsp;|&nbsp;<i class="fas fa-clock"></i>&nbsp;9&nbsp;minutes
   
   
   
@@ -297,9 +297,9 @@ Some adhoc experiments show a tiny tweak to MLPs allow them to train with far sm
     </p>
     <div class="post-entry">
         
-        Part I: Random Kitchen Sinks Random Fourier Features, at first glance, seems a little.. well.. mad..
-Take a feature set. Multi-dimensional ? Nonlinear interactions ? Doesn&rsquo;t really matter. Linearly project it onto some noise distribution. Take a little cosine here&hellip; Add a little uniform noise over there&hellip; Fit a linear classifier to the strange little mix from (3) .. And out comes a reasonably performing, easy, economic regressor.
-But why?&hellip;
+        Random Fourier Features, in my opinion, have one of the best performance-to-cost tradeoffs in machine learning techniques today. Simple to code, cheap to fit, and unreasonably effective, they have been my bread-and-butter for small-to-medium learning tasks and serve as an amazing baseline for more complex systems.
+This post will be the first of a three part series. To give you a roadmap:
+Post I: This post will be short and introduce RFF by example Post II: The next post will explore the connection between MLPs, used in Transformers, and RFF.
         <a href="https://markkurzeja.github.io/post/rff_intro/" class="post-read-more">[Read More]</a>
         
     </div>
@@ -428,6 +428,28 @@ But why?&hellip;
 
 
 
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css" integrity="sha384-wcIxkf4k558AjM3Yz3BBFQUbk/zgIYC2R0QpeeYb+TwlBVMrlgLqwRjRtGZiK7ww" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js" integrity="sha384-hIoBPJpTUs74ddyc4bFZSM1TVlQDA60VBbJS0oA934VSz82sBx1X7kSx2ATBDIyd" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement(document.body, {
+          
+          
+          delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false},
+              {left: '\\(', right: '\\)', display: false},
+              {left: '\\[', right: '\\]', display: true}
+          ],
+          
+          throwOnError : false
+        });
+    });
+</script>
 
 
     
