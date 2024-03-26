@@ -63,7 +63,7 @@
   "headline": "Random Fourier Features, Part I ",
   "description" : "Random Fourier Features (RFF), in my opinion, have one of the best performance-to-cost tradeoffs in machine learning techniques today. Simple to code, cheap to fit, and unreasonably effective, they have been my bread-and-butter for small-to-medium multi-dimensional learning tasks and serve as an decent baseline for more complex systems.\nThis post will be the first of a three part series on RFF:\nPost I: This post will help to build intuition of RFF through low-dimensional examples.",
   "inLanguage" : "en",
-  "wordCount":  1892 ,
+  "wordCount":  2003 ,
   "datePublished" : "2024-03-23T00:00:00",
   "dateModified" : "2024-03-23T00:00:00",
   "image" : "https:\/\/markkurzeja.github.io\/logo\/logo_close.png",
@@ -244,7 +244,7 @@
   <i class="fas fa-calendar"></i>&nbsp;Posted on Mar 23, 2024
   
   
-    &nbsp;|&nbsp;<i class="fas fa-clock"></i>&nbsp;9&nbsp;minutes
+    &nbsp;|&nbsp;<i class="fas fa-clock"></i>&nbsp;10&nbsp;minutes
   
   
   
@@ -299,13 +299,30 @@ Sinks</a> if you are
 curious about <em>how</em> these approximations work.</p>
 <h2 id="the-setup">The Setup</h2>
 <p>Imagine you have a learning problem where you are given a vector $x$. You need
-to predict a vector $y$. Your goal is to find a function, $y \leftarrow F(x)$
-such that the approximation error is minimal. To establish a baseline, you have
-to find a simple-yet-reasonable way of constructing $F$. Ideally $F$ will be
-(a) easy to tune (b) economic to build and (c) decently useful for the task at
-hand.</p>
-<p>Our goal today is to explore using Random Fourier Features for this baseline
-(and possibly as your first definition of $F$).</p>
+to predict a vector $y$. Your goal is to find a function such that the
+approximation error is minimal (for some definition of approximation error).</p>
+<p>$$
+\mathbf{x} = \begin{bmatrix} x_1 \\ x_2 \\  \cdots \\ x_{d_x} \end{bmatrix}
+\xrightarrow{\text{RFF}}
+\mathbf{y} = \begin{bmatrix} y_1 \\ y_2 \\ \cdots \\ y_{d_y} \end{bmatrix}
+$$</p>
+<p>RFF can solve this problem and has a number of advantages:</p>
+<ol>
+<li>RFF generalizes from scalar to multidimensional problems without modification</li>
+<li>RFF can represent nonlinear functions</li>
+<li>RFF can be fit in one of two modes. In &ldquo;batch-mode&rdquo;, all of the data is
+passed to RFF, in memory, and the fit happens all at once.  In
+&ldquo;streaming-mode&rdquo;, the algorithm can be trained via SGD like any other
+deep-learning building block.</li>
+<li>RFF, in &lsquo;batch-mode&rsquo; does not require any advanced libraries outside of random number
+generation and standard matrix operations.</li>
+<li>RFF can be &ldquo;scaled&rdquo;: RFF has parameters which can be tuned for a given
+compute or parameter budget</li>
+<li>The approximation is easy to tune: with only three parameters, RFF can get
+decent performance quickly and reliably.</li>
+</ol>
+<p>Our goal today is to explore using Random Fourier Features, in &ldquo;batch-mode&rdquo;, to
+see how it works.</p>
 <h2 id="learning-by-example-the-one-dimensional-case">Learning by Example: The One Dimensional Case</h2>
 <h4 id="function-definition">Function Definition</h4>
 <p>Our goal, today, will be to learn-via-example by fitting the following

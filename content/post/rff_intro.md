@@ -34,14 +34,32 @@ curious about *how* these approximations work.
 ## The Setup
 
 Imagine you have a learning problem where you are given a vector $x$. You need
-to predict a vector $y$. Your goal is to find a function, $y \leftarrow F(x)$
-such that the approximation error is minimal. To establish a baseline, you have
-to find a simple-yet-reasonable way of constructing $F$. Ideally $F$ will be
-(a) easy to tune (b) economic to build and (c) decently useful for the task at
-hand.
+to predict a vector $y$. Your goal is to find a function such that the
+approximation error is minimal (for some definition of approximation error). 
 
-Our goal today is to explore using Random Fourier Features for this baseline
-(and possibly as your first definition of $F$).
+$$
+\mathbf{x} = \begin{bmatrix} x_1 \\\\ x_2 \\\\  \cdots \\\\ x_{d_x} \end{bmatrix} 
+\xrightarrow{\text{RFF}} 
+\mathbf{y} = \begin{bmatrix} y_1 \\\\ y_2 \\\\ \cdots \\\\ y_{d_y} \end{bmatrix}
+$$
+
+RFF can solve this problem and has a number of advantages:
+
+1. RFF generalizes from scalar to multidimensional problems without modification
+1. RFF can represent nonlinear functions 
+1. RFF can be fit in one of two modes. In "batch-mode", all of the data is
+   passed to RFF, in memory, and the fit happens all at once.  In
+   "streaming-mode", the algorithm can be trained via SGD like any other
+   deep-learning building block.
+1. RFF, in 'batch-mode' does not require any advanced libraries outside of random number
+   generation and standard matrix operations.
+1. RFF can be "scaled": RFF has parameters which can be tuned for a given
+   compute or parameter budget
+1. The approximation is easy to tune: with only three parameters, RFF can get
+   decent performance quickly and reliably.
+
+Our goal today is to explore using Random Fourier Features, in "batch-mode", to
+see how it works.
 
 ## Learning by Example: The One Dimensional Case
 
