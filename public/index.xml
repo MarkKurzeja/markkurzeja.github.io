@@ -16,13 +16,6 @@
       <description>Random Fourier Features (RFF), in my opinion, have one of the best performance-to-cost tradeoffs in machine learning techniques today. Simple to code, cheap to fit, and unreasonably effective, they have been my bread-and-butter for small-to-medium multi-dimensional learning tasks and serve as an decent baseline for more complex systems.&#xA;This post will be the first of a three part series on RFF:&#xA;Post I: This post will help to build intuition of RFF through low-dimensional examples.</description>
     </item>
     <item>
-      <title>TensorTales</title>
-      <link>https://markkurzeja.github.io/post/tensor-tales/</link>
-      <pubDate>Sun, 17 Mar 2024 14:48:38 -0500</pubDate>
-      <guid>https://markkurzeja.github.io/post/tensor-tales/</guid>
-      <description>I&amp;rsquo;ve always loved machine learning. Something about it has always felt like magic. When I first learned about prediction machines, in high school, to me, they always conjured images of The Oracle of Delphi or one of those old cartoons with a group of magicians huddled around a crystal ball. Ask the right questions, cast the right spells in the right order, and the seemingly impossible, a glimpse of the future, could be yours.</description>
-    </item>
-    <item>
       <title>About me</title>
       <link>https://markkurzeja.github.io/page/about/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>

@@ -63,7 +63,7 @@
   "headline": "Random Fourier Features, Part I ",
   "description" : "Random Fourier Features (RFF), in my opinion, have one of the best performance-to-cost tradeoffs in machine learning techniques today. Simple to code, cheap to fit, and unreasonably effective, they have been my bread-and-butter for small-to-medium multi-dimensional learning tasks and serve as an decent baseline for more complex systems.\nThis post will be the first of a three part series on RFF:\nPost I: This post will help to build intuition of RFF through low-dimensional examples.",
   "inLanguage" : "en",
-  "wordCount":  2603 ,
+  "wordCount":  1892 ,
   "datePublished" : "2024-03-23T00:00:00",
   "dateModified" : "2024-03-23T00:00:00",
   "image" : "https:\/\/markkurzeja.github.io\/logo\/logo_close.png",
@@ -244,7 +244,7 @@
   <i class="fas fa-calendar"></i>&nbsp;Posted on Mar 23, 2024
   
   
-    &nbsp;|&nbsp;<i class="fas fa-clock"></i>&nbsp;13&nbsp;minutes
+    &nbsp;|&nbsp;<i class="fas fa-clock"></i>&nbsp;9&nbsp;minutes
   
   
   
@@ -891,99 +891,6 @@ the $x$ and $y$ dimensions from a grid to a vector of examples.</p>
 
 </div>
 
-<h3 id="this-is-part-one-of-a-three-part-series">This is Part-One of a Three-Part Series</h3>
-<p>A few years ago, I stumbled on a short blog post: <a href="https://archives.argmin.net/2017/12/05/kitchen-sinks/">Reflections on Random
-Kitchen Sinks</a>. This
-blog post turned out to be a transcription of an awards speech: the NIPS 2017
-test-of-time award.</p>
-<p>The post consumed a great deal of my mental space for quite some time. It
-changed the way I actually practice machine learning, how I think about
-baselines, and how I think about MLPs in the Transformer Architecture.  And my
-goal is to share this adventure with you.</p>
-<p>My first posts on TensorTales will be about the road I traveled after reading
-this transcript. I will break this out across three blog posts since I have
-three main points I want to discuss.</p>
-<h4 id="how-i-read-math">How I Read Math</h4>
-<p>A short digression: I developed a habit a long time ago when reading
-mathematics. I&rsquo;ve found that when reading math, or any topic which can be
-highly technical, a &ldquo;best-practice&rdquo; is often to code up the idea for oneself.
-The goal of this practice is two fold:</p>
-<ol>
-<li>Programming requires precision: to code something which is abstract often
-involves resolving a bunch of the hand-wavy details that traditional
-mathematical notation can allow</li>
-<li>Programming an idea provides a grounding in reality: a lot of ideas are
-&ldquo;cool&rdquo;, few are &ldquo;useful&rdquo;, and fewer still are &ldquo;economic&rdquo;. Proving a concrete
-manifestation of an idea, in code, helps to separate out ideas quickly and
-get a decent proxy for their utility (at least in the context in which you
-test them)</li>
-</ol>
-<p>Will this coding practice slow you down? With high probability, its slower than
-careful reading. However, to &ldquo;feel&rdquo; an idea, sometimes its best to poke it.
-Prod it. Find its rough edges&hellip; and programming advanced ideas can help one to
-do that in an economic way.</p>
-<h3 id="random-fourier-features-are-five-lines-of-code">Random Fourier Features are Five Lines of Code</h3>
-<p>I mention my practice of coding math to emphasize my shock when I learned the
-code economy of Random Fourier Features. Its five lines of &ldquo;productive&rdquo; code:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">import numpy as np
-</span></span><span class="line"><span class="cl">import matplotlib.pyplot as plt
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"># Setup:
-</span></span><span class="line"><span class="cl">R = 10            # Number of RFF samples
-</span></span><span class="line"><span class="cl">gamma = 1         # Kernel &#34;width&#34; parameter
-</span></span><span class="line"><span class="cl">lambda_reg = 0.1  # Regularization parameter
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"># Data:
-</span></span><span class="line"><span class="cl">N = 1000
-</span></span><span class="line"><span class="cl">np.random.seed(0)
-</span></span><span class="line"><span class="cl">X = np.linspace(-np.pi, np.pi, N).reshape(N, 1)
-</span></span><span class="line"><span class="cl">y = (X * np.sin(2 * X) + np.random.normal(size=(N, 1), scale = 0.25)).reshape(N, 1)
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"># Here is RFF, in all it&#39;s glory...
-</span></span><span class="line"><span class="cl">kernel = np.random.normal(size=(R, 1))
-</span></span><span class="line"><span class="cl">bias = 2 * np.pi * np.random.rand(R, 1)
-</span></span><span class="line"><span class="cl">rff_projection = np.cos(gamma * (X @ kernel.T) + bias.T)
-</span></span><span class="line"><span class="cl">weights = np.linalg.solve(rff_projection.T @ rff_projection + lambda_reg * np.eye(R), rff_projection.T @ y)
-</span></span><span class="line"><span class="cl">y_hat = rff_projection @ weights
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"># Plot it out.
-</span></span><span class="line"><span class="cl">plt.figure(figsize=(10, 6))
-</span></span><span class="line"><span class="cl">plt.scatter(X, y, label=&#39;Data&#39;)
-</span></span><span class="line"><span class="cl">plt.plot(X, y_hat, label=&#39;RFF Approximation&#39;, linestyle=&#39;-&#39;, color = &#34;orange&#34;, lw= 5)
-</span></span><span class="line"><span class="cl">plt.legend()
-</span></span><span class="line"><span class="cl">plt.xlabel(&#39;x&#39;)
-</span></span><span class="line"><span class="cl">plt.ylabel(&#39;y&#39;)
-</span></span><span class="line"><span class="cl">plt.suptitle(f&#39;RFF Approximation R={R}&#39;)
-</span></span><span class="line"><span class="cl">plt.title(f&#39;Total Learnable Parameters = {np.prod(weights.shape)}&#39;)
-</span></span><span class="line"><span class="cl">plt.show()
-</span></span></code></pre></div><h3 id="random-kitchen-sinks">Random Kitchen Sinks</h3>
-<p>Random Fourier Features, at first glance, seems a little.. well.. mad..</p>
-<ol>
-<li>Take a feature set. Multi-dimensional ? Nonlinear interactions ? Doesn&rsquo;t
-really matter.</li>
-<li>Linearly project it onto some noise distribution.</li>
-<li>Take a little cosine here&hellip; Add a little uniform noise over there&hellip;</li>
-<li>Fit a linear classifier to the strange little mix from (3)</li>
-</ol>
-<p>.. And out comes a reasonably performing, easy, economic regressor.</p>
-<p>But why?&hellip;</p>
-<p>In <a href="https://archives.argmin.net/2017/12/05/kitchen-sinks/">Reflections on Random Kitchen
-Sinks</a>, Ali Rahimi and
-Ben Recht&rsquo;s talk on Random Fourier Features, they provide the intuition behind
-the method and how their thinking about RFF has grown over the years. No matter
-how many times I&rsquo;ve seen the explanations, read the code, read the math,
-derived the math&hellip; I couldn&rsquo;t quite &ldquo;feel&rdquo; why this should work. When I learn
-something new, I like to think about putting that new thing &ldquo;on a hook&rdquo; of my
-existing knoweldge. RFF seemed alien, however. I knew about kernel methods.
-I knew about regression. But random regression? Why cosine? The code was
-strange too&hellip; It felt too simple and seemed to work decently well for a whole
-host of problems. Trying to find some way to convince myself it
-<code>{can|could|should|must}</code> work, I began coding.</p>
-<p>Note: This post <em>will not</em> be about the <em>Why</em> of RFF. Instead, it will be about
-a curious connection I found when coding with it. I highly recommend reading
-Gregory Gundersen&rsquo;s <a href="https://gregorygundersen.com/blog/2019/12/23/random-fourier-features/">blog
-post</a>
-for more background if you need it.</p>
 
 
         
@@ -1054,10 +961,6 @@ for more background if you need it.</p>
 
       
         <ul class="pager blog-pager">
-          
-            <li class="previous">
-              <a href="https://markkurzeja.github.io/post/tensor-tales/" data-toggle="tooltip" data-placement="top" title="TensorTales">&larr; Previous Post</a>
-            </li>
           
           
         </ul>
