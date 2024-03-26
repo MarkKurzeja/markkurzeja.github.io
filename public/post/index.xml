@@ -9,18 +9,11 @@
     <lastBuildDate>Sat, 23 Mar 2024 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://markkurzeja.github.io/post/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Are Token-wise MLPs over-parameterized in Transformers?</title>
-      <link>https://markkurzeja.github.io/post/rff/</link>
-      <pubDate>Sat, 23 Mar 2024 00:00:00 +0000</pubDate>
-      <guid>https://markkurzeja.github.io/post/rff/</guid>
-      <description>&amp;ldquo;The pessimist says the glass is half-full. The optimist says the glass is half-empty. The engineer says its mearly 2x larger than it needs to be. \( \approx \) Thomas Cathcart&#xA;To spoil the punchline, there is a curious connection between the token-wise MLP projections of modern Transformer recipes and Random Fourier Features.&#xA;Some adhoc experiments show a tiny tweak to MLPs allow them to train with far smaller batch sizes and dramatically reduce the number of parameters required to learn complex functions.</description>
-    </item>
-    <item>
       <title>Random Fourier Features, Part I </title>
       <link>https://markkurzeja.github.io/post/rff_intro/</link>
       <pubDate>Sat, 23 Mar 2024 00:00:00 +0000</pubDate>
       <guid>https://markkurzeja.github.io/post/rff_intro/</guid>
-      <description>Random Fourier Features, in my opinion, have one of the best performance-to-cost tradeoffs in machine learning techniques today. Simple to code, cheap to fit, and unreasonably effective, they have been my bread-and-butter for small-to-medium multi-dimensional learning tasks and serve as an amazing baseline for more complex systems.&#xA;This post will be the first of a three part series. To give you a roadmap:&#xA;Post I: This post will help to build intuition of RFF through low-dimensional examples and explain some of the code to come.</description>
+      <description>Random Fourier Features (RFF), in my opinion, have one of the best performance-to-cost tradeoffs in machine learning techniques today. Simple to code, cheap to fit, and unreasonably effective, they have been my bread-and-butter for small-to-medium multi-dimensional learning tasks and serve as an decent baseline for more complex systems.&#xA;This post will be the first of a three part series on RFF:&#xA;Post I: This post will help to build intuition of RFF through low-dimensional examples.</description>
     </item>
     <item>
       <title>TensorTales</title>

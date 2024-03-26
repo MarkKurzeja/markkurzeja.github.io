@@ -4,36 +4,51 @@ subtitle = 'RFFs deserve to be your method-of-choice for baselines'
 date = 2024-03-23
 +++
 
-Random Fourier Features, in my opinion, have one of the best
+Random Fourier Features (RFF), in my opinion, have one of the best
 performance-to-cost tradeoffs in machine learning techniques today. Simple to
 code, cheap to fit, and unreasonably effective, they have been my
 bread-and-butter for small-to-medium multi-dimensional learning tasks and serve
-as an amazing baseline for more complex systems. 
+as an decent baseline for more complex systems.
 
-This post will be the first of a three part series. To give you a roadmap:
+This post will be the first of a three part series on RFF:
 
 * **Post I**: This post will help to build intuition of RFF through
-  low-dimensional examples and explain some of the code to come.
+  low-dimensional examples. Through code, we will get a "feel" for the
+  approximations afforded by RFF.
 * **Post II**: The next post will explore the connection between MLPs, used in
-  Transformers, and RFF. I won't spoil the surprise just yet.
+  Transformers, and RFF. We will explore if traditional MLPs are
+  over-parameterized and see if we can improve the performance of RFF through
+  a simple tweak.
 * **Post III**: The final post will provide numerical examples comparing MLPs
   and RFFs in higher dimensional problems. We will also explore their potential
-  use in language modeling and deep learning stacks. 
+  use in language modeling and deep learning stacks.
 
 Note: This post intends to show how RFF works via examples, code, and visuals.
-Great tutorials of RFF, from a mathematical perspective exist and to summarize
-their findings here I feel would be a disservice to the topic.
-I highly recommend reading Gregory Gundersen's [blog
-post](https://gregorygundersen.com/blog/2019/12/23/random-fourier-features/)
-or Rahimi and Recht's [Reflections on Random Kitchen
+Great tutorials of RFF, from a mathematical perspective exist and summarizing
+it here would not do the original sources justice.  I highly recommend reading
+Gregory Gundersen's [blog
+post](https://gregorygundersen.com/blog/2019/12/23/random-fourier-features/) or
+Rahimi and Recht's [Reflections on Random Kitchen
 Sinks](https://archives.argmin.net/2017/12/05/kitchen-sinks/) if you are
 curious about *how* these approximations work.
 
-## Learning by Example: One Dimensional Learning
+## The Setup
+
+Imagine you have a learning problem where you are given a vector $x$. You need
+to predict a vector $y$. Your goal is to find a function, $y \leftarrow F(x)$
+such that the approximation error is minimal. To establish a baseline, you have
+to find a simple-yet-reasonable way of constructing $F$. Ideally $F$ will be
+(a) easy to tune (b) economic to build and (c) decently useful for the task at
+hand.
+
+Our goal today is to explore using Random Fourier Features for this baseline
+(and possibly as your first definition of $F$).
+
+## Learning by Example: The One Dimensional Case
 
 #### Function Definition
 
-Our goal, today, will be to teach-via-example by fitting the following
+Our goal, today, will be to learn-via-example by fitting the following
 (highly-nonlinear) function:
 
 $$
@@ -44,9 +59,13 @@ x \sin(3x) & \text{if } x < 0, \\\\
 \end{cases}
 $$
 
-This functional is *intentionally* pathological to showcase the
-adaptability of RFF even with traditionally difficult functions.
-
+Why this function? Well, for starters, it's easy to visualize. Visualization
+allows us to get a feel for RFF and it's capabilities and short comings. We
+will plot it shortly. More importantly, the function contains a number of
+pathologies. It isn't continuous. It isn't periodic across its domain. It has
+a non-continuous first derivative. Each of these "wrenches", which may trip up
+other algorithms will showcase some of the benefits and shortcomings of RFF
+which is the point of this first post.
 
 #### Plots
 
@@ -60,7 +79,6 @@ N_data = 1000
 X = np.linspace(-np.pi, np.pi, N_data).reshape(N_data, 1)
 y = [np.piecewise(x, x < 0, [x * np.sin(3 * x), 1 + x]) for x in X]
 
-# Plot it out.
 plt.figure(figsize=(10, 6))
 plt.scatter(X, y, label='Data')
 plt.xlabel('x')
@@ -68,33 +86,39 @@ plt.ylabel('y')
 plt.title('$f(x) = I[X < 0](x \sin(3x)) + I[x\geq 0](1 + x)$')
 ```
 
-Nothing special here. 
+This code is nothing special.
 1. We start with $N_{data}$ points
 2. Our input, $x$ has domain $x \in [-\pi, \pi]$.
 3. We set $y = \mathbb{I}\[X < 0\](x
-   \sin(3x)) + \mathbb{I}\[x \geq 0\](1 + x)$. 
+   \sin(3x)) + \mathbb{I}\[x \geq 0\](1 + x)$.
 
 $\mathbb{I}[\cdot]$ is the [Iverson
 bracket](https://en.wikipedia.org/wiki/Iverson_bracket). For simplicity, in
-this blog post, we will assume all the data fits *in memory*. In future blog
-posts, we will address the case where this is not possible.
+this blog post, we will assume all the data fits *in memory*. It's important to
+note this is *not* a constraint of the RFF method in general. In future blog
+posts, we will remove this constraint to show how RFF can be trained in
+a streaming fashion.
 
 ![](/posts/rff/rff_goal.png)
 
 #### RFF is Five Lines of Code
 
 The first amazing fact about RFF is that it is four lines of setup and five
-lines of "modeling" code. 
+lines of "modeling" code.
 
-There are three parameters which drive RFF:
+There are three parameters which define the RFF approximation:
 
 | Parameter | Rank               | Description                                                                                                                                                                                                          |
 |-----------|--------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| $R$       | $\mathbb{R} $ | Number of "features" or "kernels" used by RFF. The more features, the better the approximation, at the cost of more computational overhead                                                                                                    |
-| $\gamma$  | $\mathbb{R} $ | $ \gamma $ acts as the "width" or "frequency" of the kernel approximation. Larger values  of $\gamma$ favor more "local" approximations while smaller values of $ \gamma $ prefer more "global" approximations. I've heuristically found increasing $\gamma$ as a function of R can help with fitting fitting.|
-| $\lambda$ | $\mathbb{R} $ | $ \lambda $ acts as a regularization term. Larger values of $ \lambda $ favor simpler functions. | 
+| $R$       | $\mathbb{R} $ | Number of "features" or "kernels" used by RFF.  The more features, the better the approximation. More features comes at the cost of higher computational overhead. |
+| $\gamma$  | $\mathbb{R} $ | $ \gamma $ acts as the "width" or "frequency" of the kernel approximation. Larger values  of $\gamma$ favor more "local" approximations while smaller values of $ \gamma $ prefer more "global" approximations. I've heuristically found increasing $\gamma$ as a function of R can improve the fit at the cost of larger variance.|
+| $\lambda$ | $\mathbb{R} $ | $ \lambda $ acts as a regularization term. Larger values of $ \lambda $ favor simpler functions. |
 
-And now for it all put together:
+In some settings, $\gamma$ and $\lambda$ can be generalized to vectors. For
+this blog post, we will assume they are scalar but we may remove that
+restriction in future blog posts.
+
+And now, RFF:
 
 ```
 # Setup
@@ -112,15 +136,14 @@ y_hat = proj @ weights
 
 # And plot the results.
 plt.plot(X, y_hat, label='RFF Approximation', linestyle='-', color = "orange", lw= 5)
-plt.suptitle(f'RFF Approximation R={R}')
+plt.suptitle(f'RFF Approximation $R={R}, \gamma={gamma}, \lambda={llambda}$')
 plt.legend()
 plt.show()
 ```
 
-To avoid code without explanation, the modeling code is roughly as
-follows. In general, $x$ and $y$ are not limited to scalars and be vectors. We
-will let $d_x$ and $d_y$ denote the dimensionality of $x$ and $y$ respectively.
-In the problem above, since $x$ and $y$ are scalar quantities, $d_x = d_y = 1$.
+Slowing down, let's break each line out for explanation. $x$ is our input and
+$y$ is our output. Both are scalars with dimensionality $d_x = 1$ and $d_y = 1$
+respectively. RFF proceeds as follows:
 
 | Step                    | Shape                             |                                                                    |
 |-------------------------|-----------------------------------|--------------------------------------------------------------------|
@@ -132,8 +155,9 @@ In the problem above, since $x$ and $y$ are scalar quantities, $d_x = d_y = 1$.
 
 #### Plot the fit for various values of $R$
 
-Another small miracle of RFF is the approximation improves by increasing $R$.
-Let's plot the fit for a few values of $R$.
+In RFF, the larger $R$ is, the better the approximation (on average).
+Let's plot the fit of our test function for a few values of $R$. Since we have
+a lot of data, we will scale $\gamma$ with $R$ to allow for more flexible fits.
 
 {{< gallery caption-effect="fade" >}}
     {{< figure link="/posts/rff/rff_2.png" caption="R=2" >}}
@@ -164,6 +188,38 @@ parameters $\gamma$ and $\lambda$ jointly determine how flexible the fit will
 be in the limit. For a fixed $\gamma$ and $\lambda$ we can see this "limiting"
 effect by increasing $R$.
 
+The plotting code is a slight modification from before. This time, we learn our
+weight matrix, $W$ using the ten training points and then use this learned
+weight matrix to predict for a much denser grid of plotting points. In code:
+
+```
+# Setup
+np.random.seed(0)  # Set the random seed for reproducability
+R = 30            # Number of RFF samples
+gamma = R / 10
+# gamma = min(1, R / 10)     # Kernel "width" parameter
+# gamma = 1     # Kernel "width" parameter
+llambda = 0.1      # Regularization parameter
+
+# Here is RFF, in all it's glory...
+kernel = np.random.normal(size=(R, 1))
+bias = 2 * np.pi * np.random.rand(R, 1)
+proj = np.cos(gamma * (X @ kernel.T) + bias.T)
+weights = np.linalg.solve(proj.T @ proj + llambda * np.eye(R), proj.T @ y)
+
+# Define plotx to be a dense grid in the domain of the function. Project
+# plotx using the RFF formulation and reuse the learned weight matrix to
+# estimate the RFF approximation.
+plotx =  np.linspace(-np.pi, np.pi, 1000).reshape(1000, 1)
+proj2 =  np.cos(gamma * (plotx @ kernel.T) + bias.T)
+y_hat = proj2 @ weights
+
+plt.plot(plotx, y_hat, label='RFF Approximation', linestyle='-', color = "orange", lw= 5)
+plt.suptitle(f'RFF Approximation $R={R}, \gamma={gamma}, \lambda={llambda}$')
+plt.legend()
+plt.show()
+```
+
 {{< gallery caption-effect="fade" >}}
     {{< figure link="/posts/rff/rff_underspecified_2.png" caption="R=2" >}}
     {{< figure link="/posts/rff/rff_underspecified_5.png" caption="R=5" >}}
@@ -173,8 +229,10 @@ effect by increasing $R$.
 {{< /gallery >}}
 
 Even with hundreds more interpolates than data points, the function naturally
-regularizes itself due to the $\gamma$ and $\lambda$ parameters. What happens
-if $\gamma$ or $\lambda$ are misspecified? 
+regularizes itself due to the $\gamma$ and $\lambda$ parameters.
+
+#### Misspecification
+What happens if $\gamma$ or $\lambda$ are misspecified?
 
 {{< gallery caption-effect="fade" >}}
     {{< figure link="/posts/rff/rff_underspecified_small_gamma_small_lambda.png" caption="Small $\gamma$, Small $\lambda$" >}}
@@ -194,27 +252,27 @@ In practice, I typically start with somewhat larger values of $\lambda$ and
 somewhat smaller values of $\gamma$ and adjust them accordingly depending on
 the type of fit I want and how it performs on validation data.
 
-## Higher Dimensions
+## Learning by Example: Higher Dimensions
 
-Most analytic methods of curve fits tend to be specified only for one dimension
-and quickly become unwieldy in higher dimensions. RFF's third amazing fact is
+Most analytic methods of curve fitting tend to work well in one dimensional settings
+but quickly become unwieldy in higher dimensions. RFF's third amazing fact is
 that it works, just fine, for inputs *and* outputs which are multidimensional.
-The code changes are almost unnoticeable as well: where we used to have $d_x$
-implicitly specified as $d_x=1$, we now will explicitly parameterise it.
+The code changes are almost unnoticeable as well.
 
-#### Learn-By-Example
+#### Function Definition
 
-As before, we are going to learn-by-example and teach RFF to approximate the function:
+As before, we are going to learn-by-example and teach RFF to approximate the
+function:
 
-$$
-y = 2 \sin(x_1) + 4 \sin(x_1x_2)
-$$
+$$ y = 2 \sin(x_1) + 4 \sin(x_1x_2) $$
 
-Unfortunately, we are limited by human biology in this example: with $d_x = 2$
-and $d_y = 1$, we exhaust the three dimensions our eyes are capable of seeing.
-The dimensions interact however, and the functional looks quite cool.
+Unfortunately, we are limited by human biology in this exploration: with $d_x
+= 2$ and $d_y = 1$, we exhaust the three dimensional limitations of our eyes.
+Worry not, however, since we can still learn a few things in the
+three-dimensional setting.
 
-The plotting code this time is only slightly more difficult:
+#### Plots
+The plotting code, this time, is only slightly more difficult:
 
 ```
 import numpy as np
@@ -229,7 +287,6 @@ x2 = np.linspace(-np.pi, np.pi, N)
 X1, X2 = np.meshgrid(x1, x2)
 Y = 2 * np.sin(X1) + 4 * np.sin(X1 * X2)
 
-# Plotting
 fig = plt.figure(figsize=(14, 7))
 ax = fig.add_subplot(121, projection='3d')
 ax.plot_surface(X1, X2, Y, cmap='viridis', alpha=0.7)
@@ -241,7 +298,7 @@ ax.set_title('$y=2 \sin(x_1) + 4 \sin(x_1 x_2)$')
 #### Fitting with RFF
 
 The code for RFF is more-or-less the same as before except we have to "flatten"
-the $x$ and $y$ dimensions from a grid to a vector of examples. 
+the $x$ and $y$ dimensions from a grid to a vector of examples.
 
 ```
 # Setup
@@ -272,7 +329,7 @@ ax2.set_title(f'RFF Approximation; R={R}')
 plt.show()
 ```
 
-which, for different values of $R$ yields:
+Which, for different values of $R$ yields:
 
 {{< gallery caption-effect="fade" >}}
     {{< figure link="/posts/rff/rff_2d_2.png" caption="R=2" >}}
@@ -288,16 +345,16 @@ which, for different values of $R$ yields:
 A few years ago, I stumbled on a short blog post: [Reflections on Random
 Kitchen Sinks](https://archives.argmin.net/2017/12/05/kitchen-sinks/). This
 blog post turned out to be a transcription of an awards speech: the NIPS 2017
-test-of-time award. 
+test-of-time award.
 
 The post consumed a great deal of my mental space for quite some time. It
 changed the way I actually practice machine learning, how I think about
 baselines, and how I think about MLPs in the Transformer Architecture.  And my
-goal is to share this adventure with you. 
+goal is to share this adventure with you.
 
 My first posts on TensorTales will be about the road I traveled after reading
 this transcript. I will break this out across three blog posts since I have
-three main points I want to discuss. 
+three main points I want to discuss.
 
 #### How I Read Math
 
