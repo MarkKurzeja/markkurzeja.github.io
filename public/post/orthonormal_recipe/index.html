@@ -10,9 +10,9 @@
  
 
 
-      <title>Learning Orthonormal Matrices for Machine Learning - TensorTales Blog</title>
+      <title>Learning Orthonormal Matrices For Deep Learning Pipelines - TensorTales Blog</title>
 
-  <meta name="description" content="How to learn orthonormal projections">
+  <meta name="description" content="Benchmarks for efficiently parametrizing orthonormal matrices">
   <meta name="author" content="Mark Kurzeja"/><script type="application/ld+json">
 {
     "@context": "http://schema.org",
@@ -49,7 +49,7 @@
         "position": 3,
         "item": {
           "@id": "https:\/\/markkurzeja.github.io\/post\/orthonormal_recipe\/",
-          "name": "Learning orthonormal matrices for machine learning"
+          "name": "Learning orthonormal matrices for deep learning pipelines"
         }
     }]
 }
@@ -60,10 +60,10 @@
   "author": {
     "name" : "Mark Kurzeja"
   },
-  "headline": "Learning Orthonormal Matrices for Machine Learning",
-  "description" : "Prelude I have been researching alternative means to initialize and parameterize MLPs for use in deep learning pipelines. Orthonormal matrices continue to come up as a fundamental building block of some methods. This post is about my journey to find the fastest way to parameterize them in modern machine learning stacks.\nIntroduction to Orthonormal Matrices An orthonormal matrix is a square matrix whose rows and columns are orthonormal vectors. In other words, the dot product of any two different rows (or columns) of the matrix is zero, and the dot product of a row (or column) with itself is one.",
+  "headline": "Learning Orthonormal Matrices For Deep Learning Pipelines",
+  "description" : "Prelude I have been researching alternative methods to initialize and parameterize dense layers for use in deep learning pipelines. Orthonormal matrices have several interesting properties, including fast inverses (via their transpose) and unit eigenvalues which make them interesting candidates for several methods.\nWhen coding up solutions, however, the naive QR decomposition proved to be far too slow and cumbersome for generating these matrices. So I turned to the Matrix Cookbook and \u0026ldquo;got cooking\u0026rdquo; looking for alternative methods of parametrization.",
   "inLanguage" : "en",
-  "wordCount":  1626 ,
+  "wordCount":  2176 ,
   "datePublished" : "2024-03-27T00:00:00",
   "dateModified" : "2024-03-27T00:00:00",
   "image" : "https:\/\/markkurzeja.github.io\/logo\/logo_close.png",
@@ -82,15 +82,15 @@
 }
 </script>
 
-<meta property="og:title" content="Learning Orthonormal Matrices for Machine Learning" />
-<meta property="og:description" content="How to learn orthonormal projections">
+<meta property="og:title" content="Learning Orthonormal Matrices For Deep Learning Pipelines" />
+<meta property="og:description" content="Benchmarks for efficiently parametrizing orthonormal matrices">
 <meta property="og:image" content="https://markkurzeja.github.io/logo/logo_close.png" />
 <meta property="og:url" content="https://markkurzeja.github.io/post/orthonormal_recipe/" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="TensorTales" />
 
-  <meta name="twitter:title" content="Learning Orthonormal Matrices for Machine Learning" />
-  <meta name="twitter:description" content="How to learn orthonormal projections">
+  <meta name="twitter:title" content="Learning Orthonormal Matrices For Deep Learning Pipelines" />
+  <meta name="twitter:description" content="Benchmarks for efficiently parametrizing orthonormal matrices">
   <meta name="twitter:image" content="https://markkurzeja.github.io/logo/logo_close.png" />
   <meta name="twitter:card" content="summary_large_image" />
   <link href='https://markkurzeja.github.io/logo/logo.ico' rel='icon' type='image/x-icon'/>
@@ -229,12 +229,12 @@
           <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
             <div class="post-heading">
               
-                <h1>Learning Orthonormal Matrices for Machine Learning</h1>
+                <h1>Learning Orthonormal Matrices For Deep Learning Pipelines</h1>
               
               
               
                 
-                  <h2 class="post-subheading">How to learn orthonormal projections</h2>
+                  <h2 class="post-subheading">Benchmarks for efficiently parametrizing orthonormal matrices</h2>
                 
               
               
@@ -244,7 +244,7 @@
   <i class="fas fa-calendar"></i>&nbsp;Posted on Mar 27, 2024
   
   
-    &nbsp;|&nbsp;<i class="fas fa-clock"></i>&nbsp;8&nbsp;minutes
+    &nbsp;|&nbsp;<i class="fas fa-clock"></i>&nbsp;11&nbsp;minutes
   
   
   
@@ -272,9 +272,12 @@
     <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
       <article role="main" class="blog-post">
         <h2 id="prelude">Prelude</h2>
-<p>I have been researching alternative means to initialize and parameterize MLPs for use in deep learning pipelines. Orthonormal matrices continue to come up as a fundamental building block of some methods. This post is about my journey to find the fastest way to parameterize them in modern machine learning stacks.</p>
+<p>I have been researching alternative methods to initialize and parameterize dense layers for use in deep learning pipelines. Orthonormal matrices have several interesting properties, including fast inverses (via their transpose) and unit eigenvalues which make them interesting candidates for several methods.</p>
+<p>When coding up solutions, however, the naive QR decomposition proved to be far too slow and cumbersome for generating these matrices. So I turned to the <a href="https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf">Matrix Cookbook</a> and &ldquo;got cooking&rdquo; looking for alternative methods of parametrization.</p>
+<p>This post is about my journey to find the fastest way to parameterize them in modern machine learning stacks. To spoil the surprise, there are methods which are hundreds or thousands of times faster for large matrices than the QR decomposition.</p>
+<p><img src="/posts/orthonormal_recipe/benchmarks_all.png" alt=""></p>
 <h2 id="introduction-to-orthonormal-matrices">Introduction to Orthonormal Matrices</h2>
-<p>An orthonormal matrix is a square matrix whose rows and columns are orthonormal vectors. In other words, the dot product of any two different rows (or columns) of the matrix is zero, and the dot product of a row (or column) with itself is one. Such a matrix has several properties which make it useful in a machine learning pipeline.</p>
+<p>An orthonormal matrix $Q \in \mathbb{R}^{N \times N}$ is a square matrix whose rows and columns are orthonormal vectors. In other words, the dot product of any two different rows (or columns) of the matrix is zero, and the dot product of a row (or column) with itself is one. Such a matrix has several properties which make it useful in a machine learning pipeline.</p>
 <table>
 <thead>
 <tr>
@@ -285,18 +288,14 @@
 <tbody>
 <tr>
 <td>Fast Inverses</td>
-<td>If $Q$ is orthonormal, then its inverse is $Q^T$, and $QQ^T = Q^TQ = I$. This makes it easy to build a lot of &ldquo;there-and-back-again&rdquo; algorithms which have neat properties.</td>
+<td>If $Q$ is orthonormal, then its inverse is $Q^T$, and $QQ^T = Q^TQ = I$. For algorithms which require forward and backward projections (regression often comes to mind), these matrices provide quick inverses cheaply via the transpose.</td>
 </tr>
 <tr>
-<td>Unit Eigenvalues</td>
-<td>If $Q$ is orthonormal, then the magnitude of each of its eigenvalues is one. This property is useful since it implies multiplying by $Q$ will not change the norm of each of the incoming vectors.</td>
+<td>Angle-Length Invariance</td>
+<td>If $Q$ is orthonormal, then multiplying any matrix by $Q$ will preserve its angle and norms. This property ensures a certain stability during training</td>
 </tr>
 </tbody>
 </table>
-<p>Orthonormal matrices are valuable in machine learning pipelines because they preserve the Euclidean norm of vectors. This property is particularly useful when preprocessing data since it ensures that the scale of the data remains unchanged.</p>
-<p>Despite their usefulness, parametrizing orthonormal matrices for machine learning can be difficult. In this post, we will cover some of the ways they can be generated quickly for use in a deep learning pipeline.</p>
-<p>While transforms like the QR decomposition exist, they tend to be slow. To spoil the surprise, there are methods which are hundreds of times faster for large matrices</p>
-<p><img src="/posts/orthonormal_recipe/benchmarks.png" alt=""></p>
 <h2 id="before-we-begin">Before we begin</h2>
 <p>Throughout the post, we will be working with numerical examples. Assume we are given a matrix of parameters $A \in \mathbb{R}^{N\times N}$. Critically, $A$ has no constraints: it is just a learnable set of $N^2$ parameters arranged into a rank-2 tensor.</p>
 <p>The stated goal of this post will be to use $A$ to build an orthonormal matrix $Q$ as efficiently as possible. We will use $Q$ as a replacement for dense projections in parts of the pipeline, and we will need to parameterize it efficiently if we hope to succeed.</p>
@@ -307,15 +306,22 @@
 </span></span><span class="line"><span class="cl"><span class="n">import</span> <span class="n">chex</span>
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="c1"># Utility function for generating the norms of the eigen values of a matrix</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># Note: This function is not available for GPU/TPU backends.</span>
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">eigen_value_norms</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">jax</span><span class="o">.</span><span class="n">vmap</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">)(</span><span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvals</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">print_orthonormal_check</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">  <span class="c1"># Carve out for GPUs since they do not implement eigvals.</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="s2">&#34;cuda&#34;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">local_devices</span><span class="p">()):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="s2">&#34;not-implemented&#34;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">eigval_norms</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">vmap</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">)(</span><span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvals</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">  <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&#34;Orthonormal Check: &#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="n">len</span><span class="p">(</span><span class="n">eigvals</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&#34;  |\lambda| = {eigval_norms}&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&#34;  Min: {min(eigvals)}&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&#34;  Max: {max(eigvals)}&#34;</span><span class="p">)</span>
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="c1"># Generate a random matrix</span>
 </span></span><span class="line"><span class="cl"><span class="n">key</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">PRNGKey</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 </span></span><span class="line"><span class="cl"><span class="n">A</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
 </span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&#34;A: </span><span class="se">\n</span><span class="s2">{A}&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&#34;eigen_value_norms(A): </span><span class="se">\n</span><span class="s2">{eigen_value_norms(A)}&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">print_orthonormal_check</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
 </span></span></code></pre></div><p>Yields:</p>
 <p>$$
 A = \begin{bmatrix}
@@ -332,14 +338,12 @@ $$</p>
 1.3769 &amp; 1.9691 &amp; 1.9691 &amp;  1.1398
 \end{bmatrix}^T
 $$</p>
-<p>Clearly $A$ is random and not orthonormal since the magnitude of $A$&rsquo;s eigenvalues is not equal to one.</p>
+<p>Clearly $A$ is random and not orthonormal since the magnitude of $A$&rsquo;s eigenvalues are not equal to one.</p>
 <h2 id="doesnt-jax-already-have-functions-which-do-this">Doesn&rsquo;t Jax Already have functions which do this?</h2>
-<p>Jax already has functions which initialize parameter matrices as orthonormal matrices such as <a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.nn.initializers.orthogonal.html"><code>jax.nn.initalizers.orthogonal</code></a>. However, these are initializers. During training, it is easy to &ldquo;lose&rdquo; orthogonality unless care is taken with the updates.</p>
-<p>Another good question: can&rsquo;t we just take the QR decomposition of a learnable matrix and call it a day? We can ! In fact, the QR decomposition method will be compared against others in this post.</p>
+<p>Jax has functions which initialize parameter matrices as orthonormal matrices such as <a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.nn.initializers.orthogonal.html"><code>jax.nn.initalizers.orthogonal</code></a>. However, these are initializers and not invariants: a dense transform can start orthonormal but quickly be pulled away due to training dynamics unless care is taken with the updates.</p>
 <h2 id="take-one-qr-decomposition">Take One: QR Decomposition</h2>
-<p>One approach is to directly utilize $A$ by computing its QR decomposition. Given any matrix, we can decompose it into an orthogonal matrix $Q$ and an upper triangular matrix $R$. By extracting the $Q$ matrix from this decomposition, we obtain an orthonormal matrix.</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl"># Perform QR decomposition
-</span></span><span class="line"><span class="cl">@jax.jit
+<p>One approach to generations $Q$ is to directly utilize $A$ by computing its QR decomposition. Given any matrix, we can decompose it into an orthogonal matrix $Q$ and an upper triangular matrix $R$. By extracting the $Q$ matrix from this decomposition, we obtain an orthonormal matrix.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">@jax.jit
 </span></span><span class="line"><span class="cl">def qr(x):
 </span></span><span class="line"><span class="cl">  q, _ = jsp.linalg.qr(x)
 </span></span><span class="line"><span class="cl">  return q
@@ -347,17 +351,21 @@ $$</p>
 </span></span><span class="line"><span class="cl">Q = qr(A)
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl">print(f&#34;Orthonormal Matrix Q: \n{Q}&#34;)
-</span></span><span class="line"><span class="cl">print(f&#34;Eigenvalues Q: \n{eigen_value_norms(Q)}&#34;)
+</span></span><span class="line"><span class="cl">print_orthonormal_check(Q)
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl">---
+</span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl">Orthonormal Matrix Q:
 </span></span><span class="line"><span class="cl">[[-0.09262133  0.7986421   0.12070771  0.5822558 ]
 </span></span><span class="line"><span class="cl"> [-0.36504808 -0.4619358  -0.45298663  0.66944635]
 </span></span><span class="line"><span class="cl"> [ 0.8543949   0.04950267 -0.48875752  0.1693365 ]
 </span></span><span class="line"><span class="cl"> [ 0.35800898 -0.38253853  0.7357642   0.42912114]]
-</span></span><span class="line"><span class="cl">Eigenvalues Q:
-</span></span><span class="line"><span class="cl">[1.0000002 0.9999999 0.9999999 1.       ]
-</span></span></code></pre></div><h2 id="take-two-householder-transforms">Take Two: Householder Transforms</h2>
+</span></span><span class="line"><span class="cl">Orthonormal Check:
+</span></span><span class="line"><span class="cl">  |\lambda| = [1.0000002 0.9999999 0.9999999 1.       ]
+</span></span><span class="line"><span class="cl">  Min: 0.9999998807907104
+</span></span><span class="line"><span class="cl">  Max: 1.000000238418579
+</span></span></code></pre></div><p>As expected, the eigenvalues are all near one in magnitude indicating this matrix is near orthonormal. We could print out $Q^TQ$ and check to see how close it is to the identity matrix, but I have found visually this can be difficult.</p>
+<h2 id="take-two-householder-transforms">Take Two: Householder Transforms</h2>
 <p>Another method of transforming $A$ into $Q$ involves Householder transformations. In a Householder transform, we are given a vector $v$. We can generate an orthonormal matrix $Q$ via:</p>
 <p>$$ Q \leftarrow I - 2 v^Tv$$</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">@jax.jit
@@ -366,51 +374,64 @@ $$</p>
 </span></span><span class="line"><span class="cl">  v = x * jnp.reciprocal(jnp.linalg.norm(x))
 </span></span><span class="line"><span class="cl">  return jnp.eye(len(x)) - 2 * jnp.outer(v, v)
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"># Example with a 4x4 matrix
 </span></span><span class="line"><span class="cl">H = householder(A[:, 0])
-</span></span><span class="line"><span class="cl">print(f&#34;Orthonormal Matrix H: \n{H}&#34;)
-</span></span><span class="line"><span class="cl">print(f&#34;eigen_value_norms H: \n{eigen_value_norms(H)}&#34;)
+</span></span><span class="line"><span class="cl">print(f&#34;Householder Matrix: \n{H}&#34;)
+</span></span><span class="line"><span class="cl">print_orthonormal_check(H)
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl">---
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">Orthonormal Matrix H:
+</span></span><span class="line"><span class="cl">Householder Matrix:
 </span></span><span class="line"><span class="cl">[[ 0.98284256 -0.06762246  0.15827034  0.06631851]
 </span></span><span class="line"><span class="cl"> [-0.06762246  0.7334798   0.62379044  0.26138097]
 </span></span><span class="line"><span class="cl"> [ 0.15827034  0.62379044 -0.45998132 -0.61176205]
 </span></span><span class="line"><span class="cl"> [ 0.06631851  0.26138097 -0.61176205  0.74365914]]
-</span></span><span class="line"><span class="cl">eigen_value_norms H:
-</span></span><span class="line"><span class="cl">[1.         0.99999964 1.         1.        ]
-</span></span></code></pre></div><p>This, however, does not fully utilize $A$: it only uses its first column. Luckily, the product of two orthonormal matrices is another orthonormal matrix. This fact can be used to build more flexible matrices by multiplying the Householder transforms of a subset of, or all of, the columns of $A$</p>
+</span></span><span class="line"><span class="cl">Orthonormal Check:
+</span></span><span class="line"><span class="cl">  |\lambda| = [1.         0.99999964 1.         1.        ]
+</span></span><span class="line"><span class="cl">  Min: 0.9999996423721313
+</span></span><span class="line"><span class="cl">  Max: 1.0
+</span></span></code></pre></div><p>This, however, does not fully utilize $A$: it only uses its first column. Luckily, the product of two orthonormal matrices is another orthonormal matrix. This fact can be used to build more flexible matrices by multiplying the Householder transforms of a subset of, or all of, the columns of $A$:</p>
+<p>$$
+Q \leftarrow \prod_{i = 0}^{order} I - 2A_i^TA_i
+$$</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="err">@</span><span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">jit</span><span class="p">,</span> <span class="n">static_argnames</span><span class="o">=</span><span class="p">[</span><span class="s2">&#34;order&#34;</span><span class="p">])</span>
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">chained_householder</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">order</span> <span class="o">=</span> <span class="n">None</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">chained_householder</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
 </span></span><span class="line"><span class="cl">  <span class="c1"># chained_householder takes in a matrix, A, and extracts the first _order_</span>
 </span></span><span class="line"><span class="cl">  <span class="c1"># column vectors. It then constructs a householder matrix from each column</span>
 </span></span><span class="line"><span class="cl">  <span class="c1"># vector extracted and computes their matrix product to create the</span>
 </span></span><span class="line"><span class="cl">  <span class="c1"># final orthonormal approximation. If order is None, use all of the columns</span>
 </span></span><span class="line"><span class="cl">  <span class="c1"># of A.</span>
 </span></span><span class="line"><span class="cl">  <span class="n">chex</span><span class="o">.</span><span class="n">assert_rank</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="n">order</span> <span class="n">is</span> <span class="ow">not</span> <span class="n">None</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">    <span class="n">A</span> <span class="o">=</span> <span class="n">A</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="n">order</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">vmap</span><span class="p">(</span><span class="n">householder</span><span class="p">,</span> <span class="n">in_axes</span><span class="o">=</span><span class="mi">1</span><span class="p">)(</span><span class="n">A</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">  <span class="n">result</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">h</span> <span class="o">=</span> <span class="n">householder</span><span class="p">(</span><span class="n">A</span><span class="p">[:,</span> <span class="n">i</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">    <span class="n">result</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&#34;Chained Householder Matrix: </span><span class="se">\n</span><span class="s2">{chained_householder(A, order = 2)}&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&#34;eigen_value_norms: </span><span class="se">\n</span><span class="s2">{eigen_value_norms(chained_householder(A, order = 2))}&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">result</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">print_orthonormal_check</span><span class="p">(</span><span class="n">chained_householder</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">order</span> <span class="o">=</span> <span class="mi">1</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="n">print_orthonormal_check</span><span class="p">(</span><span class="n">chained_householder</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">order</span> <span class="o">=</span> <span class="mi">2</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="n">print_orthonormal_check</span><span class="p">(</span><span class="n">chained_householder</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">order</span> <span class="o">=</span> <span class="mi">4</span><span class="p">))</span>
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="o">---</span>
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">Chained</span> <span class="n">Householder</span> <span class="n">Matrix</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl"><span class="p">[[</span><span class="o">-</span><span class="mf">0.19409285</span>  <span class="mf">0.44146028</span>  <span class="mf">0.4380249</span>   <span class="mf">0.75866663</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl"> <span class="p">[</span> <span class="mf">0.79662025</span>  <span class="mf">0.35965204</span>  <span class="mf">0.41836214</span> <span class="o">-</span><span class="mf">0.24702147</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl"> <span class="p">[</span><span class="o">-</span><span class="mf">0.29171947</span>  <span class="mf">0.8184333</span>  <span class="o">-</span><span class="mf">0.35301986</span> <span class="o">-</span><span class="mf">0.34704953</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl"> <span class="p">[</span> <span class="mf">0.49256864</span>  <span class="mf">0.0770067</span>  <span class="o">-</span><span class="mf">0.7130807</span>   <span class="mf">0.49291176</span><span class="p">]]</span>
-</span></span><span class="line"><span class="cl"><span class="n">eigen_value_norms</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="mf">0.99999994</span> <span class="mf">0.99999976</span> <span class="mf">0.99999976</span> <span class="mf">1.</span>        <span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="n">Orthonormal</span> <span class="n">Check</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">  <span class="o">|</span>\<span class="n">lambda</span><span class="o">|</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.</span>         <span class="mf">0.99999964</span> <span class="mf">1.</span>         <span class="mf">1.</span>        <span class="p">]</span>
+</span></span><span class="line"><span class="cl">  <span class="n">Min</span><span class="p">:</span> <span class="mf">0.9999996423721313</span>
+</span></span><span class="line"><span class="cl">  <span class="n">Max</span><span class="p">:</span> <span class="mf">1.0</span>
+</span></span><span class="line"><span class="cl"><span class="n">Orthonormal</span> <span class="n">Check</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">  <span class="o">|</span>\<span class="n">lambda</span><span class="o">|</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.</span>        <span class="mf">0.9999999</span> <span class="mf">0.9999999</span> <span class="mf">1.</span>       <span class="p">]</span>
+</span></span><span class="line"><span class="cl">  <span class="n">Min</span><span class="p">:</span> <span class="mf">0.9999998807907104</span>
+</span></span><span class="line"><span class="cl">  <span class="n">Max</span><span class="p">:</span> <span class="mf">1.0</span>
+</span></span><span class="line"><span class="cl"><span class="n">Orthonormal</span> <span class="n">Check</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">  <span class="o">|</span>\<span class="n">lambda</span><span class="o">|</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0000002</span> <span class="mf">1.0000002</span> <span class="mf">1.</span>        <span class="mf">1.</span>       <span class="p">]</span>
+</span></span><span class="line"><span class="cl">  <span class="n">Min</span><span class="p">:</span> <span class="mf">1.0</span>
+</span></span><span class="line"><span class="cl">  <span class="n">Max</span><span class="p">:</span> <span class="mf">1.000000238418579</span>
 </span></span></code></pre></div><h2 id="take-three-cayley-transform">Take Three: Cayley Transform</h2>
 <p>The Cayley transform provides another method to generate orthonormal matrices. Given a skew-symmetric matrix $S$, $Q$ can be formed via:</p>
 <p>$$
 Q \leftarrow (I + S)(I - S)^{-1}
 $$</p>
-<p>There are two ways to turn $A$ into a skew symmetric matrix:</p>
+<p>There are two ways parameterize a skew-symmetric matrix $S$ from an arbitary matrix $A$:</p>
 <table>
 <thead>
 <tr>
@@ -429,8 +450,8 @@ $$</p>
 </tr>
 </tbody>
 </table>
-<p>This second formulation is preferred, when it is economic, since it allows us to get two orthonormal matrices out of $A$ instead of one if we utilize the upper triangular section of $A$ instead.</p>
-<p>With the skew-symmetric formulation of $A$, we can generate $Q$:</p>
+<p>This second formulation is preferred, when possible, since it allows us to get two orthonormal matrices out of $A$ instead of one. The second matrix can be created using the upper triangular portion of $A$ instead.</p>
+<p>With $S$ in hand, we can generate $Q$:</p>
 <p>$$
 \begin{align*}
 S &amp;\leftarrow \text{SkewSymmetric}(A) \\
@@ -452,25 +473,21 @@ $$</p>
 </span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="p">(</span><span class="n">I</span> <span class="o">+</span> <span class="n">S</span><span class="p">)</span> <span class="o">@</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">I</span> <span class="o">-</span> <span class="n">S</span><span class="p">)</span>
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Skew-symmetric Matrix: </span><span class="se">\n</span><span class="si">{</span><span class="n">skew_symmetric</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Cayley Transform: </span><span class="se">\n</span><span class="si">{</span><span class="n">cayley_transform</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;eigen_value_norms: </span><span class="se">\n</span><span class="si">{</span><span class="n">eigen_value_norms</span><span class="p">(</span><span class="n">cayley_transform</span><span class="p">(</span><span class="n">A</span><span class="p">))</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">print_orthonormal_check</span><span class="p">(</span><span class="n">cayley_transform</span><span class="p">(</span><span class="n">A</span><span class="p">))</span>
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="o">---</span>
+</span></span><span class="line"><span class="cl"><span class="o">---</span> 
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="n">Skew</span><span class="o">-</span><span class="n">symmetric</span> <span class="n">Matrix</span><span class="p">:</span>
 </span></span><span class="line"><span class="cl"><span class="p">[[</span> <span class="mf">0.</span>         <span class="o">-</span><span class="mf">0.33432344</span>  <span class="mf">0.7824839</span>   <span class="mf">0.32787678</span><span class="p">]</span>
 </span></span><span class="line"><span class="cl"> <span class="p">[</span> <span class="mf">0.33432344</span>  <span class="mf">0.</span>          <span class="mf">0.4539462</span>   <span class="mf">1.1234448</span> <span class="p">]</span>
 </span></span><span class="line"><span class="cl"> <span class="p">[</span><span class="o">-</span><span class="mf">0.7824839</span>  <span class="o">-</span><span class="mf">0.4539462</span>   <span class="mf">0.</span>          <span class="mf">1.6607416</span> <span class="p">]</span>
 </span></span><span class="line"><span class="cl"> <span class="p">[</span><span class="o">-</span><span class="mf">0.32787678</span> <span class="o">-</span><span class="mf">1.1234448</span>  <span class="o">-</span><span class="mf">1.6607416</span>   <span class="mf">0.</span>        <span class="p">]]</span>
-</span></span><span class="line"><span class="cl"><span class="n">Cayley</span> <span class="n">Transform</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl"><span class="p">[[</span> <span class="mf">0.35566828</span> <span class="o">-</span><span class="mf">0.8281733</span>   <span class="mf">0.3969655</span>   <span class="mf">0.1733424</span> <span class="p">]</span>
-</span></span><span class="line"><span class="cl"> <span class="p">[</span> <span class="mf">0.45279822</span>  <span class="mf">0.16153368</span> <span class="o">-</span><span class="mf">0.4076859</span>   <span class="mf">0.77632004</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl"> <span class="p">[</span><span class="o">-</span><span class="mf">0.7581913</span>  <span class="o">-</span><span class="mf">0.4245323</span>  <span class="o">-</span><span class="mf">0.3563349</span>   <span class="mf">0.3434295</span> <span class="p">]</span>
-</span></span><span class="line"><span class="cl"> <span class="p">[</span> <span class="mf">0.30597383</span> <span class="o">-</span><span class="mf">0.32834178</span> <span class="o">-</span><span class="mf">0.74110454</span> <span class="o">-</span><span class="mf">0.4993353</span> <span class="p">]]</span>
-</span></span><span class="line"><span class="cl"><span class="n">eigen_value_norms</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="mf">0.9999999</span> <span class="mf">0.9999999</span> <span class="mf">1.</span>        <span class="mf">1.</span>       <span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="n">Orthonormal</span> <span class="n">Check</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">  <span class="o">|</span>\<span class="k">lambda</span><span class="o">|</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.9999999</span> <span class="mf">0.9999999</span> <span class="mf">1.</span>        <span class="mf">1.</span>       <span class="p">]</span>
+</span></span><span class="line"><span class="cl">  <span class="n">Min</span><span class="p">:</span> <span class="mf">0.9999998807907104</span>
+</span></span><span class="line"><span class="cl">  <span class="n">Max</span><span class="p">:</span> <span class="mf">1.0</span>
 </span></span></code></pre></div><h2 id="take-four-neumann-approximation-to-cayley-transform">Take Four: Neumann Approximation to Cayley Transform</h2>
-<p>In the Cayley Transform, taking the inverse of $(I - S)$ can be expensive. To speed up the Cayley transform, we can use the Neumann series approximation:</p>
+<p>While searching the <a href="https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf">Matrix Cookbook</a>, I found an interesting approximation to speed up the Cayley Transform. In the Cayley Transform, taking the inverse of $(I - S)$ can be expensive. For uses of orthonormal matrices which try to avoid taking inverses in the first place, the inverse itself somewhat defeats the purpose. To speed up the Cayley transform, we can use the Neumann series approximation:</p>
 <p>$$
 (I - S)^{-1} \approx \sum_{i = 0}^\infty A^i
 $$</p>
@@ -480,67 +497,255 @@ $$</p>
 S &amp;\leftarrow \text{SkewSymmetric}(A) \\
 Q &amp;\leftarrow \text{CayleyTransform}(S) \\
 &amp;= (I + S)(I - S)^{-1} \\
-&amp;\approx (I + S)(I + S + S^2 + S^3 + S^4) \\
-&amp;\approx (I + S)(I + S + S^2) \\
+&amp;\approx (I + S) \sum_{i = 0}^{order} S^i
 \end{align*}
 $$</p>
-<p>The second to last approximation is the fourth-order Neumann approximation while the last approximation is a second-order Neumann approximation.
+<p>In practice, I&rsquo;ve found using odd order, $order=1$ or $order=3$, to work best and the approximation also tends to improve in higher dimensions.
 While not perfect, it is often &ldquo;good enough for government work&rdquo;.</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nd">@functools.partial</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">jit</span><span class="p">,</span> <span class="n">static_argnames</span><span class="o">=</span><span class="p">[</span><span class="s2">&#34;expanded&#34;</span><span class="p">])</span>
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">neumann_approx</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">expanded</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nd">@functools.partial</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">jit</span><span class="p">,</span> <span class="n">static_argnames</span><span class="o">=</span><span class="p">[</span><span class="s2">&#34;order&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">neumann_approx</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
 </span></span><span class="line"><span class="cl">  <span class="n">S</span> <span class="o">=</span> <span class="n">skew_symmetric</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
 </span></span><span class="line"><span class="cl">  <span class="c1"># Normalize S to reduce its spectral norm</span>
 </span></span><span class="line"><span class="cl">  <span class="n">S</span> <span class="o">*=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">reciprocal</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">S</span><span class="p">))</span>
 </span></span><span class="line"><span class="cl">  <span class="n">I</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-</span></span><span class="line"><span class="cl">  <span class="n">IS</span> <span class="o">=</span> <span class="n">I</span> <span class="o">+</span> <span class="n">S</span>
-</span></span><span class="line"><span class="cl">  <span class="n">S2</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_power</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="ow">not</span> <span class="n">expanded</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">IS</span> <span class="o">@</span> <span class="p">(</span><span class="n">IS</span> <span class="o">+</span> <span class="n">S2</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">  <span class="n">S3</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_power</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">  <span class="n">S4</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_power</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">IS</span> <span class="o">@</span> <span class="p">(</span><span class="n">IS</span> <span class="o">+</span> <span class="n">S2</span> <span class="o">+</span> <span class="n">S3</span> <span class="o">+</span> <span class="n">S4</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="n">approx</span> <span class="o">=</span> <span class="n">I</span> <span class="o">+</span> <span class="n">S</span>
+</span></span><span class="line"><span class="cl">  <span class="c1"># This method isn&#39;t the most numerically stable way to compute</span>
+</span></span><span class="line"><span class="cl">  <span class="c1"># this sum, but it works well enough for demonstration.</span>
+</span></span><span class="line"><span class="cl">  <span class="n">pow_s</span> <span class="o">=</span> <span class="n">S</span>
+</span></span><span class="line"><span class="cl">  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">pow_s</span> <span class="o">=</span> <span class="n">pow_s</span> <span class="o">@</span> <span class="n">S</span>
+</span></span><span class="line"><span class="cl">    <span class="n">approx</span> <span class="o">+=</span> <span class="n">pow_s</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="p">(</span><span class="n">I</span> <span class="o">+</span> <span class="n">S</span><span class="p">)</span> <span class="o">@</span> <span class="n">approx</span>
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Neumann Matrix: </span><span class="se">\n</span><span class="si">{</span><span class="n">neumann_approx</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;eigen_value_norms: </span><span class="se">\n</span><span class="si">{</span><span class="n">eigen_value_norms</span><span class="p">(</span><span class="n">neumann_approx</span><span class="p">(</span><span class="n">A</span><span class="p">))</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Neumann Matrix with expansion: </span><span class="se">\n</span><span class="si">{</span><span class="n">neumann_approx</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;eigen_value_norms: </span><span class="se">\n</span><span class="si">{</span><span class="n">eigen_value_norms</span><span class="p">(</span><span class="n">neumann_approx</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">print_orthonormal_check</span><span class="p">(</span><span class="n">neumann_approx</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">order</span> <span class="o">=</span> <span class="mi">0</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="n">print_orthonormal_check</span><span class="p">(</span><span class="n">neumann_approx</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">order</span> <span class="o">=</span> <span class="mi">1</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="n">print_orthonormal_check</span><span class="p">(</span><span class="n">neumann_approx</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">order</span> <span class="o">=</span> <span class="mi">2</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="n">print_orthonormal_check</span><span class="p">(</span><span class="n">neumann_approx</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">order</span> <span class="o">=</span> <span class="mi">3</span><span class="p">))</span>
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="o">---</span>
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">Neumann</span> <span class="n">Matrix</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl"><span class="p">[[</span> <span class="mf">0.83558977</span> <span class="o">-</span><span class="mf">0.36708668</span>  <span class="mf">0.27625954</span>  <span class="mf">0.31916648</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl"> <span class="p">[</span> <span class="mf">0.08097215</span>  <span class="mf">0.6876185</span>  <span class="o">-</span><span class="mf">0.11617136</span>  <span class="mf">0.7318331</span> <span class="p">]</span>
-</span></span><span class="line"><span class="cl"> <span class="p">[</span><span class="o">-</span><span class="mf">0.5515893</span>  <span class="o">-</span><span class="mf">0.51815355</span>  <span class="mf">0.292894</span>    <span class="mf">0.6450456</span> <span class="p">]</span>
-</span></span><span class="line"><span class="cl"> <span class="p">[</span> <span class="mf">0.04617295</span> <span class="o">-</span><span class="mf">0.39037955</span> <span class="o">-</span><span class="mf">0.9481574</span>   <span class="mf">0.1838977</span> <span class="p">]]</span>
-</span></span><span class="line"><span class="cl"><span class="n">eigen_value_norms</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="mf">1.0491595</span> <span class="mf">1.0491595</span> <span class="mf">1.0000209</span> <span class="mf">1.0000209</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl"><span class="n">Neumann</span> <span class="n">Matrix</span> <span class="k">with</span> <span class="n">expansion</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl"><span class="p">[[</span> <span class="mf">0.88549775</span> <span class="o">-</span><span class="mf">0.30075887</span>  <span class="mf">0.30205643</span>  <span class="mf">0.19132581</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl"> <span class="p">[</span> <span class="mf">0.15770163</span>  <span class="mf">0.8115121</span>  <span class="o">-</span><span class="mf">0.00212702</span>  <span class="mf">0.56809056</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl"> <span class="p">[</span><span class="o">-</span><span class="mf">0.4397213</span>  <span class="o">-</span><span class="mf">0.3150354</span>   <span class="mf">0.6141498</span>   <span class="mf">0.5885297</span> <span class="p">]</span>
-</span></span><span class="line"><span class="cl"> <span class="p">[</span><span class="o">-</span><span class="mf">0.00865609</span> <span class="o">-</span><span class="mf">0.39736384</span> <span class="o">-</span><span class="mf">0.7400856</span>   <span class="mf">0.55965173</span><span class="p">]]</span>
-</span></span><span class="line"><span class="cl"><span class="n">eigen_value_norms</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="mf">0.9999999</span> <span class="mf">0.9999999</span> <span class="mf">1.0108453</span> <span class="mf">1.0108453</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="n">Orthonormal</span> <span class="n">Check</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">  <span class="o">|</span>\<span class="k">lambda</span><span class="o">|</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.465294</span>  <span class="mf">1.465294</span>  <span class="mf">1.0347062</span> <span class="mf">1.0347062</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">  <span class="n">Min</span><span class="p">:</span> <span class="mf">1.0347062349319458</span>
+</span></span><span class="line"><span class="cl">  <span class="n">Max</span><span class="p">:</span> <span class="mf">1.4652940034866333</span>
+</span></span><span class="line"><span class="cl"><span class="n">Orthonormal</span> <span class="n">Check</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">  <span class="o">|</span>\<span class="k">lambda</span><span class="o">|</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0491595</span> <span class="mf">1.0491595</span> <span class="mf">1.0000209</span> <span class="mf">1.0000209</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">  <span class="n">Min</span><span class="p">:</span> <span class="mf">1.0000208616256714</span>
+</span></span><span class="line"><span class="cl">  <span class="n">Max</span><span class="p">:</span> <span class="mf">1.0491595268249512</span>
+</span></span><span class="line"><span class="cl"><span class="n">Orthonormal</span> <span class="n">Check</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">  <span class="o">|</span>\<span class="k">lambda</span><span class="o">|</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.9987954</span> <span class="mf">0.9987954</span> <span class="mf">0.7835015</span> <span class="mf">0.7835015</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">  <span class="n">Min</span><span class="p">:</span> <span class="mf">0.7835015058517456</span>
+</span></span><span class="line"><span class="cl">  <span class="n">Max</span><span class="p">:</span> <span class="mf">0.9987953901290894</span>
+</span></span><span class="line"><span class="cl"><span class="n">Orthonormal</span> <span class="n">Check</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">  <span class="o">|</span>\<span class="k">lambda</span><span class="o">|</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0000001</span> <span class="mf">1.0000001</span> <span class="mf">1.0108459</span> <span class="mf">1.0108459</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">  <span class="n">Min</span><span class="p">:</span> <span class="mf">1.0000001192092896</span>
+</span></span><span class="line"><span class="cl">  <span class="n">Max</span><span class="p">:</span> <span class="mf">1.0108458995819092</span>
 </span></span></code></pre></div><h2 id="take-five-matrix-exponentials">Take Five: Matrix Exponentials</h2>
 <p>Matrix exponentials provide yet another method to generate orthonormal matrices. Given a skew symmetric matrix, $S$, we can generate an orthonormal matrix $Q$ using: $ Q \leftarrow \exp(A) $. The matrix exponential is defined as $ \exp(A) = \sum_{k=0}^{\infty} \frac{A^k}{k!} $</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">functools</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nd">@functools.partial</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">jit</span><span class="p">,</span> <span class="n">static_argnames</span><span class="o">=</span><span class="p">[</span><span class="s2">&#34;max_squarings&#34;</span><span class="p">])</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nd">@functools.partial</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">jit</span><span class="p">,</span> <span class="n">static_argnames</span><span class="o">=</span><span class="p">[</span><span class="s2">&#34;max_squarings&#34;</span><span class="p">])</span>
 </span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">expm</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">max_squarings</span> <span class="o">=</span> <span class="mi">16</span><span class="p">):</span>
 </span></span><span class="line"><span class="cl">  <span class="n">S</span> <span class="o">=</span> <span class="n">skew_symmetric</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
 </span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">jsp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">expm</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">max_squarings</span><span class="o">=</span><span class="n">max_squarings</span><span class="p">)</span>
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Orthonormal Matrix from Matrix Exponential: </span><span class="se">\n</span><span class="si">{</span><span class="n">expm</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;eigen_value_norms: </span><span class="se">\n</span><span class="si">{</span><span class="n">eigen_value_norms</span><span class="p">(</span><span class="n">expm</span><span class="p">(</span><span class="n">A</span><span class="p">))</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">print_orthonormal_check</span><span class="p">(</span><span class="n">expm</span><span class="p">(</span><span class="n">A</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="o">---</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">Orthonormal</span> <span class="n">Check</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">  <span class="o">|</span>\<span class="k">lambda</span><span class="o">|</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.</span>         <span class="mf">1.</span>         <span class="mf">0.99999976</span> <span class="mf">0.99999976</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">  <span class="n">Min</span><span class="p">:</span> <span class="mf">0.9999997615814209</span>
+</span></span><span class="line"><span class="cl">  <span class="n">Max</span><span class="p">:</span> <span class="mf">1.0</span>
 </span></span></code></pre></div><h2 id="which-is-fastest">Which is fastest?</h2>
 <p>Lets run some profiling code to determine which is fastest for a given matrix size. The following benchmarks were ran using the benchmarking code at the bottom of this post. All functions were ran under <code>jax.jit</code> on an A100 CPU.</p>
-<p><img src="/posts/orthonormal_recipe/benchmarks.png" alt=""></p>
-<p>Two questions come out of this:</p>
-<ol>
-<li>What is best? It appears the best method by almost 10x performance is to use a Householder approximation of order two. This makes sense: if you can parameterize a matrix using two matrix multiplies, then it is best to do so.</li>
-</ol>
-
+<p><img src="/posts/orthonormal_recipe/benchmarks_all.png" alt="">
+<img src="/posts/orthonormal_recipe/benchmarks_breakdown.png" alt=""></p>
+<p>What is best?</p>
+<ul>
+<li>If you need a fully parameterized, fully orthonormal matrix, then the QR decomposition appears to be your best bet at large matrix sizes.</li>
+<li>If you need something fast or need to be stingy with parameters, then the Householder reflections of $order=1$ or $order=2$ seem like a decent choice. Only using a parameter count linear in $N$, they are parameter efficient at the cost of less flexibility. Of course, when $order=1$ this amounts to a nearly 2300X speedup and when $order=2$ the speedup is nearly 7x compared to the full QR decomposition at $N=8192$. Not to mention the memory savings are likely to be quite large.</li>
+<li>If you are OK with a decent approximation (you probably should be), the Neumann Approximation, with $order=1$ or $order=3$ appear to be decent choices. $order=1$ is roughly 1000x faster and $order=3$ is roughly 3X faster than the full QR decomposition at $N=8192$</li>
+<li>The Cayley Transform and Matrix Exponential methods are far too slow to use on their own.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>index</th>
+<th>n</th>
+<th>name</th>
+<th>time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>90</td>
+<td>8192</td>
+<td>qr</td>
+<td>0.21846221209852956</td>
+</tr>
+<tr>
+<td>91</td>
+<td>8192</td>
+<td>householder-order=1</td>
+<td>9.436944965273142e-05</td>
+</tr>
+<tr>
+<td>92</td>
+<td>8192</td>
+<td>householder-order=2</td>
+<td>0.032502647599903865</td>
+</tr>
+<tr>
+<td>93</td>
+<td>8192</td>
+<td>householder-order=3</td>
+<td>0.10345467844745145</td>
+</tr>
+<tr>
+<td>94</td>
+<td>8192</td>
+<td>householder-order=5</td>
+<td>0.18184256530366838</td>
+</tr>
+<tr>
+<td>95</td>
+<td>8192</td>
+<td>cayley-transform</td>
+<td>0.7519991190521977</td>
+</tr>
+<tr>
+<td>96</td>
+<td>8192</td>
+<td>neumann-approx-order=1</td>
+<td>0.0002714382484555244</td>
+</tr>
+<tr>
+<td>97</td>
+<td>8192</td>
+<td>neumann-approx-order=3</td>
+<td>0.0748584695509635</td>
+</tr>
+<tr>
+<td>98</td>
+<td>8192</td>
+<td>expm-maxsq=2</td>
+<td>0.7251319101022091</td>
+</tr>
+<tr>
+<td>99</td>
+<td>8192</td>
+<td>expm-maxsq=10</td>
+<td>1.3546142223000062</td>
+</tr>
+</tbody>
+</table>
+<h2 id="appendix-benchmarking-code">Appendix: Benchmarking Code</h2>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">import timeit
+</span></span><span class="line"><span class="cl">import pandas as pd
+</span></span><span class="line"><span class="cl">from matplotlib import pyplot as plt
+</span></span><span class="line"><span class="cl">from IPython.display import display
+</span></span><span class="line"><span class="cl">import tqdm
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">dat = []
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"># pbar = tqdm.tqdm(jnp.arange(4, 11))
+</span></span><span class="line"><span class="cl">pbar = tqdm.tqdm(jnp.arange(4, 14))
+</span></span><span class="line"><span class="cl">for ni in pbar:
+</span></span><span class="line"><span class="cl">  key = jax.random.PRNGKey(0)
+</span></span><span class="line"><span class="cl">  n = 2**ni
+</span></span><span class="line"><span class="cl">  A = jax.random.normal(key, (n, n))
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  nruns = 20
+</span></span><span class="line"><span class="cl">  dat.append({
+</span></span><span class="line"><span class="cl">      &#34;n&#34;: n,
+</span></span><span class="line"><span class="cl">      &#34;name&#34;: &#34;qr&#34;,
+</span></span><span class="line"><span class="cl">      &#34;time&#34;: timeit.timeit(lambda: qr(A), number = nruns) / nruns
+</span></span><span class="line"><span class="cl">  })
+</span></span><span class="line"><span class="cl">  dat.append({
+</span></span><span class="line"><span class="cl">      &#34;n&#34;: n,
+</span></span><span class="line"><span class="cl">      &#34;name&#34;: &#34;householder-order=1&#34;,
+</span></span><span class="line"><span class="cl">      &#34;time&#34;: timeit.timeit(lambda: chained_householder(A, order = 1), number = nruns) / nruns
+</span></span><span class="line"><span class="cl">  })
+</span></span><span class="line"><span class="cl">  dat.append({
+</span></span><span class="line"><span class="cl">      &#34;n&#34;: n,
+</span></span><span class="line"><span class="cl">      &#34;name&#34;: &#34;householder-order=2&#34;,
+</span></span><span class="line"><span class="cl">      &#34;time&#34;: timeit.timeit(lambda: chained_householder(A, order = 2), number = nruns) / nruns
+</span></span><span class="line"><span class="cl">  })
+</span></span><span class="line"><span class="cl">  dat.append({
+</span></span><span class="line"><span class="cl">      &#34;n&#34;: n,
+</span></span><span class="line"><span class="cl">      &#34;name&#34;: &#34;householder-order=3&#34;,
+</span></span><span class="line"><span class="cl">      &#34;time&#34;: timeit.timeit(lambda: chained_householder(A, order = 3), number = nruns) / nruns
+</span></span><span class="line"><span class="cl">  })
+</span></span><span class="line"><span class="cl">  dat.append({
+</span></span><span class="line"><span class="cl">        &#34;n&#34;: n,
+</span></span><span class="line"><span class="cl">        &#34;name&#34;: &#34;householder-order=5&#34;,
+</span></span><span class="line"><span class="cl">        &#34;time&#34;: timeit.timeit(lambda: chained_householder(A, order=5), number = nruns) / nruns
+</span></span><span class="line"><span class="cl">  })
+</span></span><span class="line"><span class="cl">  dat.append({
+</span></span><span class="line"><span class="cl">      &#34;n&#34;: n,
+</span></span><span class="line"><span class="cl">      &#34;name&#34;: &#34;cayley-transform&#34;,
+</span></span><span class="line"><span class="cl">      &#34;time&#34;: timeit.timeit(lambda: cayley_transform(A), number = nruns) / nruns
+</span></span><span class="line"><span class="cl">  })
+</span></span><span class="line"><span class="cl">  dat.append({
+</span></span><span class="line"><span class="cl">      &#34;n&#34;: n,
+</span></span><span class="line"><span class="cl">      &#34;name&#34;: &#34;neumann-approx-order=1&#34;,
+</span></span><span class="line"><span class="cl">      &#34;time&#34;: timeit.timeit(lambda: neumann_approx(A, order =1 ), number = nruns) / nruns
+</span></span><span class="line"><span class="cl">  })
+</span></span><span class="line"><span class="cl">  dat.append({
+</span></span><span class="line"><span class="cl">      &#34;n&#34;: n,
+</span></span><span class="line"><span class="cl">      &#34;name&#34;: &#34;neumann-approx-order=3&#34;,
+</span></span><span class="line"><span class="cl">      &#34;time&#34;: timeit.timeit(lambda: neumann_approx(A, order=3), number = nruns) / nruns
+</span></span><span class="line"><span class="cl">  })
+</span></span><span class="line"><span class="cl">  dat.append({
+</span></span><span class="line"><span class="cl">      &#34;n&#34;: n,
+</span></span><span class="line"><span class="cl">      &#34;name&#34;: &#34;expm-maxsq=2&#34;,
+</span></span><span class="line"><span class="cl">      &#34;time&#34;: timeit.timeit(lambda: expm(A, max_squarings=2), number = nruns) / nruns
+</span></span><span class="line"><span class="cl">  })
+</span></span><span class="line"><span class="cl">  dat.append({
+</span></span><span class="line"><span class="cl">      &#34;n&#34;: n,
+</span></span><span class="line"><span class="cl">      &#34;name&#34;: &#34;expm-maxsq=10&#34;,
+</span></span><span class="line"><span class="cl">      &#34;time&#34;: timeit.timeit(lambda: expm(A, max_squarings=10), number = nruns) / nruns
+</span></span><span class="line"><span class="cl">  })
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">df = pd.DataFrame(dat)
+</span></span><span class="line"><span class="cl">df[&#34;n&#34;] = df[&#34;n&#34;].map(lambda n: int(n))
+</span></span><span class="line"><span class="cl">display(df)
+</span></span></code></pre></div><p>and then for plotting:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">import plotnine as p9
+</span></span><span class="line"><span class="cl">from plotnine import aes, coord_flip, facet_wrap, geom_bar, ggplot, labs, scale_y_log10, scale_y_log10, theme
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">(
+</span></span><span class="line"><span class="cl">    ggplot(
+</span></span><span class="line"><span class="cl">      df,
+</span></span><span class="line"><span class="cl">      aes(x=&#39;name&#39;, y=&#39;time&#39;, group=&#39;factor(n)&#39;, color = &#39;factor(n)&#39;),
+</span></span><span class="line"><span class="cl">    )
+</span></span><span class="line"><span class="cl">    + p9.geom_point()
+</span></span><span class="line"><span class="cl">    + p9.geom_line()
+</span></span><span class="line"><span class="cl">    + labs(x=&#39;Name&#39;, y=&#39;Time&#39;, fill=&#39;n&#39;)
+</span></span><span class="line"><span class="cl">    + p9.scale_y_log10()
+</span></span><span class="line"><span class="cl">    + theme(figure_size=(12, 8))
+</span></span><span class="line"><span class="cl">    + theme(axis_text_x=p9.element_text(rotation=45, hjust=1))
+</span></span><span class="line"><span class="cl">    + p9.ggtitle(&#39;Runtime (s) vs Orthonormal Method faceted by Matrix Size $N$ (Log Scale)&#39;)
+</span></span><span class="line"><span class="cl">    + p9.xlab(&#39;Method for producing $Q$&#39;)
+</span></span><span class="line"><span class="cl">    + p9.ylab(&#39;Runtime (s)&#39;)
+</span></span><span class="line"><span class="cl">)
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">(
+</span></span><span class="line"><span class="cl">    ggplot(
+</span></span><span class="line"><span class="cl">        df.query(&#39;n in (32, 1024, 8192)&#39;),
+</span></span><span class="line"><span class="cl">        aes(x=&#39;name&#39;, y=&#39;time&#39;, group=&#39;factor(n)&#39;),
+</span></span><span class="line"><span class="cl">    )
+</span></span><span class="line"><span class="cl">    + p9.geom_point()
+</span></span><span class="line"><span class="cl">    + p9.geom_line()
+</span></span><span class="line"><span class="cl">    + labs(x=&#39;Name&#39;, y=&#39;Time&#39;, fill=&#39;n&#39;)
+</span></span><span class="line"><span class="cl">    + p9.facet_grid(&#39;n~&#39;, scales = &#34;free&#34;)
+</span></span><span class="line"><span class="cl">    + theme(figure_size=(12, 8))
+</span></span><span class="line"><span class="cl">    + theme(axis_text_x=p9.element_text(rotation=45, hjust=1))
+</span></span><span class="line"><span class="cl">    + p9.ggtitle(&#39;Runtime (s) vs Orthonormal Method faceted by Matrix Size $N$ (Absolute Scale)&#39;)
+</span></span><span class="line"><span class="cl">    + p9.xlab(&#39;Method for producing $Q$&#39;)
+</span></span><span class="line"><span class="cl">    + p9.ylab(&#39;Runtime (s)&#39;)
+</span></span><span class="line"><span class="cl">)
+</span></span></code></pre></div>
 
         
 
@@ -554,7 +759,7 @@ While not perfect, it is often &ldquo;good enough for government work&rdquo;.</p
     <ul class="share">
       
       <li>
-        <a href="//twitter.com/share?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2forthonormal_recipe%2f&amp;text=Learning%20Orthonormal%20Matrices%20for%20Machine%20Learning&amp;via=" target="_blank" title="Share on Twitter">
+        <a href="//twitter.com/share?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2forthonormal_recipe%2f&amp;text=Learning%20Orthonormal%20Matrices%20For%20Deep%20Learning%20Pipelines&amp;via=" target="_blank" title="Share on Twitter">
           <i class="fab fa-twitter"></i>
         </a>
       </li>
@@ -568,28 +773,28 @@ While not perfect, it is often &ldquo;good enough for government work&rdquo;.</p
   
       
       <li>
-        <a href="//reddit.com/submit?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2forthonormal_recipe%2f&amp;title=Learning%20Orthonormal%20Matrices%20for%20Machine%20Learning" target="_blank" title="Share on Reddit">
+        <a href="//reddit.com/submit?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2forthonormal_recipe%2f&amp;title=Learning%20Orthonormal%20Matrices%20For%20Deep%20Learning%20Pipelines" target="_blank" title="Share on Reddit">
           <i class="fab fa-reddit"></i>
         </a>
       </li>
   
       
       <li>
-        <a href="//www.linkedin.com/shareArticle?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2forthonormal_recipe%2f&amp;title=Learning%20Orthonormal%20Matrices%20for%20Machine%20Learning" target="_blank" title="Share on LinkedIn">
+        <a href="//www.linkedin.com/shareArticle?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2forthonormal_recipe%2f&amp;title=Learning%20Orthonormal%20Matrices%20For%20Deep%20Learning%20Pipelines" target="_blank" title="Share on LinkedIn">
           <i class="fab fa-linkedin"></i>
         </a>
       </li>
   
       
       <li>
-        <a href="//www.stumbleupon.com/submit?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2forthonormal_recipe%2f&amp;title=Learning%20Orthonormal%20Matrices%20for%20Machine%20Learning" target="_blank" title="Share on StumbleUpon">
+        <a href="//www.stumbleupon.com/submit?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2forthonormal_recipe%2f&amp;title=Learning%20Orthonormal%20Matrices%20For%20Deep%20Learning%20Pipelines" target="_blank" title="Share on StumbleUpon">
           <i class="fab fa-stumbleupon"></i>
         </a>
       </li>
   
       
       <li>
-        <a href="//www.pinterest.com/pin/create/button/?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2forthonormal_recipe%2f&amp;description=Learning%20Orthonormal%20Matrices%20for%20Machine%20Learning" target="_blank" title="Share on Pinterest">
+        <a href="//www.pinterest.com/pin/create/button/?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2forthonormal_recipe%2f&amp;description=Learning%20Orthonormal%20Matrices%20For%20Deep%20Learning%20Pipelines" target="_blank" title="Share on Pinterest">
           <i class="fab fa-pinterest"></i>
         </a>
       </li>

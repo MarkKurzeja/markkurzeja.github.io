@@ -1,36 +1,33 @@
 +++
-title = "Learning Orthonormal Matrices for Machine Learning"
-subtitle = "How to learn orthonormal projections"
+title = "Learning Orthonormal Matrices For Deep Learning Pipelines"
+subtitle = "Benchmarks for efficiently parametrizing orthonormal matrices"
 date = 2024-03-27
 +++
 
 ## Prelude
 
-I have been researching alternative means to initialize and parameterize MLPs for use in deep learning pipelines. Orthonormal matrices continue to come up as a fundamental building block of some methods. This post is about my journey to find the fastest way to parameterize them in modern machine learning stacks.
+I have been researching alternative methods to initialize and parameterize dense layers for use in deep learning pipelines. Orthonormal matrices have several interesting properties, including fast inverses (via their transpose) and unit eigenvalues which make them interesting candidates for several methods. 
+
+When coding up solutions, however, the naive QR decomposition proved to be far too slow and cumbersome for generating these matrices. So I turned to the [Matrix Cookbook](https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf) and "got cooking" looking for alternative methods of parametrization. 
+
+This post is about my journey to find the fastest way to parameterize them in modern machine learning stacks. To spoil the surprise, there are methods which are hundreds or thousands of times faster for large matrices than the QR decomposition.
+
+![](/posts/orthonormal_recipe/benchmarks_all.png)
 
 ## Introduction to Orthonormal Matrices
 
-An orthonormal matrix is a square matrix whose rows and columns are orthonormal vectors. In other words, the dot product of any two different rows (or columns) of the matrix is zero, and the dot product of a row (or column) with itself is one. Such a matrix has several properties which make it useful in a machine learning pipeline.
+An orthonormal matrix $Q \in \mathbb{R}^{N \times N}$ is a square matrix whose rows and columns are orthonormal vectors. In other words, the dot product of any two different rows (or columns) of the matrix is zero, and the dot product of a row (or column) with itself is one. Such a matrix has several properties which make it useful in a machine learning pipeline.
 
 | Property      |  Comment   | 
 | ---           | --- |
-| Fast Inverses | If $Q$ is orthonormal, then its inverse is $Q^T$, and $QQ^T = Q^TQ = I$. This makes it easy to build a lot of "there-and-back-again" algorithms which have neat properties.|
-| Unit Eigenvalues | If $Q$ is orthonormal, then the magnitude of each of its eigenvalues is one. This property is useful since it implies multiplying by $Q$ will not change the norm of each of the incoming vectors. | 
-
-Orthonormal matrices are valuable in machine learning pipelines because they preserve the Euclidean norm of vectors. This property is particularly useful when preprocessing data since it ensures that the scale of the data remains unchanged. 
-
-Despite their usefulness, parametrizing orthonormal matrices for machine learning can be difficult. In this post, we will cover some of the ways they can be generated quickly for use in a deep learning pipeline.
-
-While transforms like the QR decomposition exist, they tend to be slow. To spoil the surprise, there are methods which are hundreds of times faster for large matrices
-
-![](/posts/orthonormal_recipe/benchmarks.png)
+| Fast Inverses | If $Q$ is orthonormal, then its inverse is $Q^T$, and $QQ^T = Q^TQ = I$. For algorithms which require forward and backward projections (regression often comes to mind), these matrices provide quick inverses cheaply via the transpose.|
+| Angle-Length Invariance | If $Q$ is orthonormal, then multiplying any matrix by $Q$ will preserve its angle and norms. This property ensures a certain stability during training |
 
 ## Before we begin
 
 Throughout the post, we will be working with numerical examples. Assume we are given a matrix of parameters $A \in \mathbb{R}^{N\times N}$. Critically, $A$ has no constraints: it is just a learnable set of $N^2$ parameters arranged into a rank-2 tensor. 
 
 The stated goal of this post will be to use $A$ to build an orthonormal matrix $Q$ as efficiently as possible. We will use $Q$ as a replacement for dense projections in parts of the pipeline, and we will need to parameterize it efficiently if we hope to succeed.
-
 
 ```
 import jax
@@ -40,15 +37,22 @@ import functools
 import chex
 
 # Utility function for generating the norms of the eigen values of a matrix
-# Note: This function is not available for GPU/TPU backends.
-def eigen_value_norms(x):
-  return jax.vmap(jnp.linalg.norm)(jnp.linalg.eigvals(x))
+def print_orthonormal_check(x):
+  # Carve out for GPUs since they do not implement eigvals.
+  if "cuda" in str(jax.local_devices()):
+    return "not-implemented"
+  eigval_norms = jax.vmap(jnp.linalg.norm)(jnp.linalg.eigvals(x))
+  print(f"Orthonormal Check: ")
+  if len(eigvals) < 10:
+    print(f"  |\lambda| = {eigval_norms}")
+  print(f"  Min: {min(eigvals)}")
+  print(f"  Max: {max(eigvals)}")
 
 # Generate a random matrix
 key = jax.random.PRNGKey(0)
 A = jax.random.normal(key, (4, 4))
 print(f"A: \n{A}")
-print(f"eigen_value_norms(A): \n{eigen_value_norms(A)}")
+print_orthonormal_check(A)
 ```
 
 Yields: 
@@ -71,20 +75,17 @@ $$
 \end{bmatrix}^T
 $$
 
-Clearly $A$ is random and not orthonormal since the magnitude of $A$'s eigenvalues is not equal to one.
+Clearly $A$ is random and not orthonormal since the magnitude of $A$'s eigenvalues are not equal to one.
 
 ## Doesn't Jax Already have functions which do this?
 
-Jax already has functions which initialize parameter matrices as orthonormal matrices such as [`jax.nn.initalizers.orthogonal`](https://jax.readthedocs.io/en/latest/_autosummary/jax.nn.initializers.orthogonal.html). However, these are initializers. During training, it is easy to "lose" orthogonality unless care is taken with the updates.
-
-Another good question: can't we just take the QR decomposition of a learnable matrix and call it a day? We can ! In fact, the QR decomposition method will be compared against others in this post. 
+Jax has functions which initialize parameter matrices as orthonormal matrices such as [`jax.nn.initalizers.orthogonal`](https://jax.readthedocs.io/en/latest/_autosummary/jax.nn.initializers.orthogonal.html). However, these are initializers and not invariants: a dense transform can start orthonormal but quickly be pulled away due to training dynamics unless care is taken with the updates.
 
 ## Take One: QR Decomposition
 
-One approach is to directly utilize $A$ by computing its QR decomposition. Given any matrix, we can decompose it into an orthogonal matrix $Q$ and an upper triangular matrix $R$. By extracting the $Q$ matrix from this decomposition, we obtain an orthonormal matrix.
+One approach to generations $Q$ is to directly utilize $A$ by computing its QR decomposition. Given any matrix, we can decompose it into an orthogonal matrix $Q$ and an upper triangular matrix $R$. By extracting the $Q$ matrix from this decomposition, we obtain an orthonormal matrix.
 
 ```
-# Perform QR decomposition
 @jax.jit
 def qr(x):
   q, _ = jsp.linalg.qr(x)
@@ -93,17 +94,22 @@ def qr(x):
 Q = qr(A)
 
 print(f"Orthonormal Matrix Q: \n{Q}")
-print(f"Eigenvalues Q: \n{eigen_value_norms(Q)}")
+print_orthonormal_check(Q)
 
 ---
+
 Orthonormal Matrix Q:
 [[-0.09262133  0.7986421   0.12070771  0.5822558 ]
  [-0.36504808 -0.4619358  -0.45298663  0.66944635]
  [ 0.8543949   0.04950267 -0.48875752  0.1693365 ]
  [ 0.35800898 -0.38253853  0.7357642   0.42912114]]
-Eigenvalues Q:
-[1.0000002 0.9999999 0.9999999 1.       ]
+Orthonormal Check:
+  |\lambda| = [1.0000002 0.9999999 0.9999999 1.       ]
+  Min: 0.9999998807907104
+  Max: 1.000000238418579
 ```
+
+As expected, the eigenvalues are all near one in magnitude indicating this matrix is near orthonormal. We could print out $Q^TQ$ and check to see how close it is to the identity matrix, but I have found visually this can be difficult.
 
 ## Take Two: Householder Transforms
 
@@ -118,49 +124,63 @@ def householder(x):
   v = x * jnp.reciprocal(jnp.linalg.norm(x))
   return jnp.eye(len(x)) - 2 * jnp.outer(v, v)
 
-# Example with a 4x4 matrix
 H = householder(A[:, 0])
-print(f"Orthonormal Matrix H: \n{H}")
-print(f"eigen_value_norms H: \n{eigen_value_norms(H)}")
+print(f"Householder Matrix: \n{H}")
+print_orthonormal_check(H)
 
 ---
 
-Orthonormal Matrix H:
+Householder Matrix:
 [[ 0.98284256 -0.06762246  0.15827034  0.06631851]
  [-0.06762246  0.7334798   0.62379044  0.26138097]
  [ 0.15827034  0.62379044 -0.45998132 -0.61176205]
  [ 0.06631851  0.26138097 -0.61176205  0.74365914]]
-eigen_value_norms H:
-[1.         0.99999964 1.         1.        ]
+Orthonormal Check:
+  |\lambda| = [1.         0.99999964 1.         1.        ]
+  Min: 0.9999996423721313
+  Max: 1.0
 ```
 
-This, however, does not fully utilize $A$: it only uses its first column. Luckily, the product of two orthonormal matrices is another orthonormal matrix. This fact can be used to build more flexible matrices by multiplying the Householder transforms of a subset of, or all of, the columns of $A$
+This, however, does not fully utilize $A$: it only uses its first column. Luckily, the product of two orthonormal matrices is another orthonormal matrix. This fact can be used to build more flexible matrices by multiplying the Householder transforms of a subset of, or all of, the columns of $A$:
+
+$$
+Q \leftarrow \prod_{i = 0}^{order} I - 2A_i^TA_i
+$$
 
 ```
 @functools.partial(jax.jit, static_argnames=["order"])
-def chained_householder(A, order = None):
+def chained_householder(A, order):
   # chained_householder takes in a matrix, A, and extracts the first _order_
   # column vectors. It then constructs a householder matrix from each column
   # vector extracted and computes their matrix product to create the
   # final orthonormal approximation. If order is None, use all of the columns
   # of A.
   chex.assert_rank(A, 2)
-  if order is not None:
-    A = A[:, 0:order]
-  return jnp.linalg.multi_dot(jax.vmap(householder, in_axes=1)(A))
+  result = jnp.eye(A.shape[0])
+  for i in range(order):
+    h = householder(A[:, i])
+    result = jnp.dot(result, h)
 
-print(f"Chained Householder Matrix: \n{chained_householder(A, order = 2)}")
-print(f"eigen_value_norms: \n{eigen_value_norms(chained_householder(A, order = 2))}")
+  return result
+
+print_orthonormal_check(chained_householder(A, order = 1))
+print_orthonormal_check(chained_householder(A, order = 2))
+print_orthonormal_check(chained_householder(A, order = 4))
 
 ---
 
-Chained Householder Matrix:
-[[-0.19409285  0.44146028  0.4380249   0.75866663]
- [ 0.79662025  0.35965204  0.41836214 -0.24702147]
- [-0.29171947  0.8184333  -0.35301986 -0.34704953]
- [ 0.49256864  0.0770067  -0.7130807   0.49291176]]
-eigen_value_norms:
-[0.99999994 0.99999976 0.99999976 1.        ]
+Orthonormal Check:
+  |\lambda| = [1.         0.99999964 1.         1.        ]
+  Min: 0.9999996423721313
+  Max: 1.0
+Orthonormal Check:
+  |\lambda| = [1.        0.9999999 0.9999999 1.       ]
+  Min: 0.9999998807907104
+  Max: 1.0
+Orthonormal Check:
+  |\lambda| = [1.0000002 1.0000002 1.        1.       ]
+  Min: 1.0
+  Max: 1.000000238418579
 ```
 
 ## Take Three: Cayley Transform
@@ -171,16 +191,16 @@ $$
 Q \leftarrow (I + S)(I - S)^{-1}
 $$
 
-There are two ways to turn $A$ into a skew symmetric matrix: 
+There are two ways parameterize a skew-symmetric matrix $S$ from an arbitary matrix $A$:
 
 | Method | Formulation |
 | --- | --- | 
 | Use all of $A$ directly | $ S \leftarrow A - A^T $ 
 | Use the lower-tri components of $A$ | $$ \begin{align*} A_{\text{lower}} &\leftarrow \text{Tril}(A, \text{diag = false}) \\\\ S &\leftarrow A_{\text{lower}} - A_{\text{lower}}^T \end{align*} $$ | 
 
-This second formulation is preferred, when it is economic, since it allows us to get two orthonormal matrices out of $A$ instead of one if we utilize the upper triangular section of $A$ instead.
+This second formulation is preferred, when possible, since it allows us to get two orthonormal matrices out of $A$ instead of one. The second matrix can be created using the upper triangular portion of $A$ instead.
 
-With the skew-symmetric formulation of $A$, we can generate $Q$:
+With $S$ in hand, we can generate $Q$:
 
 $$
 \begin{align*}
@@ -205,28 +225,24 @@ def cayley_transform(A):
   return (I + S) @ jnp.linalg.inv(I - S)
 
 print(f"Skew-symmetric Matrix: \n{skew_symmetric(A)}")
-print(f"Cayley Transform: \n{cayley_transform(A)}")
-print(f"eigen_value_norms: \n{eigen_value_norms(cayley_transform(A))}")
+print_orthonormal_check(cayley_transform(A))
 
----
+--- 
 
 Skew-symmetric Matrix:
 [[ 0.         -0.33432344  0.7824839   0.32787678]
  [ 0.33432344  0.          0.4539462   1.1234448 ]
  [-0.7824839  -0.4539462   0.          1.6607416 ]
  [-0.32787678 -1.1234448  -1.6607416   0.        ]]
-Cayley Transform:
-[[ 0.35566828 -0.8281733   0.3969655   0.1733424 ]
- [ 0.45279822  0.16153368 -0.4076859   0.77632004]
- [-0.7581913  -0.4245323  -0.3563349   0.3434295 ]
- [ 0.30597383 -0.32834178 -0.74110454 -0.4993353 ]]
-eigen_value_norms:
-[0.9999999 0.9999999 1.        1.       ]
+Orthonormal Check:
+  |\lambda| = [0.9999999 0.9999999 1.        1.       ]
+  Min: 0.9999998807907104
+  Max: 1.0
 ```
 
 ## Take Four: Neumann Approximation to Cayley Transform
 
-In the Cayley Transform, taking the inverse of $(I - S)$ can be expensive. To speed up the Cayley transform, we can use the Neumann series approximation:
+While searching the [Matrix Cookbook](https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf), I found an interesting approximation to speed up the Cayley Transform. In the Cayley Transform, taking the inverse of $(I - S)$ can be expensive. For uses of orthonormal matrices which try to avoid taking inverses in the first place, the inverse itself somewhat defeats the purpose. To speed up the Cayley transform, we can use the Neumann series approximation:
 
 $$
 (I - S)^{-1} \approx \sum_{i = 0}^\infty A^i
@@ -239,51 +255,52 @@ $$
 S &\leftarrow \text{SkewSymmetric}(A) \\\\
 Q &\leftarrow \text{CayleyTransform}(S) \\\\
 &= (I + S)(I - S)^{-1} \\\\
-&\approx (I + S)(I + S + S^2 + S^3 + S^4) \\\\
-&\approx (I + S)(I + S + S^2) \\\\
+&\approx (I + S) \sum_{i = 0}^{order} S^i
 \end{align*}
 $$
 
-The second to last approximation is the fourth-order Neumann approximation while the last approximation is a second-order Neumann approximation.
+In practice, I've found using odd order, $order=1$ or $order=3$, to work best and the approximation also tends to improve in higher dimensions.
 While not perfect, it is often "good enough for government work".
 
 ```python
-@functools.partial(jax.jit, static_argnames=["expanded"])
-def neumann_approx(A, expanded = False):
+@functools.partial(jax.jit, static_argnames=["order"])
+def neumann_approx(A, order):
   S = skew_symmetric(A)
   # Normalize S to reduce its spectral norm
   S *= jnp.reciprocal(jnp.linalg.norm(S))
   I = jnp.eye(A.shape[0])
-  IS = I + S
-  S2 = jnp.linalg.matrix_power(S, 2)
-  if not expanded:
-    return IS @ (IS + S2)
-  S3 = jnp.linalg.matrix_power(S, 3)
-  S4 = jnp.linalg.matrix_power(S, 4)
-  return IS @ (IS + S2 + S3 + S4)
+  approx = I + S
+  # This method isn't the most numerically stable way to compute
+  # this sum, but it works well enough for demonstration.
+  pow_s = S
+  for i in range(order):
+    pow_s = pow_s @ S
+    approx += pow_s
+  return (I + S) @ approx
 
-print(f"Neumann Matrix: \n{neumann_approx(A)}")
-print(f"eigen_value_norms: \n{eigen_value_norms(neumann_approx(A))}")
-
-print(f"Neumann Matrix with expansion: \n{neumann_approx(A, expanded=True)}")
-print(f"eigen_value_norms: \n{eigen_value_norms(neumann_approx(A, expanded=True))}")
+print_orthonormal_check(neumann_approx(A, order = 0))
+print_orthonormal_check(neumann_approx(A, order = 1))
+print_orthonormal_check(neumann_approx(A, order = 2))
+print_orthonormal_check(neumann_approx(A, order = 3))
 
 ---
 
-Neumann Matrix:
-[[ 0.83558977 -0.36708668  0.27625954  0.31916648]
- [ 0.08097215  0.6876185  -0.11617136  0.7318331 ]
- [-0.5515893  -0.51815355  0.292894    0.6450456 ]
- [ 0.04617295 -0.39037955 -0.9481574   0.1838977 ]]
-eigen_value_norms:
-[1.0491595 1.0491595 1.0000209 1.0000209]
-Neumann Matrix with expansion:
-[[ 0.88549775 -0.30075887  0.30205643  0.19132581]
- [ 0.15770163  0.8115121  -0.00212702  0.56809056]
- [-0.4397213  -0.3150354   0.6141498   0.5885297 ]
- [-0.00865609 -0.39736384 -0.7400856   0.55965173]]
-eigen_value_norms:
-[0.9999999 0.9999999 1.0108453 1.0108453]
+Orthonormal Check:
+  |\lambda| = [1.465294  1.465294  1.0347062 1.0347062]
+  Min: 1.0347062349319458
+  Max: 1.4652940034866333
+Orthonormal Check:
+  |\lambda| = [1.0491595 1.0491595 1.0000209 1.0000209]
+  Min: 1.0000208616256714
+  Max: 1.0491595268249512
+Orthonormal Check:
+  |\lambda| = [0.9987954 0.9987954 0.7835015 0.7835015]
+  Min: 0.7835015058517456
+  Max: 0.9987953901290894
+Orthonormal Check:
+  |\lambda| = [1.0000001 1.0000001 1.0108459 1.0108459]
+  Min: 1.0000001192092896
+  Max: 1.0108458995819092
 ```
 
 ## Take Five: Matrix Exponentials
@@ -291,23 +308,160 @@ eigen_value_norms:
 Matrix exponentials provide yet another method to generate orthonormal matrices. Given a skew symmetric matrix, $S$, we can generate an orthonormal matrix $Q$ using: $ Q \leftarrow \exp(A) $. The matrix exponential is defined as $ \exp(A) = \sum_{k=0}^{\infty} \frac{A^k}{k!} $
 
 ```python
-import functools
-
 @functools.partial(jax.jit, static_argnames=["max_squarings"])
 def expm(A, max_squarings = 16):
   S = skew_symmetric(A)
   return jsp.linalg.expm(S, max_squarings=max_squarings)
 
-print(f"Orthonormal Matrix from Matrix Exponential: \n{expm(A)}")
-print(f"eigen_value_norms: \n{eigen_value_norms(expm(A))}")
+print_orthonormal_check(expm(A))
+
+---
+
+Orthonormal Check:
+  |\lambda| = [1.         1.         0.99999976 0.99999976]
+  Min: 0.9999997615814209
+  Max: 1.0
 ```
 
 ## Which is fastest?
 
 Lets run some profiling code to determine which is fastest for a given matrix size. The following benchmarks were ran using the benchmarking code at the bottom of this post. All functions were ran under `jax.jit` on an A100 CPU.
 
-![](/posts/orthonormal_recipe/benchmarks.png)
+![](/posts/orthonormal_recipe/benchmarks_all.png)
+![](/posts/orthonormal_recipe/benchmarks_breakdown.png)
 
-Two questions come out of this:
+What is best? 
 
-1. What is best? It appears the best method by almost 10x performance is to use a Householder approximation of order two. This makes sense: if you can parameterize a matrix using two matrix multiplies, then it is best to do so. 
+* If you need a fully parameterized, fully orthonormal matrix, then the QR decomposition appears to be your best bet at large matrix sizes.
+* If you need something fast or need to be stingy with parameters, then the Householder reflections of $order=1$ or $order=2$ seem like a decent choice. Only using a parameter count linear in $N$, they are parameter efficient at the cost of less flexibility. Of course, when $order=1$ this amounts to a nearly 2300X speedup and when $order=2$ the speedup is nearly 7x compared to the full QR decomposition at $N=8192$. Not to mention the memory savings are likely to be quite large.
+* If you are OK with a decent approximation (you probably should be), the Neumann Approximation, with $order=1$ or $order=3$ appear to be decent choices. $order=1$ is roughly 1000x faster and $order=3$ is roughly 3X faster than the full QR decomposition at $N=8192$
+* The Cayley Transform and Matrix Exponential methods are far too slow to use on their own.
+
+|index|n|name|time|
+|---|---|---|---|
+|90|8192|qr|0\.21846221209852956|
+|91|8192|householder-order=1|9\.436944965273142e-05|
+|92|8192|householder-order=2|0\.032502647599903865|
+|93|8192|householder-order=3|0\.10345467844745145|
+|94|8192|householder-order=5|0\.18184256530366838|
+|95|8192|cayley-transform|0\.7519991190521977|
+|96|8192|neumann-approx-order=1|0\.0002714382484555244|
+|97|8192|neumann-approx-order=3|0\.0748584695509635|
+|98|8192|expm-maxsq=2|0\.7251319101022091|
+|99|8192|expm-maxsq=10|1\.3546142223000062|
+
+
+## Appendix: Benchmarking Code
+
+```
+import timeit
+import pandas as pd
+from matplotlib import pyplot as plt
+from IPython.display import display
+import tqdm
+
+dat = []
+
+# pbar = tqdm.tqdm(jnp.arange(4, 11))
+pbar = tqdm.tqdm(jnp.arange(4, 14))
+for ni in pbar:
+  key = jax.random.PRNGKey(0)
+  n = 2**ni
+  A = jax.random.normal(key, (n, n))
+
+  nruns = 20
+  dat.append({
+      "n": n,
+      "name": "qr",
+      "time": timeit.timeit(lambda: qr(A), number = nruns) / nruns
+  })
+  dat.append({
+      "n": n,
+      "name": "householder-order=1",
+      "time": timeit.timeit(lambda: chained_householder(A, order = 1), number = nruns) / nruns
+  })
+  dat.append({
+      "n": n,
+      "name": "householder-order=2",
+      "time": timeit.timeit(lambda: chained_householder(A, order = 2), number = nruns) / nruns
+  })
+  dat.append({
+      "n": n,
+      "name": "householder-order=3",
+      "time": timeit.timeit(lambda: chained_householder(A, order = 3), number = nruns) / nruns
+  })
+  dat.append({
+        "n": n,
+        "name": "householder-order=5",
+        "time": timeit.timeit(lambda: chained_householder(A, order=5), number = nruns) / nruns
+  })
+  dat.append({
+      "n": n,
+      "name": "cayley-transform",
+      "time": timeit.timeit(lambda: cayley_transform(A), number = nruns) / nruns
+  })
+  dat.append({
+      "n": n,
+      "name": "neumann-approx-order=1",
+      "time": timeit.timeit(lambda: neumann_approx(A, order =1 ), number = nruns) / nruns
+  })
+  dat.append({
+      "n": n,
+      "name": "neumann-approx-order=3",
+      "time": timeit.timeit(lambda: neumann_approx(A, order=3), number = nruns) / nruns
+  })
+  dat.append({
+      "n": n,
+      "name": "expm-maxsq=2",
+      "time": timeit.timeit(lambda: expm(A, max_squarings=2), number = nruns) / nruns
+  })
+  dat.append({
+      "n": n,
+      "name": "expm-maxsq=10",
+      "time": timeit.timeit(lambda: expm(A, max_squarings=10), number = nruns) / nruns
+  })
+
+
+df = pd.DataFrame(dat)
+df["n"] = df["n"].map(lambda n: int(n))
+display(df)
+```
+
+and then for plotting: 
+
+```
+import plotnine as p9
+from plotnine import aes, coord_flip, facet_wrap, geom_bar, ggplot, labs, scale_y_log10, scale_y_log10, theme
+
+(
+    ggplot(
+      df,
+      aes(x='name', y='time', group='factor(n)', color = 'factor(n)'),
+    )
+    + p9.geom_point()
+    + p9.geom_line()
+    + labs(x='Name', y='Time', fill='n')
+    + p9.scale_y_log10()
+    + theme(figure_size=(12, 8))
+    + theme(axis_text_x=p9.element_text(rotation=45, hjust=1))
+    + p9.ggtitle('Runtime (s) vs Orthonormal Method faceted by Matrix Size $N$ (Log Scale)')
+    + p9.xlab('Method for producing $Q$')
+    + p9.ylab('Runtime (s)')
+)
+
+(
+    ggplot(
+        df.query('n in (32, 1024, 8192)'),
+        aes(x='name', y='time', group='factor(n)'),
+    )
+    + p9.geom_point()
+    + p9.geom_line()
+    + labs(x='Name', y='Time', fill='n')
+    + p9.facet_grid('n~', scales = "free")
+    + theme(figure_size=(12, 8))
+    + theme(axis_text_x=p9.element_text(rotation=45, hjust=1))
+    + p9.ggtitle('Runtime (s) vs Orthonormal Method faceted by Matrix Size $N$ (Absolute Scale)')
+    + p9.xlab('Method for producing $Q$')
+    + p9.ylab('Runtime (s)')
+)
+```
