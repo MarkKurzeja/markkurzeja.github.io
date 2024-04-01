@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/WebPage">
+  <head>
+    
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+ 
+
+
+      <title>Learning Orthonormal Matrices for Machine Learning - TensorTales Blog</title>
+
+  <meta name="description" content="How to learn orthonormal projections">
+  <meta name="author" content="Mark Kurzeja"/><script type="application/ld+json">
+{
+    "@context": "http://schema.org",
+    "@type": "WebSite",
+    "name": "TensorTales",
+    
+    "url": "https:\/\/markkurzeja.github.io"
+}
+</script><script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "Organization",
+  "name": "",
+  "url": "https:\/\/markkurzeja.github.io"
+  
+  
+  
+  
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [{
+        "@type": "ListItem",
+        "position": 1,
+        "item": {
+          "@id": "https:\/\/markkurzeja.github.io",
+          "name": "home"
+        }
+    },{
+        "@type": "ListItem",
+        "position": 3,
+        "item": {
+          "@id": "https:\/\/markkurzeja.github.io\/post\/orthonormal_recipe\/",
+          "name": "Learning orthonormal matrices for machine learning"
+        }
+    }]
+}
+</script><script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "Article",
+  "author": {
+    "name" : "Mark Kurzeja"
+  },
+  "headline": "Learning Orthonormal Matrices for Machine Learning",
+  "description" : "Prelude I have been researching alternative means to initialize and parameterize MLPs for use in deep learning pipelines. Orthonormal matrices continue to come up as a fundamental building block of some methods. This post is about my journey to find the fastest way to parameterize them in modern machine learning stacks.\nIntroduction to Orthonormal Matrices An orthonormal matrix is a square matrix whose rows and columns are orthonormal vectors. In other words, the dot product of any two different rows (or columns) of the matrix is zero, and the dot product of a row (or column) with itself is one.",
+  "inLanguage" : "en",
+  "wordCount":  1626 ,
+  "datePublished" : "2024-03-27T00:00:00",
+  "dateModified" : "2024-03-27T00:00:00",
+  "image" : "https:\/\/markkurzeja.github.io\/logo\/logo_close.png",
+  "keywords" : [ "" ],
+  "mainEntityOfPage" : "https:\/\/markkurzeja.github.io\/post\/orthonormal_recipe\/",
+  "publisher" : {
+    "@type": "Organization",
+    "name" : "https:\/\/markkurzeja.github.io",
+    "logo" : {
+        "@type" : "ImageObject",
+        "url" : "https:\/\/markkurzeja.github.io\/logo\/logo_close.png",
+        "height" :  60 ,
+        "width" :  60
+    }
+  }
+}
+</script>
+
+<meta property="og:title" content="Learning Orthonormal Matrices for Machine Learning" />
+<meta property="og:description" content="How to learn orthonormal projections">
+<meta property="og:image" content="https://markkurzeja.github.io/logo/logo_close.png" />
+<meta property="og:url" content="https://markkurzeja.github.io/post/orthonormal_recipe/" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="TensorTales" />
+
+  <meta name="twitter:title" content="Learning Orthonormal Matrices for Machine Learning" />
+  <meta name="twitter:description" content="How to learn orthonormal projections">
+  <meta name="twitter:image" content="https://markkurzeja.github.io/logo/logo_close.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link href='https://markkurzeja.github.io/logo/logo.ico' rel='icon' type='image/x-icon'/>
+  <meta name="generator" content="Hugo 0.121.2">
+  <link rel="alternate" href="https://markkurzeja.github.io/index.xml" type="application/rss+xml" title="TensorTales"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.7/dist/katex.min.css" integrity="sha384-3UiQGuEI4TTMaFmGIZumfRPtfKQ3trwQE2JgosJxCnGmQpL/lJdjpcHkaaFwHlcI" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous"><link rel="stylesheet" href="https://markkurzeja.github.io/css/main.css" /><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" />
+  <link rel="stylesheet" href="https://markkurzeja.github.io/css/highlight.min.css" /><link rel="stylesheet" href="https://markkurzeja.github.io/css/codeblock.css" /><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.2/photoswipe.min.css" integrity="sha384-h/L2W9KefUClHWaty3SLE5F/qvc4djlyR4qY3NUV5HGQBBW7stbcfff1+I/vmsHh" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.2/default-skin/default-skin.min.css" integrity="sha384-iD0dNku6PYSIQLyfTOpB06F2KCZJAKLOThS5HRe8b3ibhdEQ6eKsFf/EeFxdOt5R" crossorigin="anonymous">
+
+
+  </head>
+  <body>
+    <nav class="navbar navbar-default navbar-fixed-top navbar-custom">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#main-navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="https://markkurzeja.github.io">TensorTales</a>
+    </div>
+
+    <div class="collapse navbar-collapse" id="main-navbar">
+      <ul class="nav navbar-nav navbar-right">
+        
+          
+            <li>
+              <a title="Blog" href="/">Blog</a>
+            </li>
+          
+        
+          
+            <li>
+              <a title="About" href="/page/about/">About</a>
+            </li>
+          
+        
+          
+            <li>
+              <a title="Tags" href="/tags">Tags</a>
+            </li>
+          
+        
+
+        
+
+        
+      </ul>
+    </div>
+
+    
+      <div class="avatar-container">
+        <div class="avatar-img-border">
+          <a title="TensorTales" href="https://markkurzeja.github.io">
+            <img class="avatar-img" src="https://markkurzeja.github.io/logo/logo_close.png" alt="TensorTales" />
+          </a>
+        </div>
+      </div>
+    
+
+  </div>
+</nav>
+
+
+
+
+    
+
+
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+<div class="pswp__bg"></div>
+
+<div class="pswp__scroll-wrap">
+    
+    <div class="pswp__container">
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+    </div>
+    
+    <div class="pswp__ui pswp__ui--hidden">
+    <div class="pswp__top-bar">
+      
+      <div class="pswp__counter"></div>
+      <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+      <button class="pswp__button pswp__button--share" title="Share"></button>
+      <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+      <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+      
+      
+      <div class="pswp__preloader">
+        <div class="pswp__preloader__icn">
+          <div class="pswp__preloader__cut">
+            <div class="pswp__preloader__donut"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+      <div class="pswp__share-tooltip"></div>
+    </div>
+    <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+    </button>
+    <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+    </button>
+    <div class="pswp__caption">
+      <div class="pswp__caption__center"></div>
+    </div>
+    </div>
+    </div>
+</div>
+
+
+  
+  
+  
+
+
+
+
+
+
+  
+
+  <header class="header-section ">
+    
+    
+    <div class="intro-header no-img">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+            <div class="post-heading">
+              
+                <h1>Learning Orthonormal Matrices for Machine Learning</h1>
+              
+              
+              
+                
+                  <h2 class="post-subheading">How to learn orthonormal projections</h2>
+                
+              
+              
+                <span class="post-meta">
+  
+  
+  <i class="fas fa-calendar"></i>&nbsp;Posted on Mar 27, 2024
+  
+  
+    &nbsp;|&nbsp;<i class="fas fa-clock"></i>&nbsp;8&nbsp;minutes
+  
+  
+  
+    
+      &nbsp;|&nbsp;<i class="fas fa-user"></i>&nbsp;Mark Kurzeja
+    
+  
+  
+</span>
+
+
+              
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+  </header>
+
+
+    
+<div class="container" role="main">
+  <div class="row">
+    <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+      <article role="main" class="blog-post">
+        <h2 id="prelude">Prelude</h2>
+<p>I have been researching alternative means to initialize and parameterize MLPs for use in deep learning pipelines. Orthonormal matrices continue to come up as a fundamental building block of some methods. This post is about my journey to find the fastest way to parameterize them in modern machine learning stacks.</p>
+<h2 id="introduction-to-orthonormal-matrices">Introduction to Orthonormal Matrices</h2>
+<p>An orthonormal matrix is a square matrix whose rows and columns are orthonormal vectors. In other words, the dot product of any two different rows (or columns) of the matrix is zero, and the dot product of a row (or column) with itself is one. Such a matrix has several properties which make it useful in a machine learning pipeline.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fast Inverses</td>
+<td>If $Q$ is orthonormal, then its inverse is $Q^T$, and $QQ^T = Q^TQ = I$. This makes it easy to build a lot of &ldquo;there-and-back-again&rdquo; algorithms which have neat properties.</td>
+</tr>
+<tr>
+<td>Unit Eigenvalues</td>
+<td>If $Q$ is orthonormal, then the magnitude of each of its eigenvalues is one. This property is useful since it implies multiplying by $Q$ will not change the norm of each of the incoming vectors.</td>
+</tr>
+</tbody>
+</table>
+<p>Orthonormal matrices are valuable in machine learning pipelines because they preserve the Euclidean norm of vectors. This property is particularly useful when preprocessing data since it ensures that the scale of the data remains unchanged.</p>
+<p>Despite their usefulness, parametrizing orthonormal matrices for machine learning can be difficult. In this post, we will cover some of the ways they can be generated quickly for use in a deep learning pipeline.</p>
+<p>While transforms like the QR decomposition exist, they tend to be slow. To spoil the surprise, there are methods which are hundreds of times faster for large matrices</p>
+<p><img src="/posts/orthonormal_recipe/benchmarks.png" alt=""></p>
+<h2 id="before-we-begin">Before we begin</h2>
+<p>Throughout the post, we will be working with numerical examples. Assume we are given a matrix of parameters $A \in \mathbb{R}^{N\times N}$. Critically, $A$ has no constraints: it is just a learnable set of $N^2$ parameters arranged into a rank-2 tensor.</p>
+<p>The stated goal of this post will be to use $A$ to build an orthonormal matrix $Q$ as efficiently as possible. We will use $Q$ as a replacement for dense projections in parts of the pipeline, and we will need to parameterize it efficiently if we hope to succeed.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="n">import</span> <span class="n">jax</span>
+</span></span><span class="line"><span class="cl"><span class="n">import</span> <span class="n">jax</span><span class="o">.</span><span class="n">numpy</span> <span class="n">as</span> <span class="n">jnp</span>
+</span></span><span class="line"><span class="cl"><span class="n">import</span> <span class="n">jax</span><span class="o">.</span><span class="n">scipy</span> <span class="n">as</span> <span class="n">jsp</span>
+</span></span><span class="line"><span class="cl"><span class="n">import</span> <span class="n">functools</span>
+</span></span><span class="line"><span class="cl"><span class="n">import</span> <span class="n">chex</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Utility function for generating the norms of the eigen values of a matrix</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># Note: This function is not available for GPU/TPU backends.</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">eigen_value_norms</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">jax</span><span class="o">.</span><span class="n">vmap</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">)(</span><span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvals</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Generate a random matrix</span>
+</span></span><span class="line"><span class="cl"><span class="n">key</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">PRNGKey</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">A</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&#34;A: </span><span class="se">\n</span><span class="s2">{A}&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&#34;eigen_value_norms(A): </span><span class="se">\n</span><span class="s2">{eigen_value_norms(A)}&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>Yields:</p>
+<p>$$
+A = \begin{bmatrix}
+0.0848 &amp; 1.9098 &amp; 0.2956 &amp; 1.1210 \\
+0.3343 &amp; -0.8261 &amp; 0.6481 &amp; 1.0435 \\
+-0.7825 &amp; -0.4540 &amp; 0.6298 &amp; 0.8152 \\
+-0.3279 &amp; -1.1234 &amp; -1.6607 &amp; 0.2729 \\
+\end{bmatrix}
+$$</p>
+<p>with eigenvalue norms:</p>
+<p>$$
+(||\lambda_1||, \ldots, ||\lambda_4||) =
+\begin{bmatrix}
+1.3769 &amp; 1.9691 &amp; 1.9691 &amp;  1.1398
+\end{bmatrix}^T
+$$</p>
+<p>Clearly $A$ is random and not orthonormal since the magnitude of $A$&rsquo;s eigenvalues is not equal to one.</p>
+<h2 id="doesnt-jax-already-have-functions-which-do-this">Doesn&rsquo;t Jax Already have functions which do this?</h2>
+<p>Jax already has functions which initialize parameter matrices as orthonormal matrices such as <a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.nn.initializers.orthogonal.html"><code>jax.nn.initalizers.orthogonal</code></a>. However, these are initializers. During training, it is easy to &ldquo;lose&rdquo; orthogonality unless care is taken with the updates.</p>
+<p>Another good question: can&rsquo;t we just take the QR decomposition of a learnable matrix and call it a day? We can ! In fact, the QR decomposition method will be compared against others in this post.</p>
+<h2 id="take-one-qr-decomposition">Take One: QR Decomposition</h2>
+<p>One approach is to directly utilize $A$ by computing its QR decomposition. Given any matrix, we can decompose it into an orthogonal matrix $Q$ and an upper triangular matrix $R$. By extracting the $Q$ matrix from this decomposition, we obtain an orthonormal matrix.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl"># Perform QR decomposition
+</span></span><span class="line"><span class="cl">@jax.jit
+</span></span><span class="line"><span class="cl">def qr(x):
+</span></span><span class="line"><span class="cl">  q, _ = jsp.linalg.qr(x)
+</span></span><span class="line"><span class="cl">  return q
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Q = qr(A)
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">print(f&#34;Orthonormal Matrix Q: \n{Q}&#34;)
+</span></span><span class="line"><span class="cl">print(f&#34;Eigenvalues Q: \n{eigen_value_norms(Q)}&#34;)
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">---
+</span></span><span class="line"><span class="cl">Orthonormal Matrix Q:
+</span></span><span class="line"><span class="cl">[[-0.09262133  0.7986421   0.12070771  0.5822558 ]
+</span></span><span class="line"><span class="cl"> [-0.36504808 -0.4619358  -0.45298663  0.66944635]
+</span></span><span class="line"><span class="cl"> [ 0.8543949   0.04950267 -0.48875752  0.1693365 ]
+</span></span><span class="line"><span class="cl"> [ 0.35800898 -0.38253853  0.7357642   0.42912114]]
+</span></span><span class="line"><span class="cl">Eigenvalues Q:
+</span></span><span class="line"><span class="cl">[1.0000002 0.9999999 0.9999999 1.       ]
+</span></span></code></pre></div><h2 id="take-two-householder-transforms">Take Two: Householder Transforms</h2>
+<p>Another method of transforming $A$ into $Q$ involves Householder transformations. In a Householder transform, we are given a vector $v$. We can generate an orthonormal matrix $Q$ via:</p>
+<p>$$ Q \leftarrow I - 2 v^Tv$$</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">@jax.jit
+</span></span><span class="line"><span class="cl">def householder(x):
+</span></span><span class="line"><span class="cl">  chex.assert_rank(x, 1)
+</span></span><span class="line"><span class="cl">  v = x * jnp.reciprocal(jnp.linalg.norm(x))
+</span></span><span class="line"><span class="cl">  return jnp.eye(len(x)) - 2 * jnp.outer(v, v)
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"># Example with a 4x4 matrix
+</span></span><span class="line"><span class="cl">H = householder(A[:, 0])
+</span></span><span class="line"><span class="cl">print(f&#34;Orthonormal Matrix H: \n{H}&#34;)
+</span></span><span class="line"><span class="cl">print(f&#34;eigen_value_norms H: \n{eigen_value_norms(H)}&#34;)
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">---
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Orthonormal Matrix H:
+</span></span><span class="line"><span class="cl">[[ 0.98284256 -0.06762246  0.15827034  0.06631851]
+</span></span><span class="line"><span class="cl"> [-0.06762246  0.7334798   0.62379044  0.26138097]
+</span></span><span class="line"><span class="cl"> [ 0.15827034  0.62379044 -0.45998132 -0.61176205]
+</span></span><span class="line"><span class="cl"> [ 0.06631851  0.26138097 -0.61176205  0.74365914]]
+</span></span><span class="line"><span class="cl">eigen_value_norms H:
+</span></span><span class="line"><span class="cl">[1.         0.99999964 1.         1.        ]
+</span></span></code></pre></div><p>This, however, does not fully utilize $A$: it only uses its first column. Luckily, the product of two orthonormal matrices is another orthonormal matrix. This fact can be used to build more flexible matrices by multiplying the Householder transforms of a subset of, or all of, the columns of $A$</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="err">@</span><span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">jit</span><span class="p">,</span> <span class="n">static_argnames</span><span class="o">=</span><span class="p">[</span><span class="s2">&#34;order&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">chained_householder</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">order</span> <span class="o">=</span> <span class="n">None</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">  <span class="c1"># chained_householder takes in a matrix, A, and extracts the first _order_</span>
+</span></span><span class="line"><span class="cl">  <span class="c1"># column vectors. It then constructs a householder matrix from each column</span>
+</span></span><span class="line"><span class="cl">  <span class="c1"># vector extracted and computes their matrix product to create the</span>
+</span></span><span class="line"><span class="cl">  <span class="c1"># final orthonormal approximation. If order is None, use all of the columns</span>
+</span></span><span class="line"><span class="cl">  <span class="c1"># of A.</span>
+</span></span><span class="line"><span class="cl">  <span class="n">chex</span><span class="o">.</span><span class="n">assert_rank</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="n">order</span> <span class="n">is</span> <span class="ow">not</span> <span class="n">None</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">A</span> <span class="o">=</span> <span class="n">A</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="n">order</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">vmap</span><span class="p">(</span><span class="n">householder</span><span class="p">,</span> <span class="n">in_axes</span><span class="o">=</span><span class="mi">1</span><span class="p">)(</span><span class="n">A</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&#34;Chained Householder Matrix: </span><span class="se">\n</span><span class="s2">{chained_householder(A, order = 2)}&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&#34;eigen_value_norms: </span><span class="se">\n</span><span class="s2">{eigen_value_norms(chained_householder(A, order = 2))}&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="o">---</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">Chained</span> <span class="n">Householder</span> <span class="n">Matrix</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl"><span class="p">[[</span><span class="o">-</span><span class="mf">0.19409285</span>  <span class="mf">0.44146028</span>  <span class="mf">0.4380249</span>   <span class="mf">0.75866663</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"> <span class="p">[</span> <span class="mf">0.79662025</span>  <span class="mf">0.35965204</span>  <span class="mf">0.41836214</span> <span class="o">-</span><span class="mf">0.24702147</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"> <span class="p">[</span><span class="o">-</span><span class="mf">0.29171947</span>  <span class="mf">0.8184333</span>  <span class="o">-</span><span class="mf">0.35301986</span> <span class="o">-</span><span class="mf">0.34704953</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"> <span class="p">[</span> <span class="mf">0.49256864</span>  <span class="mf">0.0770067</span>  <span class="o">-</span><span class="mf">0.7130807</span>   <span class="mf">0.49291176</span><span class="p">]]</span>
+</span></span><span class="line"><span class="cl"><span class="n">eigen_value_norms</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="mf">0.99999994</span> <span class="mf">0.99999976</span> <span class="mf">0.99999976</span> <span class="mf">1.</span>        <span class="p">]</span>
+</span></span></code></pre></div><h2 id="take-three-cayley-transform">Take Three: Cayley Transform</h2>
+<p>The Cayley transform provides another method to generate orthonormal matrices. Given a skew-symmetric matrix $S$, $Q$ can be formed via:</p>
+<p>$$
+Q \leftarrow (I + S)(I - S)^{-1}
+$$</p>
+<p>There are two ways to turn $A$ into a skew symmetric matrix:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Formulation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Use all of $A$ directly</td>
+<td>$ S \leftarrow A - A^T $</td>
+</tr>
+<tr>
+<td>Use the lower-tri components of $A$</td>
+<td>$$ \begin{align*} A_{\text{lower}} &amp;\leftarrow \text{Tril}(A, \text{diag = false}) \\ S &amp;\leftarrow A_{\text{lower}} - A_{\text{lower}}^T \end{align*} $$</td>
+</tr>
+</tbody>
+</table>
+<p>This second formulation is preferred, when it is economic, since it allows us to get two orthonormal matrices out of $A$ instead of one if we utilize the upper triangular section of $A$ instead.</p>
+<p>With the skew-symmetric formulation of $A$, we can generate $Q$:</p>
+<p>$$
+\begin{align*}
+S &amp;\leftarrow \text{SkewSymmetric}(A) \\
+Q &amp;\leftarrow \text{CayleyTransform}(S) \\
+&amp;= (I + S)(I - S)^{-1}
+\end{align*}
+$$</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nd">@jax.jit</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">skew_symmetric</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">  <span class="n">chex</span><span class="o">.</span><span class="n">assert_rank</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="n">A_lower</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">numpy</span><span class="o">.</span><span class="n">tril</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">A_lower</span> <span class="o">-</span> <span class="n">A_lower</span><span class="o">.</span><span class="n">T</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nd">@jax.jit</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">cayley_transform</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">  <span class="n">chex</span><span class="o">.</span><span class="n">assert_rank</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="n">S</span> <span class="o">=</span> <span class="n">skew_symmetric</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="n">I</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="p">(</span><span class="n">I</span> <span class="o">+</span> <span class="n">S</span><span class="p">)</span> <span class="o">@</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">I</span> <span class="o">-</span> <span class="n">S</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Skew-symmetric Matrix: </span><span class="se">\n</span><span class="si">{</span><span class="n">skew_symmetric</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Cayley Transform: </span><span class="se">\n</span><span class="si">{</span><span class="n">cayley_transform</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;eigen_value_norms: </span><span class="se">\n</span><span class="si">{</span><span class="n">eigen_value_norms</span><span class="p">(</span><span class="n">cayley_transform</span><span class="p">(</span><span class="n">A</span><span class="p">))</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="o">---</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">Skew</span><span class="o">-</span><span class="n">symmetric</span> <span class="n">Matrix</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl"><span class="p">[[</span> <span class="mf">0.</span>         <span class="o">-</span><span class="mf">0.33432344</span>  <span class="mf">0.7824839</span>   <span class="mf">0.32787678</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"> <span class="p">[</span> <span class="mf">0.33432344</span>  <span class="mf">0.</span>          <span class="mf">0.4539462</span>   <span class="mf">1.1234448</span> <span class="p">]</span>
+</span></span><span class="line"><span class="cl"> <span class="p">[</span><span class="o">-</span><span class="mf">0.7824839</span>  <span class="o">-</span><span class="mf">0.4539462</span>   <span class="mf">0.</span>          <span class="mf">1.6607416</span> <span class="p">]</span>
+</span></span><span class="line"><span class="cl"> <span class="p">[</span><span class="o">-</span><span class="mf">0.32787678</span> <span class="o">-</span><span class="mf">1.1234448</span>  <span class="o">-</span><span class="mf">1.6607416</span>   <span class="mf">0.</span>        <span class="p">]]</span>
+</span></span><span class="line"><span class="cl"><span class="n">Cayley</span> <span class="n">Transform</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl"><span class="p">[[</span> <span class="mf">0.35566828</span> <span class="o">-</span><span class="mf">0.8281733</span>   <span class="mf">0.3969655</span>   <span class="mf">0.1733424</span> <span class="p">]</span>
+</span></span><span class="line"><span class="cl"> <span class="p">[</span> <span class="mf">0.45279822</span>  <span class="mf">0.16153368</span> <span class="o">-</span><span class="mf">0.4076859</span>   <span class="mf">0.77632004</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"> <span class="p">[</span><span class="o">-</span><span class="mf">0.7581913</span>  <span class="o">-</span><span class="mf">0.4245323</span>  <span class="o">-</span><span class="mf">0.3563349</span>   <span class="mf">0.3434295</span> <span class="p">]</span>
+</span></span><span class="line"><span class="cl"> <span class="p">[</span> <span class="mf">0.30597383</span> <span class="o">-</span><span class="mf">0.32834178</span> <span class="o">-</span><span class="mf">0.74110454</span> <span class="o">-</span><span class="mf">0.4993353</span> <span class="p">]]</span>
+</span></span><span class="line"><span class="cl"><span class="n">eigen_value_norms</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="mf">0.9999999</span> <span class="mf">0.9999999</span> <span class="mf">1.</span>        <span class="mf">1.</span>       <span class="p">]</span>
+</span></span></code></pre></div><h2 id="take-four-neumann-approximation-to-cayley-transform">Take Four: Neumann Approximation to Cayley Transform</h2>
+<p>In the Cayley Transform, taking the inverse of $(I - S)$ can be expensive. To speed up the Cayley transform, we can use the Neumann series approximation:</p>
+<p>$$
+(I - S)^{-1} \approx \sum_{i = 0}^\infty A^i
+$$</p>
+<p>The Neumann approximation converges iff $||S|| &lt; 1$ where $||\cdot||$ denotes the matrix norm. If we can ensure $S$ has a small norm, then $Q$ can be expressed as:</p>
+<p>$$
+\begin{align*}
+S &amp;\leftarrow \text{SkewSymmetric}(A) \\
+Q &amp;\leftarrow \text{CayleyTransform}(S) \\
+&amp;= (I + S)(I - S)^{-1} \\
+&amp;\approx (I + S)(I + S + S^2 + S^3 + S^4) \\
+&amp;\approx (I + S)(I + S + S^2) \\
+\end{align*}
+$$</p>
+<p>The second to last approximation is the fourth-order Neumann approximation while the last approximation is a second-order Neumann approximation.
+While not perfect, it is often &ldquo;good enough for government work&rdquo;.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nd">@functools.partial</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">jit</span><span class="p">,</span> <span class="n">static_argnames</span><span class="o">=</span><span class="p">[</span><span class="s2">&#34;expanded&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">neumann_approx</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">expanded</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">  <span class="n">S</span> <span class="o">=</span> <span class="n">skew_symmetric</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="c1"># Normalize S to reduce its spectral norm</span>
+</span></span><span class="line"><span class="cl">  <span class="n">S</span> <span class="o">*=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">reciprocal</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">S</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">  <span class="n">I</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">  <span class="n">IS</span> <span class="o">=</span> <span class="n">I</span> <span class="o">+</span> <span class="n">S</span>
+</span></span><span class="line"><span class="cl">  <span class="n">S2</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_power</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="ow">not</span> <span class="n">expanded</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">IS</span> <span class="o">@</span> <span class="p">(</span><span class="n">IS</span> <span class="o">+</span> <span class="n">S2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="n">S3</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_power</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="n">S4</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_power</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">IS</span> <span class="o">@</span> <span class="p">(</span><span class="n">IS</span> <span class="o">+</span> <span class="n">S2</span> <span class="o">+</span> <span class="n">S3</span> <span class="o">+</span> <span class="n">S4</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Neumann Matrix: </span><span class="se">\n</span><span class="si">{</span><span class="n">neumann_approx</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;eigen_value_norms: </span><span class="se">\n</span><span class="si">{</span><span class="n">eigen_value_norms</span><span class="p">(</span><span class="n">neumann_approx</span><span class="p">(</span><span class="n">A</span><span class="p">))</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Neumann Matrix with expansion: </span><span class="se">\n</span><span class="si">{</span><span class="n">neumann_approx</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;eigen_value_norms: </span><span class="se">\n</span><span class="si">{</span><span class="n">eigen_value_norms</span><span class="p">(</span><span class="n">neumann_approx</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="o">---</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">Neumann</span> <span class="n">Matrix</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl"><span class="p">[[</span> <span class="mf">0.83558977</span> <span class="o">-</span><span class="mf">0.36708668</span>  <span class="mf">0.27625954</span>  <span class="mf">0.31916648</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"> <span class="p">[</span> <span class="mf">0.08097215</span>  <span class="mf">0.6876185</span>  <span class="o">-</span><span class="mf">0.11617136</span>  <span class="mf">0.7318331</span> <span class="p">]</span>
+</span></span><span class="line"><span class="cl"> <span class="p">[</span><span class="o">-</span><span class="mf">0.5515893</span>  <span class="o">-</span><span class="mf">0.51815355</span>  <span class="mf">0.292894</span>    <span class="mf">0.6450456</span> <span class="p">]</span>
+</span></span><span class="line"><span class="cl"> <span class="p">[</span> <span class="mf">0.04617295</span> <span class="o">-</span><span class="mf">0.39037955</span> <span class="o">-</span><span class="mf">0.9481574</span>   <span class="mf">0.1838977</span> <span class="p">]]</span>
+</span></span><span class="line"><span class="cl"><span class="n">eigen_value_norms</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="mf">1.0491595</span> <span class="mf">1.0491595</span> <span class="mf">1.0000209</span> <span class="mf">1.0000209</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="n">Neumann</span> <span class="n">Matrix</span> <span class="k">with</span> <span class="n">expansion</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl"><span class="p">[[</span> <span class="mf">0.88549775</span> <span class="o">-</span><span class="mf">0.30075887</span>  <span class="mf">0.30205643</span>  <span class="mf">0.19132581</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"> <span class="p">[</span> <span class="mf">0.15770163</span>  <span class="mf">0.8115121</span>  <span class="o">-</span><span class="mf">0.00212702</span>  <span class="mf">0.56809056</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"> <span class="p">[</span><span class="o">-</span><span class="mf">0.4397213</span>  <span class="o">-</span><span class="mf">0.3150354</span>   <span class="mf">0.6141498</span>   <span class="mf">0.5885297</span> <span class="p">]</span>
+</span></span><span class="line"><span class="cl"> <span class="p">[</span><span class="o">-</span><span class="mf">0.00865609</span> <span class="o">-</span><span class="mf">0.39736384</span> <span class="o">-</span><span class="mf">0.7400856</span>   <span class="mf">0.55965173</span><span class="p">]]</span>
+</span></span><span class="line"><span class="cl"><span class="n">eigen_value_norms</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="mf">0.9999999</span> <span class="mf">0.9999999</span> <span class="mf">1.0108453</span> <span class="mf">1.0108453</span><span class="p">]</span>
+</span></span></code></pre></div><h2 id="take-five-matrix-exponentials">Take Five: Matrix Exponentials</h2>
+<p>Matrix exponentials provide yet another method to generate orthonormal matrices. Given a skew symmetric matrix, $S$, we can generate an orthonormal matrix $Q$ using: $ Q \leftarrow \exp(A) $. The matrix exponential is defined as $ \exp(A) = \sum_{k=0}^{\infty} \frac{A^k}{k!} $</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">functools</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nd">@functools.partial</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">jit</span><span class="p">,</span> <span class="n">static_argnames</span><span class="o">=</span><span class="p">[</span><span class="s2">&#34;max_squarings&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">expm</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">max_squarings</span> <span class="o">=</span> <span class="mi">16</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">  <span class="n">S</span> <span class="o">=</span> <span class="n">skew_symmetric</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">jsp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">expm</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">max_squarings</span><span class="o">=</span><span class="n">max_squarings</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Orthonormal Matrix from Matrix Exponential: </span><span class="se">\n</span><span class="si">{</span><span class="n">expm</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;eigen_value_norms: </span><span class="se">\n</span><span class="si">{</span><span class="n">eigen_value_norms</span><span class="p">(</span><span class="n">expm</span><span class="p">(</span><span class="n">A</span><span class="p">))</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><h2 id="which-is-fastest">Which is fastest?</h2>
+<p>Lets run some profiling code to determine which is fastest for a given matrix size. The following benchmarks were ran using the benchmarking code at the bottom of this post. All functions were ran under <code>jax.jit</code> on an A100 CPU.</p>
+<p><img src="/posts/orthonormal_recipe/benchmarks.png" alt=""></p>
+<p>Two questions come out of this:</p>
+<ol>
+<li>What is best? It appears the best method by almost 10x performance is to use a Householder approximation of order two. This makes sense: if you can parameterize a matrix using two matrix multiplies, then it is best to do so.</li>
+</ol>
+
+
+        
+
+        
+            <hr/>
+            <section id="social-share">
+              <div class="list-inline footer-links">
+                
+
+<div class="share-box" aria-hidden="true">
+    <ul class="share">
+      
+      <li>
+        <a href="//twitter.com/share?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2forthonormal_recipe%2f&amp;text=Learning%20Orthonormal%20Matrices%20for%20Machine%20Learning&amp;via=" target="_blank" title="Share on Twitter">
+          <i class="fab fa-twitter"></i>
+        </a>
+      </li>
+  
+      
+      <li>
+        <a href="//www.facebook.com/sharer/sharer.php?u=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2forthonormal_recipe%2f" target="_blank" title="Share on Facebook">
+          <i class="fab fa-facebook"></i>
+        </a>
+      </li>
+  
+      
+      <li>
+        <a href="//reddit.com/submit?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2forthonormal_recipe%2f&amp;title=Learning%20Orthonormal%20Matrices%20for%20Machine%20Learning" target="_blank" title="Share on Reddit">
+          <i class="fab fa-reddit"></i>
+        </a>
+      </li>
+  
+      
+      <li>
+        <a href="//www.linkedin.com/shareArticle?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2forthonormal_recipe%2f&amp;title=Learning%20Orthonormal%20Matrices%20for%20Machine%20Learning" target="_blank" title="Share on LinkedIn">
+          <i class="fab fa-linkedin"></i>
+        </a>
+      </li>
+  
+      
+      <li>
+        <a href="//www.stumbleupon.com/submit?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2forthonormal_recipe%2f&amp;title=Learning%20Orthonormal%20Matrices%20for%20Machine%20Learning" target="_blank" title="Share on StumbleUpon">
+          <i class="fab fa-stumbleupon"></i>
+        </a>
+      </li>
+  
+      
+      <li>
+        <a href="//www.pinterest.com/pin/create/button/?url=https%3a%2f%2fmarkkurzeja.github.io%2fpost%2forthonormal_recipe%2f&amp;description=Learning%20Orthonormal%20Matrices%20for%20Machine%20Learning" target="_blank" title="Share on Pinterest">
+          <i class="fab fa-pinterest"></i>
+        </a>
+      </li>
+    </ul>
+  </div>
+  
+
+              </div>
+            </section>
+        
+
+        
+          
+
+          
+        
+      </article>
+
+      
+        <ul class="pager blog-pager">
+          
+            <li class="previous">
+              <a href="https://markkurzeja.github.io/post/rff_intro/" data-toggle="tooltip" data-placement="top" title="Random Fourier Features, Part I ">&larr; Previous Post</a>
+            </li>
+          
+          
+        </ul>
+      
+
+
+      
+        
+        
+      
+
+    </div>
+  </div>
+</div>
+
+      
+<footer>
+  <div class="container">
+    
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <ul class="list-inline text-center footer-links">
+          
+              <li>
+		
+		  <a href="https://github.com/MarkKurzeja" title="GitHub">
+		
+                  <span class="fa-stack fa-lg">
+                    <i class="fas fa-circle fa-stack-2x"></i>
+                    <i class="fab fa-github fa-stack-1x fa-inverse"></i>
+                  </span>
+                </a>
+              </li>
+          
+          <li>
+            <a href="" title="RSS">
+              <span class="fa-stack fa-lg">
+                <i class="fas fa-circle fa-stack-2x"></i>
+                <i class="fas fa-rss fa-stack-1x fa-inverse"></i>
+              </span>
+            </a>
+          </li>
+          
+        </ul>
+        <p class="credits copyright text-muted">
+          
+            
+              Mark Kurzeja
+            
+          
+
+          &nbsp;&bull;&nbsp;&copy;
+          
+            2024
+          
+
+          
+            &nbsp;&bull;&nbsp;
+            <a href="https://markkurzeja.github.io">TensorTales</a>
+          
+        </p>
+        
+        <p class="credits theme-by text-muted">
+          <a href="https://gohugo.io">Hugo v0.121.2</a> powered &nbsp;&bull;&nbsp; Theme <a href="https://github.com/halogenica/beautifulhugo">Beautiful Hugo</a> adapted from <a href="https://deanattali.com/beautiful-jekyll/">Beautiful Jekyll</a>
+          
+        </p>
+      </div>
+    </div>
+  </div>
+</footer><script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.7/dist/katex.min.js" integrity="sha384-G0zcxDFp5LWZtDuRMnBkk3EphCK1lhEf4UEyEM693ka574TZGwo4IWwS6QLzM/2t" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.7/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+<script src="https://code.jquery.com/jquery-3.7.0.slim.min.js" integrity="sha384-w5y/xIeYixWvfM+A1cEbmHPURnvyqmVg5eVENruEdDjcyRLUSNej7512JQGspFUr" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
+
+<script src="https://markkurzeja.github.io/js/main.js"></script>
+<script src="https://markkurzeja.github.io/js/highlight.min.js"></script>
+<script> hljs.initHighlightingOnLoad(); </script>
+<script> $(document).ready(function() {$("pre.chroma").css("padding","0");}); </script><script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.2/photoswipe.min.js" integrity="sha384-QELNnmcmU8IR9ZAykt67vGr9/rZJdHbiWi64V88fCPaOohUlHCqUD/unNN0BXSqy" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.2/photoswipe-ui-default.min.js" integrity="sha384-m67o7SkQ1ALzKZIFh4CiTA8tmadaujiTa9Vu+nqPSwDOqHrDmxLezTdFln8077+q" crossorigin="anonymous"></script><script src="https://markkurzeja.github.io/js/load-photoswipe.js"></script>
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css" integrity="sha384-wcIxkf4k558AjM3Yz3BBFQUbk/zgIYC2R0QpeeYb+TwlBVMrlgLqwRjRtGZiK7ww" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js" integrity="sha384-hIoBPJpTUs74ddyc4bFZSM1TVlQDA60VBbJS0oA934VSz82sBx1X7kSx2ATBDIyd" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement(document.body, {
+          
+          
+          delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false},
+              {left: '\\(', right: '\\)', display: false},
+              {left: '\\[', right: '\\]', display: true}
+          ],
+          
+          throwOnError : false
+        });
+    });
+</script>
+
+
+    
+  </body>
+</html>
+

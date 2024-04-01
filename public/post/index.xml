@@ -6,8 +6,15 @@
     <description>Recent content in Posts on TensorTales</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Sat, 23 Mar 2024 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 27 Mar 2024 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://markkurzeja.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Learning Orthonormal Matrices for Machine Learning</title>
+      <link>https://markkurzeja.github.io/post/orthonormal_recipe/</link>
+      <pubDate>Wed, 27 Mar 2024 00:00:00 +0000</pubDate>
+      <guid>https://markkurzeja.github.io/post/orthonormal_recipe/</guid>
+      <description>Prelude I have been researching alternative means to initialize and parameterize MLPs for use in deep learning pipelines. Orthonormal matrices continue to come up as a fundamental building block of some methods. This post is about my journey to find the fastest way to parameterize them in modern machine learning stacks.&#xA;Introduction to Orthonormal Matrices An orthonormal matrix is a square matrix whose rows and columns are orthonormal vectors. In other words, the dot product of any two different rows (or columns) of the matrix is zero, and the dot product of a row (or column) with itself is one.</description>
+    </item>
     <item>
       <title>Random Fourier Features, Part I </title>
       <link>https://markkurzeja.github.io/post/rff_intro/</link>
