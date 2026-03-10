@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Your Only Job Is Game Design</title>
+  <link rel="stylesheet" href="tufte.css?v=1773160753"/>
+  <!-- KaTeX for math rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+        crossorigin="anonymous"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+          crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+          crossorigin="anonymous"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false},
+          {left: "\\(", right: "\\)", display: false},
+          {left: "\\[", right: "\\]", display: true}
+        ],
+        throwOnError: false,
+        ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"],
+        ignoredClasses: []
+      });
+
+      // Number sidenotes sequentially via data attributes.
+      var notes = document.querySelectorAll('.sidenote');
+      for (var i = 0; i < notes.length; i++) {
+        notes[i].setAttribute('data-sn', i + 1);
+      }
+    });
+  </script>
+  <style>
+    /* JS-driven sidenote numbering */
+    .sidenote:before { content: attr(data-sn) " "; font-size: 0.8rem; vertical-align: super; }
+  </style>
+</head>
+<body>
+  <article>
+    <h1>Your Only Job Is Game Design</h1>
+    <p class="byline"><span class="author">Mark Kurzeja</span> &middot; <span class="date">2026-03-10</span></p>
+    <p>A managing director once told me that the role of an executive is singular: they are a game designer. Their entire purpose is to set up the players, rules, and incentives of a game to ensure the correct outcomes. It is not their role to decide the strategy of the game nor how the participants should play it. They should merely set up the incentives and let the players optimize.</p>
+<h2 id="the-players">The Players<a class="headerlink" href="#the-players" title="Permanent link">&para;</a></h2>
+<p><strong>Too few breeds fiefdoms. Too many breeds apathy.</strong> If only a handful of participants are allowed to play, you incentivize Game-of-Thrones-style turf wars. If there are too many, no one can make meaningful progress without stepping on someone else&rsquo;s toes.</p>
+<h2 id="the-rules">The Rules<a class="headerlink" href="#the-rules" title="Permanent link">&para;</a></h2>
+<p>There are three components to the rules.</p>
+<p><strong>Goals and scoring.</strong> The first thing you have to decide is what you want to improve and what you don&rsquo;t care about. These need to be explicit. If you don&rsquo;t define what scores points, people will optimize for whatever is most visible, which is rarely what matters most.</p>
+<p><strong>The attribution function.</strong> Who gets the credit? &ldquo;First past the gate&rdquo; is the most common approach, but attribution functions are one of the main reasons fiefdoms exist in the first place. Teams should be rewarded for collaboration, but the focus should be on the individual: if individuals need to form teams to solve a problem, they naturally will.</p>
+<p><strong>The transgression function.</strong> What happens when someone tries to sabotage or circumnavigate the rules? You need to define this upfront. A game without enforcement isn&rsquo;t a game — it&rsquo;s a suggestion.</p>
+<h2 id="the-incentives">The Incentives<a class="headerlink" href="#the-incentives" title="Permanent link">&para;</a></h2>
+<p>There are four levers on the incentive side.</p>
+<p><strong>The do-nothing option.</strong> Define what happens if a player takes no action. You want this to be as painful as possible. You can exacerbate this by choosing participants carefully — a highly leveraged salesman paid 30k base salary in the do-nothing case behaves very differently than a wealthy one.</p>
+<p><strong>High marginal benefits.</strong> The human brain responds well to claiming a high percentage of the value it creates. If an individual can capture a meaningful share of what they land the firm, they are naturally incentivized. The problem is that this often doesn&rsquo;t scale — if someone saves a billion dollars and you give them 80% of it, you&rsquo;ve wiped out the entire gain.</p>
+<p><strong>Lotteries.</strong> When marginal payouts can&rsquo;t be large, use probabilistic outsized rewards. Imagine telling a team: if these 15-20 apps are rescanned at least three times over 15 days, the team gets 10 million. This incentivizes faster pipelines <em>and</em> better coverage simultaneously. Lotteries work because people overweight the possibility of a big win.</p>
+<p><strong>Knock-in barriers.</strong> Set aggressive thresholds with outsized payoffs on the other side. If you beat the threshold, the reward is disproportionately large. This creates a clear target that everyone rallies around.</p>
+<h2 id="dont-dictate-strategy-design-the-game">Don&rsquo;t Dictate Strategy — Design the Game<a class="headerlink" href="#dont-dictate-strategy-design-the-game" title="Permanent link">&para;</a></h2>
+<p>The problem with an exec dictating strategy directly is that they may change their mind, leaving everyone stranded. If the game is designed correctly, the optimal strategy emerges on its own.</p>
+<p>For example: if you tell a team they need to speed up a pipeline 10x, one of the only viable paths is to adopt generative models — you never had to mandate it. If you say the backlog must be cleared in two months, the team will naturally build classifiers and risk thresholds — you never had to prescribe the approach.</p>
+<p>The goal is to force upon the participants a certain risk function and let them optimize however they see fit. If you award 10 points for every item removed from a backlog and only 5 points for every escalation, people will clear the backlog without reviewing anything. If you award 10 points per item removed but subtract a million for every missed escalation, you get a very different risk threshold. The scoring <em>is</em> the strategy.</p>
+  </article>
+</body>
+</html>
