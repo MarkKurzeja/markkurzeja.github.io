@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Learning Orthonormal Matrices For Deep Learning Pipelines</title>
-  <link rel="stylesheet" href="tufte.css?v=1773153500"/>
+  <link rel="stylesheet" href="tufte.css?v=1773155354"/>
   <!-- KaTeX for math rendering -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
         crossorigin="anonymous"/>
@@ -23,24 +23,19 @@
         ],
         throwOnError: false,
         ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"],
-        ignoredClasses: ["sidenote", "marginnote"]
+        ignoredClasses: []
       });
 
-      // CSS counters break inside <details> elements (Chrome/Safari bug).
-      // Fix sidenote numbering with JS instead.
-      var nums = document.querySelectorAll('.sidenote-number');
+      // Number sidenotes sequentially via data attributes.
       var notes = document.querySelectorAll('.sidenote');
-      for (var i = 0; i < nums.length; i++) {
-        nums[i].setAttribute('data-sn', i + 1);
-        if (notes[i]) notes[i].setAttribute('data-sn', i + 1);
+      for (var i = 0; i < notes.length; i++) {
+        notes[i].setAttribute('data-sn', i + 1);
       }
     });
   </script>
   <style>
-    /* JS-driven sidenote numbering (replaces broken CSS counters in <details>) */
-    .sidenote-number { counter-increment: none; }
-    .sidenote-number:after { content: attr(data-sn); }
-    .sidenote:before { content: attr(data-sn) " "; }
+    /* JS-driven sidenote numbering */
+    .sidenote:before { content: attr(data-sn) " "; font-size: 0.8rem; vertical-align: super; }
   </style>
 </head>
 <body>
@@ -53,9 +48,12 @@ This post benchmarks several methods for efficiently parameterizing orthonormal 
 
 <h2 id="prelude">Prelude<a class="headerlink" href="#prelude" title="Permanent link">&para;</a></h2>
 <p>I have been researching alternative methods to initialize and parameterize dense layers for use in deep learning pipelines. Orthonormal matrices have several interesting properties, including fast inverses (via their transpose) and unit eigenvalues which make them interesting candidates for several methods.</p>
-<p>When coding up solutions, however, the naive QR decomposition proved to be far too slow and cumbersome for generating these matrices. So I turned to the <a href="https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf">Matrix Cookbook</a> and &ldquo;got cooking&rdquo; looking for alternative methods of parametrization.</p>
+<p>When coding up solutions, however, the naive QR decomposition proved to be far too slow and cumbersome for generating these matrices. So I turned to the Matrix Cookbook and &ldquo;got cooking&rdquo; looking for alternative methods of parametrization.<span class="marginnote"><a href='https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf'>The Matrix Cookbook</a> — an invaluable reference for matrix identities and decompositions.</span></p>
 <p>This post is about my journey to find the fastest way to parameterize them in modern machine learning stacks. To spoil the surprise, there are methods which are hundreds or thousands of times faster for large matrices than the QR decomposition.</p>
-<p><img src="posts/orthonormal_recipe/benchmarks_all.png" alt="Benchmarks of all orthonormal matrix methods"/></p>
+<figure class="fullwidth">
+<img src="posts/orthonormal_recipe/benchmarks_all.png" alt="Benchmarks of all orthonormal matrix methods"/>
+</figure>
+
 <h2 id="introduction-to-orthonormal-matrices">Introduction to Orthonormal Matrices<a class="headerlink" href="#introduction-to-orthonormal-matrices" title="Permanent link">&para;</a></h2>
 <p>An orthonormal matrix $Q \in \mathbb{R}^{N \times N}$ is a square matrix whose rows and columns are orthonormal vectors. In other words, the dot product of any two different rows (or columns) of the matrix is zero, and the dot product of a row (or column) with itself is one. Such a matrix has several properties which make it useful in a machine learning pipeline.</p>
 <table>
@@ -121,7 +119,7 @@ $$</p>
 $$</p>
 <p>Clearly $A$ is random and not orthonormal since the magnitude of $A$&rsquo;s eigenvalues are not equal to one.</p>
 <h2 id="doesnt-jax-already-have-functions-which-do-this">Doesn&rsquo;t Jax Already have functions which do this?<a class="headerlink" href="#doesnt-jax-already-have-functions-which-do-this" title="Permanent link">&para;</a></h2>
-<p>Jax has functions which initialize parameter matrices as orthonormal matrices such as <a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.nn.initializers.orthogonal.html"><code>jax.nn.initalizers.orthogonal</code></a>. However, these are initializers and not invariants: a dense transform can start orthonormal but quickly be pulled away due to training dynamics unless care is taken with the updates.</p>
+<p>Jax has functions which initialize parameter matrices as orthonormal matrices such as <a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.nn.initializers.orthogonal.html"><code>jax.nn.initalizers.orthogonal</code></a>.<span class="sidenote">However, these are initializers and not invariants: a dense transform can start orthonormal but quickly be pulled away due to training dynamics unless care is taken with the updates.</span></p>
 <h2 id="take-one-qr-decomposition">Take One: QR Decomposition<a class="headerlink" href="#take-one-qr-decomposition" title="Permanent link">&para;</a></h2>
 <p>One approach to generations $Q$ is to directly utilize $A$ by computing its QR decomposition. Given any matrix, we can decompose it into an orthogonal matrix $Q$ and an upper triangular matrix $R$. By extracting the $Q$ matrix from this decomposition, we obtain an orthonormal matrix.</p>
 <pre><code class="language-python">@jax.jit
@@ -145,7 +143,7 @@ Orthonormal Check:
   Min: 0.9999998807907104
   Max: 1.000000238418579
 </code></pre>
-<p>As expected, the eigenvalues are all near one in magnitude indicating this matrix is near orthonormal. We could print out $Q^TQ$ and check to see how close it is to the identity matrix, but I have found visually this can be difficult.</p>
+<p>As expected, the eigenvalues are all near one in magnitude indicating this matrix is near orthonormal.<span class="sidenote">We could print out $Q^TQ$ and check to see how close it is to the identity matrix, but I have found visually this can be difficult.</span></p>
 <h2 id="take-two-householder-transforms">Take Two: Householder Transforms<a class="headerlink" href="#take-two-householder-transforms" title="Permanent link">&para;</a></h2>
 <p>Another method of transforming $A$ into $Q$ involves Householder transformations. In a Householder transform, we are given a vector $v$. We can generate an orthonormal matrix $Q$ via:</p>
 <p>$$ Q \leftarrow I - 2 v^Tv$$</p>
@@ -170,7 +168,7 @@ Orthonormal Check:
   Min: 0.9999996423721313
   Max: 1.0
 </code></pre>
-<p>This, however, does not fully utilize $A$: it only uses its first column. Luckily, the product of two orthonormal matrices is another orthonormal matrix. This fact can be used to build more flexible matrices by multiplying the Householder transforms of a subset of, or all of, the columns of $A$:</p>
+<p>This, however, does not fully utilize $A$: it only uses its first column. Luckily, we can build more flexible matrices by multiplying multiple Householder transforms together.<span class="sidenote">The product of two orthonormal matrices is itself orthonormal, so chaining Householder reflections preserves orthonormality.</span> We multiply the Householder transforms of a subset of, or all of, the columns of $A$:</p>
 <p>$$
 Q \leftarrow \prod_{i = 0}^{order} I - 2A_i^TA_i
 $$</p>
@@ -231,8 +229,7 @@ $$</p>
 </tr>
 </tbody>
 </table>
-<p>This second formulation is preferred, when possible, since it allows us to get two orthonormal matrices out of $A$ instead of one. The second matrix can be created using the upper triangular portion of $A$ instead.</p>
-<p>With $S$ in hand, we can generate $Q$:</p>
+<p>With $S$ in hand, we can generate $Q$:<span class="sidenote">The second formulation is preferred, when possible, since it allows us to get two orthonormal matrices out of $A$ instead of one. The second matrix can be created using the upper triangular portion of $A$ instead.</span></p>
 <p>$$
 \begin{align*}
 S &\leftarrow \text{SkewSymmetric}(A) \\\\
@@ -268,11 +265,11 @@ Orthonormal Check:
   Max: 1.0
 </code></pre>
 <h2 id="take-four-neumann-approximation-to-cayley-transform">Take Four: Neumann Approximation to Cayley Transform<a class="headerlink" href="#take-four-neumann-approximation-to-cayley-transform" title="Permanent link">&para;</a></h2>
-<p>While searching the <a href="https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf">Matrix Cookbook</a>, I found an interesting approximation to speed up the Cayley Transform. In the Cayley Transform, taking the inverse of $(I - S)$ can be expensive. For uses of orthonormal matrices which try to avoid taking inverses in the first place, the inverse itself somewhat defeats the purpose. To speed up the Cayley transform, we can use the Neumann series approximation:</p>
+<p>While searching the Matrix Cookbook,<span class="marginnote"><a href='https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf'>The Matrix Cookbook</a> — see Section 9.3 on matrix inverses and approximations.</span> I found an interesting approximation to speed up the Cayley Transform. In the Cayley Transform, taking the inverse of $(I - S)$ can be expensive. For uses of orthonormal matrices which try to avoid taking inverses in the first place, the inverse itself somewhat defeats the purpose. To speed up the Cayley transform, we can use the Neumann series approximation:</p>
 <p>$$
 (I - S)^{-1} \approx \sum_{i = 0}^\infty A^i
 $$</p>
-<p>The Neumann approximation converges iff $||S|| < 1$ where $||\cdot||$ denotes the matrix norm. If we can ensure $S$ has a small norm, then $Q$ can be expressed as:</p>
+<p>If we can ensure $S$ has a small norm, then $Q$ can be expressed as:<span class="sidenote">The Neumann approximation converges iff $||S|| < 1$ where $||\cdot||$ denotes the matrix norm.</span></p>
 <p>$$
 \begin{align*}
 S &\leftarrow \text{SkewSymmetric}(A) \\\\
@@ -281,8 +278,7 @@ Q &\leftarrow \text{CayleyTransform}(S) \\\\
 &\approx (I + S) \sum_{i = 0}^{order} S^i
 \end{align*}
 $$</p>
-<p>In practice, I&rsquo;ve found using odd order, $order=1$ or $order=3$, to work best and the approximation also tends to improve in higher dimensions.
-While not perfect, it is often &ldquo;good enough for government work&rdquo;.</p>
+<p>The code is straightforward:<span class="sidenote">In practice, I&rsquo;ve found using odd order, $order=1$ or $order=3$, to work best and the approximation also tends to improve in higher dimensions. While not perfect, it is often &ldquo;good enough for government work&rdquo;.</span></p>
 <pre><code class="language-python">@functools.partial(jax.jit, static_argnames=[&quot;order&quot;])
 def neumann_approx(A, order):
   S = skew_symmetric(A)
@@ -337,9 +333,15 @@ print_orthonormal_check(expm(A))
   Max: 1.0
 </code></pre>
 <h2 id="which-is-fastest">Which is fastest?<a class="headerlink" href="#which-is-fastest" title="Permanent link">&para;</a></h2>
-<p>Lets run some profiling code to determine which is fastest for a given matrix size. The following benchmarks were ran using the benchmarking code at the bottom of this post. All functions were ran under <code>jax.jit</code> on an A100 CPU.</p>
-<p><img src="posts/orthonormal_recipe/benchmarks_all.png" alt="Benchmarks of all orthonormal matrix methods"/>
-<img src="posts/orthonormal_recipe/benchmarks_breakdown.png" alt="Benchmarks breakdown by matrix size"/></p>
+<p>Lets run some profiling code to determine which is fastest for a given matrix size. The following benchmarks were ran using the benchmarking code at the bottom of this post.<span class="marginnote">All functions were ran under <code>jax.jit</code> on an A100 CPU.</span></p>
+<figure class="fullwidth">
+<img src="posts/orthonormal_recipe/benchmarks_all.png" alt="Benchmarks of all orthonormal matrix methods"/>
+</figure>
+
+<figure class="fullwidth">
+<img src="posts/orthonormal_recipe/benchmarks_breakdown.png" alt="Benchmarks breakdown by matrix size"/>
+</figure>
+
 <p>What is best?</p>
 <ul>
 <li>If you need a fully parameterized, fully orthonormal matrix, then the QR decomposition appears to be your best bet at large matrix sizes.</li>
@@ -361,61 +363,61 @@ print_orthonormal_check(expm(A))
 <td>90</td>
 <td>8192</td>
 <td>qr</td>
-<td>0.21846221209852956</td>
+<td>218.46 ms</td>
 </tr>
 <tr>
 <td>91</td>
 <td>8192</td>
 <td>householder-order=1</td>
-<td>9.436944965273142e-05</td>
+<td>0.09 ms</td>
 </tr>
 <tr>
 <td>92</td>
 <td>8192</td>
 <td>householder-order=2</td>
-<td>0.032502647599903865</td>
+<td>32.50 ms</td>
 </tr>
 <tr>
 <td>93</td>
 <td>8192</td>
 <td>householder-order=3</td>
-<td>0.10345467844745145</td>
+<td>103.45 ms</td>
 </tr>
 <tr>
 <td>94</td>
 <td>8192</td>
 <td>householder-order=5</td>
-<td>0.18184256530366838</td>
+<td>181.84 ms</td>
 </tr>
 <tr>
 <td>95</td>
 <td>8192</td>
 <td>cayley-transform</td>
-<td>0.7519991190521977</td>
+<td>751.99 ms</td>
 </tr>
 <tr>
 <td>96</td>
 <td>8192</td>
 <td>neumann-approx-order=1</td>
-<td>0.0002714382484555244</td>
+<td>0.27 ms</td>
 </tr>
 <tr>
 <td>97</td>
 <td>8192</td>
 <td>neumann-approx-order=3</td>
-<td>0.0748584695509635</td>
+<td>74.86 ms</td>
 </tr>
 <tr>
 <td>98</td>
 <td>8192</td>
 <td>expm-maxsq=2</td>
-<td>0.7251319101022091</td>
+<td>725.13 ms</td>
 </tr>
 <tr>
 <td>99</td>
 <td>8192</td>
 <td>expm-maxsq=10</td>
-<td>1.3546142223000062</td>
+<td>1354.61 ms</td>
 </tr>
 </tbody>
 </table>

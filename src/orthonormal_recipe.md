@@ -1,6 +1,6 @@
 ---
 title: "Learning Orthonormal Matrices For Deep Learning Pipelines"
-subtitle: "Benchmarks for efficiently parametrizing orthonormal matrices"
+subtitle: "Fast orthonormal matrix parametrization"
 date: 2024-03-27
 author: Mark Kurzeja
 ---
@@ -13,11 +13,13 @@ This post benchmarks several methods for efficiently parameterizing orthonormal 
 
 I have been researching alternative methods to initialize and parameterize dense layers for use in deep learning pipelines. Orthonormal matrices have several interesting properties, including fast inverses (via their transpose) and unit eigenvalues which make them interesting candidates for several methods.
 
-When coding up solutions, however, the naive QR decomposition proved to be far too slow and cumbersome for generating these matrices. So I turned to the [Matrix Cookbook](https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf) and "got cooking" looking for alternative methods of parametrization.
+When coding up solutions, however, the naive QR decomposition proved to be far too slow and cumbersome for generating these matrices. So I turned to the Matrix Cookbook and "got cooking" looking for alternative methods of parametrization.<span class="marginnote"><a href='https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf'>The Matrix Cookbook</a> — an invaluable reference for matrix identities and decompositions.</span>
 
 This post is about my journey to find the fastest way to parameterize them in modern machine learning stacks. To spoil the surprise, there are methods which are hundreds or thousands of times faster for large matrices than the QR decomposition.
 
+<figure class="fullwidth">
 <img src="posts/orthonormal_recipe/benchmarks_all.png" alt="Benchmarks of all orthonormal matrix methods"/>
+</figure>
 
 ## Introduction to Orthonormal Matrices
 
@@ -84,7 +86,7 @@ Clearly $A$ is random and not orthonormal since the magnitude of $A$'s eigenvalu
 
 ## Doesn't Jax Already have functions which do this?
 
-Jax has functions which initialize parameter matrices as orthonormal matrices such as [`jax.nn.initalizers.orthogonal`](https://jax.readthedocs.io/en/latest/_autosummary/jax.nn.initializers.orthogonal.html). However, these are initializers and not invariants: a dense transform can start orthonormal but quickly be pulled away due to training dynamics unless care is taken with the updates.
+Jax has functions which initialize parameter matrices as orthonormal matrices such as [`jax.nn.initalizers.orthogonal`](https://jax.readthedocs.io/en/latest/_autosummary/jax.nn.initializers.orthogonal.html).<span class="sidenote">However, these are initializers and not invariants: a dense transform can start orthonormal but quickly be pulled away due to training dynamics unless care is taken with the updates.</span>
 
 ## Take One: QR Decomposition
 
@@ -116,7 +118,7 @@ Orthonormal Check:
   Max: 1.000000238418579
 ```
 
-As expected, the eigenvalues are all near one in magnitude indicating this matrix is near orthonormal. We could print out $Q^TQ$ and check to see how close it is to the identity matrix, but I have found visually this can be difficult.
+As expected, the eigenvalues are all near one in magnitude indicating this matrix is near orthonormal.<span class="sidenote">We could print out $Q^TQ$ and check to see how close it is to the identity matrix, but I have found visually this can be difficult.</span>
 
 ## Take Two: Householder Transforms
 
@@ -150,7 +152,7 @@ Orthonormal Check:
   Max: 1.0
 ```
 
-This, however, does not fully utilize $A$: it only uses its first column. Luckily, the product of two orthonormal matrices is another orthonormal matrix. This fact can be used to build more flexible matrices by multiplying the Householder transforms of a subset of, or all of, the columns of $A$:
+This, however, does not fully utilize $A$: it only uses its first column. Luckily, we can build more flexible matrices by multiplying multiple Householder transforms together.<span class="sidenote">The product of two orthonormal matrices is itself orthonormal, so chaining Householder reflections preserves orthonormality.</span> We multiply the Householder transforms of a subset of, or all of, the columns of $A$:
 
 $$
 Q \leftarrow \prod_{i = 0}^{order} I - 2A_i^TA_i
@@ -209,9 +211,7 @@ There are two ways parameterize a skew-symmetric matrix $S$ from an arbitary mat
 | Use all of $A$ directly | $ S \leftarrow A - A^T $
 | Use the lower-tri components of $A$ | $$ \begin{align*} A_{\text{lower}} &\leftarrow \text{Tril}(A, \text{diag = false}) \\\\ S &\leftarrow A_{\text{lower}} - A_{\text{lower}}^T \end{align*} $$ |
 
-This second formulation is preferred, when possible, since it allows us to get two orthonormal matrices out of $A$ instead of one. The second matrix can be created using the upper triangular portion of $A$ instead.
-
-With $S$ in hand, we can generate $Q$:
+With $S$ in hand, we can generate $Q$:<span class="sidenote">The second formulation is preferred, when possible, since it allows us to get two orthonormal matrices out of $A$ instead of one. The second matrix can be created using the upper triangular portion of $A$ instead.</span>
 
 $$
 \begin{align*}
@@ -255,13 +255,13 @@ Orthonormal Check:
 
 ## Take Four: Neumann Approximation to Cayley Transform
 
-While searching the [Matrix Cookbook](https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf), I found an interesting approximation to speed up the Cayley Transform. In the Cayley Transform, taking the inverse of $(I - S)$ can be expensive. For uses of orthonormal matrices which try to avoid taking inverses in the first place, the inverse itself somewhat defeats the purpose. To speed up the Cayley transform, we can use the Neumann series approximation:
+While searching the Matrix Cookbook,<span class="marginnote"><a href='https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf'>The Matrix Cookbook</a> — see Section 9.3 on matrix inverses and approximations.</span> I found an interesting approximation to speed up the Cayley Transform. In the Cayley Transform, taking the inverse of $(I - S)$ can be expensive. For uses of orthonormal matrices which try to avoid taking inverses in the first place, the inverse itself somewhat defeats the purpose. To speed up the Cayley transform, we can use the Neumann series approximation:
 
 $$
 (I - S)^{-1} \approx \sum_{i = 0}^\infty A^i
 $$
 
-The Neumann approximation converges iff $||S|| < 1$ where $||\cdot||$ denotes the matrix norm. If we can ensure $S$ has a small norm, then $Q$ can be expressed as:
+If we can ensure $S$ has a small norm, then $Q$ can be expressed as:<span class="sidenote">The Neumann approximation converges iff $||S|| < 1$ where $||\cdot||$ denotes the matrix norm.</span>
 
 $$
 \begin{align*}
@@ -272,8 +272,7 @@ Q &\leftarrow \text{CayleyTransform}(S) \\\\
 \end{align*}
 $$
 
-In practice, I've found using odd order, $order=1$ or $order=3$, to work best and the approximation also tends to improve in higher dimensions.
-While not perfect, it is often "good enough for government work".
+The code is straightforward:<span class="sidenote">In practice, I've found using odd order, $order=1$ or $order=3$, to work best and the approximation also tends to improve in higher dimensions. While not perfect, it is often "good enough for government work".</span>
 
 ```python
 @functools.partial(jax.jit, static_argnames=["order"])
@@ -342,10 +341,15 @@ Orthonormal Check:
 
 ## Which is fastest?
 
-Lets run some profiling code to determine which is fastest for a given matrix size. The following benchmarks were ran using the benchmarking code at the bottom of this post. All functions were ran under `jax.jit` on an A100 CPU.
+Lets run some profiling code to determine which is fastest for a given matrix size. The following benchmarks were ran using the benchmarking code at the bottom of this post.<span class="marginnote">All functions were ran under <code>jax.jit</code> on an A100 CPU.</span>
 
+<figure class="fullwidth">
 <img src="posts/orthonormal_recipe/benchmarks_all.png" alt="Benchmarks of all orthonormal matrix methods"/>
+</figure>
+
+<figure class="fullwidth">
 <img src="posts/orthonormal_recipe/benchmarks_breakdown.png" alt="Benchmarks breakdown by matrix size"/>
+</figure>
 
 What is best?
 
@@ -356,16 +360,16 @@ What is best?
 
 |index|n|name|time|
 |---|---|---|---|
-|90|8192|qr|0\.21846221209852956|
-|91|8192|householder-order=1|9\.436944965273142e-05|
-|92|8192|householder-order=2|0\.032502647599903865|
-|93|8192|householder-order=3|0\.10345467844745145|
-|94|8192|householder-order=5|0\.18184256530366838|
-|95|8192|cayley-transform|0\.7519991190521977|
-|96|8192|neumann-approx-order=1|0\.0002714382484555244|
-|97|8192|neumann-approx-order=3|0\.0748584695509635|
-|98|8192|expm-maxsq=2|0\.7251319101022091|
-|99|8192|expm-maxsq=10|1\.3546142223000062|
+|90|8192|qr|218.46 ms|
+|91|8192|householder-order=1|0.09 ms|
+|92|8192|householder-order=2|32.50 ms|
+|93|8192|householder-order=3|103.45 ms|
+|94|8192|householder-order=5|181.84 ms|
+|95|8192|cayley-transform|751.99 ms|
+|96|8192|neumann-approx-order=1|0.27 ms|
+|97|8192|neumann-approx-order=3|74.86 ms|
+|98|8192|expm-maxsq=2|725.13 ms|
+|99|8192|expm-maxsq=10|1354.61 ms|
 
 
 ## Appendix: Benchmarking Code

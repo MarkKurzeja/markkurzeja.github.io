@@ -157,33 +157,8 @@ a:link {
   position: relative;
 }
 
-.sidenote-number {
-  counter-increment: sidenote-counter;
-}
-
-.sidenote-number:after,
 .sidenote:before {
   font-family: 'Libertinus Serif', 'ET Book', serif;
-  position: relative;
-  vertical-align: baseline;
-}
-
-.sidenote-number:after {
-  content: counter(sidenote-counter);
-  font-size: 1rem;
-  top: -0.5rem;
-  left: 0.1rem;
-}
-
-.sidenote:before {
-  content: counter(sidenote-counter) " ";
-  font-size: 1rem;
-  top: -0.5rem;
-}
-
-/* Margin note indicator */
-.marginnote-ind {
-  margin-right: 0;
 }
 
 /* ---- Code ---- */
@@ -277,6 +252,7 @@ figcaption {
 }
 
 figure.fullwidth {
+  width: 90%;
   max-width: 90%;
   clear: both;
 }
@@ -443,31 +419,54 @@ h3:hover .headerlink {
 }
 
 /* ---- Index / Post list ---- */
+/* Index page uses full width since there are no sidenotes */
+.about,
+.post-list,
+.post-list h2 {
+  width: 85%;
+}
+
 .about {
-  padding-bottom: 1rem;
+  padding-bottom: 1.5rem;
   border-bottom: 1px solid #ccc;
-  margin-bottom: 1rem;
+  margin-bottom: 2rem;
 }
 
 .about p {
   font-size: 1.3rem;
   line-height: 1.8rem;
+  width: 100%;
 }
 
 ul.posts {
   list-style: none;
   padding: 0;
-  width: 55%;
+  width: 100%;
 }
 
 ul.posts li {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.2rem;
   line-height: 1.4;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 0.5rem;
 }
 
 ul.posts li a {
   font-size: 1.4rem;
   font-weight: 400;
+}
+
+.post-subtitle {
+  flex: 1;
+}
+
+.post-date {
+  font-size: 1.0rem;
+  color: #888;
+  margin-left: auto;
+  white-space: nowrap;
 }
 
 .post-subtitle {

@@ -1,5 +1,5 @@
 ---
-title: "Random Fourier Features, Part I"
+title: "Random Fourier Features"
 subtitle: "RFFs deserve to be your method-of-choice for baselines"
 date: 2024-03-23
 author: Mark Kurzeja
@@ -13,18 +13,9 @@ Random Fourier Features (RFF), in my opinion, have one of the best
 performance-to-cost tradeoffs in machine learning techniques today. Simple to
 code, cheap to fit, and unreasonably effective, they have been my
 bread-and-butter for small-to-medium multi-dimensional learning tasks and serve
-as an decent baseline for more complex systems.
+as a decent baseline for more complex systems.
 
-This post builds intuition for RFF through low-dimensional examples &mdash; through code, we will get a "feel" for the approximations they afford.
-
-Note: This post intends to show how RFF works via examples, code, and visuals.
-Great tutorials of RFF, from a mathematical perspective exist and summarizing
-it here would not do the original sources justice.  I highly recommend reading
-Gregory Gundersen's [blog
-post](https://gregorygundersen.com/blog/2019/12/23/random-fourier-features/) or
-Rahimi and Recht's [Reflections on Random Kitchen
-Sinks](https://archives.argmin.net/2017/12/05/kitchen-sinks/) if you are
-curious about *how* these approximations work.
+This post builds intuition for RFF through low-dimensional examples &mdash; through code, we will get a "feel" for the approximations they afford.<span class="sidenote">This post focuses on examples, code, and visuals rather than mathematical derivations. For the math, I highly recommend Gregory Gundersen's <a href="https://gregorygundersen.com/blog/2019/12/23/random-fourier-features/">blog post</a> or Rahimi and Recht's <a href="https://archives.argmin.net/2017/12/05/kitchen-sinks/">Reflections on Random Kitchen Sinks</a>.</span>
 
 ## The Setup
 
@@ -71,13 +62,11 @@ x \sin(3x) & \text{if } x < 0, \\\\
 \end{cases}
 $$
 
-Why this function? Well, for starters, it's easy to visualize. Visualization
-allows us to get a feel for RFF and it's capabilities and short comings. We
-will plot it shortly. More importantly, the function contains a number of
-pathologies. It isn't continuous. It isn't periodic across its domain. It has
-a non-continuous first derivative. Each of these "wrenches", which may trip up
-other algorithms will showcase some of the benefits and shortcomings of RFF
-which is the point of this first post.
+Why this function? For starters, it's easy to visualize, which helps build
+intuition for RFF's capabilities and shortcomings. More importantly, the
+function contains several pathologies: it isn't continuous, it isn't periodic
+across its domain, and it has a discontinuous first derivative. Each of these
+"wrenches" showcases the benefits and shortcomings of RFF.
 
 ### Plots
 
@@ -101,13 +90,7 @@ plt.title('$f(x) = I[X < 0](x \sin(3x)) + I[x\geq 0](1 + x)$')
 This code is nothing special.
 1. We start with $N_{data}$ points
 2. Our input, $x$ has domain $x \in [-\pi, \pi]$.
-3. We set $y = \mathbb{I}[X < 0](x \sin(3x)) + \mathbb{I}[x \geq 0](1 + x)$.
-
-$\mathbb{I}[\cdot]$ is the [Iverson bracket](https://en.wikipedia.org/wiki/Iverson_bracket). For simplicity, in
-this blog post, we will assume all the data fits *in memory*. It's important to
-note this is *not* a constraint of the RFF method in general. In future blog
-posts, we will remove this constraint to show how RFF can be trained in
-a streaming fashion.
+3. We set $y = \mathbb{I}[X < 0](x \sin(3x)) + \mathbb{I}[x \geq 0](1 + x)$.<span class="sidenote">$\mathbb{I}[\cdot]$ is the <a href="https://en.wikipedia.org/wiki/Iverson_bracket">Iverson bracket</a>. For simplicity, we assume all data fits in memory. This is not a constraint of RFF in general &mdash; it can also be trained in a streaming fashion via SGD.</span>
 
 <img src="posts/rff/rff_goal.png" alt="Target function plot"/>
 
@@ -124,11 +107,7 @@ There are three parameters which define the RFF approximation:
 | $\gamma$  | $\mathbb{R} $ | $ \gamma $ acts as the "width" or "frequency" of the kernel approximation. Larger values  of $\gamma$ favor more "local" approximations while smaller values of $ \gamma $ prefer more "global" approximations. I've heuristically found increasing $\gamma$ as a function of R can improve the fit at the cost of larger variance.|
 | $\lambda$ | $\mathbb{R} $ | $ \lambda $ acts as a regularization term. Larger values of $ \lambda $ favor simpler functions. |
 
-In some settings, $\gamma$ and $\lambda$ can be generalized to vectors. For
-this blog post, we will assume they are scalar but we may remove that
-restriction in future blog posts.
-
-And now, RFF:
+And now, RFF:<span class="sidenote">In some settings, $\gamma$ and $\lambda$ can be generalized to vectors. For this blog post, we assume they are scalar here, though the generalization is straightforward.</span>
 
 ```python
 # Setup
@@ -137,7 +116,7 @@ R = 100            # Number of RFF samples
 gamma = R / 10     # Kernel "width" parameter
 llambda = 0.1      # Regularization parameter
 
-# Here is RFF, in all it's glory...
+# Here is RFF, in all its glory...
 kernel = np.random.normal(size=(R, 1))
 bias = 2 * np.pi * np.random.rand(R, 1)
 proj = np.cos(gamma * (X @ kernel.T) + bias.T)
@@ -194,26 +173,18 @@ a lot of data, we will scale $\gamma$ with $R$ to allow for more flexible fits.
 <figcaption>R=100</figcaption>
 </figure>
 
-We can see a minor ringing effect in the fit, akin to [Gibbs
-Phenomenon](https://en.wikipedia.org/wiki/Gibbs_phenomenon) but the
-approximation fits decently well and handles the discontinuities easily.
+We can see a minor ringing effect in the fit,<span class="sidenote">The ringing is akin to <a href="https://en.wikipedia.org/wiki/Gibbs_phenomenon">Gibbs phenomenon</a>.</span> but the approximation fits decently well and handles the discontinuities easily.
 
 ## Underspecification
 
 The function above was difficult to fit, but we had a large amount of data.
-What happens if we reduce the data significantly but keep the fit heavily over
-parameterized ? A good approximation should (a) become better with more
-parameters and (b) self-regularize when it is over-parameterized. This second
-point is important in practice: methods which fail to self-regularize can
-"blow-up" without other interventions. If you have ever fit a polynomial of
-large degree to data, you have likely experienced [Runge
-phenomena](https://www.johndcook.com/blog/2017/11/18/runge-phenomena/) which is
-one such pathology.
+What happens if we reduce the data significantly but keep the fit heavily
+overparameterized? A good approximation should (a) improve with more
+parameters and (b) self-regularize when it is over-parameterized.<span class="sidenote">Methods which fail to self-regularize can "blow up" without intervention. If you have ever fit a high-degree polynomial, you may have experienced <a href="https://www.johndcook.com/blog/2017/11/18/runge-phenomena/">Runge phenomena</a> &mdash; one such pathology.</span>
 
-The second amazing fact of RFF is it has regularization built in. The
-parameters $\gamma$ and $\lambda$ jointly determine how flexible the fit will
-be in the limit. For a fixed $\gamma$ and $\lambda$ we can see this "limiting"
-effect by increasing $R$.
+RFF has regularization built in. The parameters $\gamma$ and $\lambda$ jointly
+determine how flexible the fit will be in the limit. For a fixed $\gamma$ and
+$\lambda$, we can observe this "limiting" effect by increasing $R$.
 
 The plotting code is a slight modification from before. This time, we learn our
 weight matrix, $W$ using the ten training points and then use this learned
@@ -221,14 +192,14 @@ weight matrix to predict for a much denser grid of plotting points. In code:
 
 ```python
 # Setup
-np.random.seed(0)  # Set the random seed for reproducability
+np.random.seed(0)  # Set the random seed for reproducibility
 R = 30            # Number of RFF samples
 gamma = R / 10
 # gamma = min(1, R / 10)     # Kernel "width" parameter
 # gamma = 1     # Kernel "width" parameter
 llambda = 0.1      # Regularization parameter
 
-# Here is RFF, in all it's glory...
+# Here is RFF, in all its glory...
 kernel = np.random.normal(size=(R, 1))
 bias = 2 * np.pi * np.random.rand(R, 1)
 proj = np.cos(gamma * (X @ kernel.T) + bias.T)
@@ -272,8 +243,8 @@ plt.show()
 <figcaption>R=500</figcaption>
 </figure>
 
-Even with hundreds more interpolates than data points, the function naturally
-regularizes itself due to the $\gamma$ and $\lambda$ parameters.
+Even with hundreds more interpolants than data points, RFF naturally
+regularizes itself via the $\gamma$ and $\lambda$ parameters.
 
 ### Misspecification
 What happens if $\gamma$ or $\lambda$ are misspecified?
@@ -308,21 +279,17 @@ What happens if $\gamma$ or $\lambda$ are misspecified?
 <figcaption>Big &#36;\gamma&#36;, Zero &#36;\lambda&#36;</figcaption>
 </figure>
 
-The worst fits come when $\lambda \rightarrow 0$ and $\gamma$ is larger than
-the intrinsic variance of the function. $\lambda$ is a regularization term, so
-as $\lambda \rightarrow 0$, the functional is able to fit the data perfectly at
-the cost of larger variance.
-
-In practice, I typically start with somewhat larger values of $\lambda$ and
-somewhat smaller values of $\gamma$ and adjust them accordingly depending on
-the type of fit I want and how it performs on validation data.
+The worst fits occur when $\lambda \rightarrow 0$ and $\gamma$ exceeds the
+intrinsic variance of the function. Since $\lambda$ controls regularization,
+as $\lambda \rightarrow 0$ the model fits the data perfectly but at the cost
+of larger variance.<span class="sidenote">In practice, I typically start with somewhat larger values of $\lambda$ and somewhat smaller values of $\gamma$ and adjust them accordingly depending on the type of fit I want and how it performs on validation data.</span>
 
 ## Learning by Example: Higher Dimensions
 
-Most analytic methods of curve fitting tend to work well in one dimensional settings
-but quickly become unwieldy in higher dimensions. RFF's third amazing fact is
-that it works, just fine, for inputs *and* outputs which are multidimensional.
-The code changes are almost unnoticeable as well.
+Most analytic curve-fitting methods work well in one dimension but quickly
+become unwieldy in higher dimensions. RFF handles multidimensional inputs
+*and* outputs without modification &mdash; the code changes are almost
+unnoticeable.
 
 ### Function Definition
 
@@ -331,12 +298,7 @@ function:
 
 $$ y = 2 \sin(x_1) + 4 \sin(x_1x_2) $$
 
-Unfortunately, we are limited by human biology in this exploration: with $d_x
-= 2$ and $d_y = 1$, we exhaust the three dimensional limitations of our eyes.
-Worry not, however, since we can still learn a few things in the
-three-dimensional setting.
-
-### Plots
+### Plots<span class="sidenote">With $d_x = 2$ and $d_y = 1$, we exhaust our three-dimensional visual limits, but we can still learn a few things.</span>
 The plotting code, this time, is only slightly more difficult:
 
 ```python
@@ -367,7 +329,7 @@ the $x$ and $y$ dimensions from a grid to a vector of examples.
 
 ```python
 # Setup
-np.random.seed(0)  # Set the random seed for reproducability
+np.random.seed(0)  # Set the random seed for reproducibility
 R = 10             # Number of RFF samples
 gamma = 1          # Kernel "width" parameter
 llambda = 0.1      # Regularization parameter
