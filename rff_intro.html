@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Random Fourier Features, Part I</title>
+  <link rel="stylesheet" href="tufte.css?v=1773153500"/>
+  <!-- KaTeX for math rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+        crossorigin="anonymous"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+          crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+          crossorigin="anonymous"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false},
+          {left: "\\(", right: "\\)", display: false},
+          {left: "\\[", right: "\\]", display: true}
+        ],
+        throwOnError: false,
+        ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"],
+        ignoredClasses: ["sidenote", "marginnote"]
+      });
+
+      // CSS counters break inside <details> elements (Chrome/Safari bug).
+      // Fix sidenote numbering with JS instead.
+      var nums = document.querySelectorAll('.sidenote-number');
+      var notes = document.querySelectorAll('.sidenote');
+      for (var i = 0; i < nums.length; i++) {
+        nums[i].setAttribute('data-sn', i + 1);
+        if (notes[i]) notes[i].setAttribute('data-sn', i + 1);
+      }
+    });
+  </script>
+  <style>
+    /* JS-driven sidenote numbering (replaces broken CSS counters in <details>) */
+    .sidenote-number { counter-increment: none; }
+    .sidenote-number:after { content: attr(data-sn); }
+    .sidenote:before { content: attr(data-sn) " "; }
+  </style>
+</head>
+<body>
+  <article>
+    <h1>Random Fourier Features, Part I</h1>
+    <p class="byline"><span class="author">Mark Kurzeja</span> &middot; <span class="date">2024-03-23</span></p>
+    <div class="abstract">
+Random Fourier Features (RFF) offer one of the best performance-to-cost tradeoffs in machine learning. This post builds intuition for RFF through low-dimensional examples, demonstrating how five lines of code can produce surprisingly effective function approximations with built-in regularization.
+</div>
+
+<p>Random Fourier Features (RFF), in my opinion, have one of the best
+performance-to-cost tradeoffs in machine learning techniques today. Simple to
+code, cheap to fit, and unreasonably effective, they have been my
+bread-and-butter for small-to-medium multi-dimensional learning tasks and serve
+as an decent baseline for more complex systems.</p>
+<p>This post builds intuition for RFF through low-dimensional examples &mdash; through code, we will get a &ldquo;feel&rdquo; for the approximations they afford.</p>
+<p>Note: This post intends to show how RFF works via examples, code, and visuals.
+Great tutorials of RFF, from a mathematical perspective exist and summarizing
+it here would not do the original sources justice.  I highly recommend reading
+Gregory Gundersen&rsquo;s <a href="https://gregorygundersen.com/blog/2019/12/23/random-fourier-features/">blog
+post</a> or
+Rahimi and Recht&rsquo;s <a href="https://archives.argmin.net/2017/12/05/kitchen-sinks/">Reflections on Random Kitchen
+Sinks</a> if you are
+curious about <em>how</em> these approximations work.</p>
+<h2 id="the-setup">The Setup<a class="headerlink" href="#the-setup" title="Permanent link">&para;</a></h2>
+<p>Imagine you have a learning problem where you are given a vector $x$. You need
+to predict a vector $y$. Your goal is to find a function such that the
+approximation error is minimal (for some definition of approximation error).</p>
+<p>$$
+\mathbf{x} = \begin{bmatrix} x_1 \\\\ x_2 \\\\  \cdots \\\\ x_{d_x} \end{bmatrix}
+\xrightarrow{\text{RFF}}
+\mathbf{y} = \begin{bmatrix} y_1 \\\\ y_2 \\\\ \cdots \\\\ y_{d_y} \end{bmatrix}
+$$</p>
+<p>RFF can solve this problem and has a number of advantages:</p>
+<ol>
+<li>RFF generalizes from scalar to multidimensional problems without modification</li>
+<li>RFF can represent nonlinear functions</li>
+<li>RFF can be fit in one of two modes. In &ldquo;batch-mode&rdquo;, all of the data is
+   passed to RFF, in memory, and the fit happens all at once.  In
+   &ldquo;streaming-mode&rdquo;, the algorithm can be trained via SGD like any other
+   deep-learning building block.</li>
+<li>RFF, in &lsquo;batch-mode&rsquo; does not require any advanced libraries outside of random number
+   generation and standard matrix operations.</li>
+<li>RFF can be &ldquo;scaled&rdquo;: RFF has parameters which can be tuned for a given
+   compute or parameter budget</li>
+<li>The approximation is easy to tune: with only three parameters, RFF can get
+   decent performance quickly and reliably.</li>
+</ol>
+<p>Our goal today is to explore using Random Fourier Features, in &ldquo;batch-mode&rdquo;, to
+see how it works.</p>
+<h2 id="learning-by-example-the-one-dimensional-case">Learning by Example: The One Dimensional Case<a class="headerlink" href="#learning-by-example-the-one-dimensional-case" title="Permanent link">&para;</a></h2>
+<h3 id="function-definition">Function Definition<a class="headerlink" href="#function-definition" title="Permanent link">&para;</a></h3>
+<p>Our goal, today, will be to learn-via-example by fitting the following
+(highly-nonlinear) function:</p>
+<p>$$
+y =
+\begin{cases}
+x \sin(3x) & \text{if } x < 0, \\\\
+1 + x & \text{otherwise}.
+\end{cases}
+$$</p>
+<p>Why this function? Well, for starters, it&rsquo;s easy to visualize. Visualization
+allows us to get a feel for RFF and it&rsquo;s capabilities and short comings. We
+will plot it shortly. More importantly, the function contains a number of
+pathologies. It isn&rsquo;t continuous. It isn&rsquo;t periodic across its domain. It has
+a non-continuous first derivative. Each of these &ldquo;wrenches&rdquo;, which may trip up
+other algorithms will showcase some of the benefits and shortcomings of RFF
+which is the point of this first post.</p>
+<h3 id="plots">Plots<a class="headerlink" href="#plots" title="Permanent link">&para;</a></h3>
+<p>Let&rsquo;s see what we are working with:</p>
+<pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+
+N_data = 1000
+X = np.linspace(-np.pi, np.pi, N_data).reshape(N_data, 1)
+y = [np.piecewise(x, x &lt; 0, [x * np.sin(3 * x), 1 + x]) for x in X]
+
+plt.figure(figsize=(10, 6))
+plt.scatter(X, y, label='Data')
+plt.xlabel('x')
+plt.ylabel('y')
+plt.title('$f(x) = I[X < 0](x \sin(3x)) + I[x\geq 0](1 + x)$')
+</code></pre>
+<p>This code is nothing special.
+1. We start with $N_{data}$ points
+2. Our input, $x$ has domain $x \in [-\pi, \pi]$.
+3. We set $y = \mathbb{I}[X < 0](x \sin(3x)) + \mathbb{I}[x \geq 0](1 + x)$.</p>
+<p>$\mathbb{I}[\cdot]$ is the <a href="https://en.wikipedia.org/wiki/Iverson_bracket">Iverson bracket</a>. For simplicity, in
+this blog post, we will assume all the data fits <em>in memory</em>. It&rsquo;s important to
+note this is <em>not</em> a constraint of the RFF method in general. In future blog
+posts, we will remove this constraint to show how RFF can be trained in
+a streaming fashion.</p>
+<p><img src="posts/rff/rff_goal.png" alt="Target function plot"/></p>
+<h3 id="rff-is-five-lines-of-code">RFF is Five Lines of Code<a class="headerlink" href="#rff-is-five-lines-of-code" title="Permanent link">&para;</a></h3>
+<p>The first amazing fact about RFF is that it is four lines of setup and five
+lines of &ldquo;modeling&rdquo; code.</p>
+<p>There are three parameters which define the RFF approximation:</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Rank</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$R$</td>
+<td>$\mathbb{R} $</td>
+<td>Number of &ldquo;features&rdquo; or &ldquo;kernels&rdquo; used by RFF.  The more features, the better the approximation. More features comes at the cost of higher computational overhead.</td>
+</tr>
+<tr>
+<td>$\gamma$</td>
+<td>$\mathbb{R} $</td>
+<td>$ \gamma $ acts as the &ldquo;width&rdquo; or &ldquo;frequency&rdquo; of the kernel approximation. Larger values  of $\gamma$ favor more &ldquo;local&rdquo; approximations while smaller values of $ \gamma $ prefer more &ldquo;global&rdquo; approximations. I&rsquo;ve heuristically found increasing $\gamma$ as a function of R can improve the fit at the cost of larger variance.</td>
+</tr>
+<tr>
+<td>$\lambda$</td>
+<td>$\mathbb{R} $</td>
+<td>$ \lambda $ acts as a regularization term. Larger values of $ \lambda $ favor simpler functions.</td>
+</tr>
+</tbody>
+</table>
+<p>In some settings, $\gamma$ and $\lambda$ can be generalized to vectors. For
+this blog post, we will assume they are scalar but we may remove that
+restriction in future blog posts.</p>
+<p>And now, RFF:</p>
+<pre><code class="language-python"># Setup
+np.random.seed(0)  # Set the random seed for reproducibility
+R = 100            # Number of RFF samples
+gamma = R / 10     # Kernel &quot;width&quot; parameter
+llambda = 0.1      # Regularization parameter
+
+# Here is RFF, in all it's glory...
+kernel = np.random.normal(size=(R, 1))
+bias = 2 * np.pi * np.random.rand(R, 1)
+proj = np.cos(gamma * (X @ kernel.T) + bias.T)
+weights = np.linalg.solve(proj.T @ proj + llambda * np.eye(R), proj.T @ y)
+y_hat = proj @ weights
+
+# And plot the results.
+plt.plot(X, y_hat, label='RFF Approximation', linestyle='-', color = &quot;orange&quot;, lw= 5)
+plt.suptitle(f'RFF Approximation $R={R}, \gamma={gamma}, \lambda={llambda}$')
+plt.legend()
+plt.show()
+</code></pre>
+<p>Slowing down, let&rsquo;s break each line out for explanation. $x$ is our input and
+$y$ is our output. Both are scalars with dimensionality $d_x = 1$ and $d_y = 1$
+respectively. RFF proceeds as follows:</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Shape</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S1: [Sample a kernel, $K$]</td>
+<td>$K \in [R, d_x] $</td>
+<td>$K \sim \mathcal{N}(\mu=0,\sigma=1) $</td>
+</tr>
+<tr>
+<td>S2: [Sample a phase bias $B$]</td>
+<td>$B \in [R, 1] $</td>
+<td>$B\sim 2\pi\text{Uniform}(0, 1) $</td>
+</tr>
+<tr>
+<td>S3: [Project onto random map, $P$]</td>
+<td>$P \in [N_{data}, R] $</td>
+<td>$P \leftarrow \cos\left(\gamma XK^T + B^T\right) $</td>
+</tr>
+<tr>
+<td>S4: [Solve for weights, $W$]</td>
+<td>$W \in [R, d_y] $</td>
+<td>Solve for $W$: $$ \left( P^TP + \lambda I(R)\right)W = P^Ty$$</td>
+</tr>
+<tr>
+<td>S5: [Predict $\hat{y}$]</td>
+<td>$\hat{y} \in [N_{data}, d_y] $</td>
+<td>$\hat{y} = PW$</td>
+</tr>
+</tbody>
+</table>
+<h3 id="plot-the-fit-for-various-values-of-math46">Plot the fit for various values of $R$<a class="headerlink" href="#plot-the-fit-for-various-values-of-math46" title="Permanent link">&para;</a></h3>
+<p>In RFF, the larger $R$ is, the better the approximation (on average).
+Let&rsquo;s plot the fit of our test function for a few values of $R$. Since we have
+a lot of data, we will scale $\gamma$ with $R$ to allow for more flexible fits.</p>
+<figure>
+<img src="posts/rff/rff_2.png" alt="R=2"/>
+<figcaption>R=2</figcaption>
+</figure>
+
+<figure>
+<img src="posts/rff/rff_5.png" alt="R=5"/>
+<figcaption>R=5</figcaption>
+</figure>
+
+<figure>
+<img src="posts/rff/rff_10.png" alt="R=10"/>
+<figcaption>R=10</figcaption>
+</figure>
+
+<figure>
+<img src="posts/rff/rff_30.png" alt="R=30"/>
+<figcaption>R=30</figcaption>
+</figure>
+
+<figure>
+<img src="posts/rff/rff_100.png" alt="R=100"/>
+<figcaption>R=100</figcaption>
+</figure>
+
+<p>We can see a minor ringing effect in the fit, akin to <a href="https://en.wikipedia.org/wiki/Gibbs_phenomenon">Gibbs
+Phenomenon</a> but the
+approximation fits decently well and handles the discontinuities easily.</p>
+<h2 id="underspecification">Underspecification<a class="headerlink" href="#underspecification" title="Permanent link">&para;</a></h2>
+<p>The function above was difficult to fit, but we had a large amount of data.
+What happens if we reduce the data significantly but keep the fit heavily over
+parameterized ? A good approximation should (a) become better with more
+parameters and (b) self-regularize when it is over-parameterized. This second
+point is important in practice: methods which fail to self-regularize can
+&ldquo;blow-up&rdquo; without other interventions. If you have ever fit a polynomial of
+large degree to data, you have likely experienced <a href="https://www.johndcook.com/blog/2017/11/18/runge-phenomena/">Runge
+phenomena</a> which is
+one such pathology.</p>
+<p>The second amazing fact of RFF is it has regularization built in. The
+parameters $\gamma$ and $\lambda$ jointly determine how flexible the fit will
+be in the limit. For a fixed $\gamma$ and $\lambda$ we can see this &ldquo;limiting&rdquo;
+effect by increasing $R$.</p>
+<p>The plotting code is a slight modification from before. This time, we learn our
+weight matrix, $W$ using the ten training points and then use this learned
+weight matrix to predict for a much denser grid of plotting points. In code:</p>
+<pre><code class="language-python"># Setup
+np.random.seed(0)  # Set the random seed for reproducability
+R = 30            # Number of RFF samples
+gamma = R / 10
+# gamma = min(1, R / 10)     # Kernel &quot;width&quot; parameter
+# gamma = 1     # Kernel &quot;width&quot; parameter
+llambda = 0.1      # Regularization parameter
+
+# Here is RFF, in all it's glory...
+kernel = np.random.normal(size=(R, 1))
+bias = 2 * np.pi * np.random.rand(R, 1)
+proj = np.cos(gamma * (X @ kernel.T) + bias.T)
+weights = np.linalg.solve(proj.T @ proj + llambda * np.eye(R), proj.T @ y)
+
+# Define plotx to be a dense grid in the domain of the function. Project
+# plotx using the RFF formulation and reuse the learned weight matrix to
+# estimate the RFF approximation.
+plotx =  np.linspace(-np.pi, np.pi, 1000).reshape(1000, 1)
+proj2 =  np.cos(gamma * (plotx @ kernel.T) + bias.T)
+y_hat = proj2 @ weights
+
+plt.plot(plotx, y_hat, label='RFF Approximation', linestyle='-', color = &quot;orange&quot;, lw= 5)
+plt.suptitle(f'RFF Approximation $R={R}, \gamma={gamma}, \lambda={llambda}$')
+plt.legend()
+plt.show()
+</code></pre>
+<figure>
+<img src="posts/rff/rff_underspecified_2.png" alt="R=2"/>
+<figcaption>R=2</figcaption>
+</figure>
+
+<figure>
+<img src="posts/rff/rff_underspecified_5.png" alt="R=5"/>
+<figcaption>R=5</figcaption>
+</figure>
+
+<figure>
+<img src="posts/rff/rff_underspecified_30.png" alt="R=30"/>
+<figcaption>R=30</figcaption>
+</figure>
+
+<figure>
+<img src="posts/rff/rff_underspecified_100.png" alt="R=100"/>
+<figcaption>R=100</figcaption>
+</figure>
+
+<figure>
+<img src="posts/rff/rff_underspecified_500.png" alt="R=500"/>
+<figcaption>R=500</figcaption>
+</figure>
+
+<p>Even with hundreds more interpolates than data points, the function naturally
+regularizes itself due to the $\gamma$ and $\lambda$ parameters.</p>
+<h3 id="misspecification">Misspecification<a class="headerlink" href="#misspecification" title="Permanent link">&para;</a></h3>
+<p>What happens if $\gamma$ or $\lambda$ are misspecified?</p>
+<figure>
+<img src="posts/rff/rff_underspecified_small_gamma_small_lambda.png" alt="Small gamma, Small lambda"/>
+<figcaption>Small &#36;\gamma&#36;, Small &#36;\lambda&#36;</figcaption>
+</figure>
+
+<figure>
+<img src="posts/rff/rff_underspecified_big_gamma_small_lambda.png" alt="Big gamma, Small lambda"/>
+<figcaption>Big &#36;\gamma&#36;, Small &#36;\lambda&#36;</figcaption>
+</figure>
+
+<figure>
+<img src="posts/rff/rff_underspecified_big_gamma_big_lambda.png" alt="Big gamma, Big lambda"/>
+<figcaption>Big &#36;\gamma&#36;, Big &#36;\lambda&#36;</figcaption>
+</figure>
+
+<figure>
+<img src="posts/rff/rff_underspecified_small_gamma_big_lambda.png" alt="Small gamma, Big lambda"/>
+<figcaption>Small &#36;\gamma&#36;, Big &#36;\lambda&#36;</figcaption>
+</figure>
+
+<figure>
+<img src="posts/rff/rff_underspecified_small_gamma_zero_lambda.png" alt="Small gamma, Zero lambda"/>
+<figcaption>Small &#36;\gamma&#36;, Zero &#36;\lambda&#36;</figcaption>
+</figure>
+
+<figure>
+<img src="posts/rff/rff_underspecified_big_gamma_zero_lambda.png" alt="Big gamma, Zero lambda"/>
+<figcaption>Big &#36;\gamma&#36;, Zero &#36;\lambda&#36;</figcaption>
+</figure>
+
+<p>The worst fits come when $\lambda \rightarrow 0$ and $\gamma$ is larger than
+the intrinsic variance of the function. $\lambda$ is a regularization term, so
+as $\lambda \rightarrow 0$, the functional is able to fit the data perfectly at
+the cost of larger variance.</p>
+<p>In practice, I typically start with somewhat larger values of $\lambda$ and
+somewhat smaller values of $\gamma$ and adjust them accordingly depending on
+the type of fit I want and how it performs on validation data.</p>
+<h2 id="learning-by-example-higher-dimensions">Learning by Example: Higher Dimensions<a class="headerlink" href="#learning-by-example-higher-dimensions" title="Permanent link">&para;</a></h2>
+<p>Most analytic methods of curve fitting tend to work well in one dimensional settings
+but quickly become unwieldy in higher dimensions. RFF&rsquo;s third amazing fact is
+that it works, just fine, for inputs <em>and</em> outputs which are multidimensional.
+The code changes are almost unnoticeable as well.</p>
+<h3 id="function-definition_1">Function Definition<a class="headerlink" href="#function-definition_1" title="Permanent link">&para;</a></h3>
+<p>As before, we are going to learn-by-example and teach RFF to approximate the
+function:</p>
+<p>$$ y = 2 \sin(x_1) + 4 \sin(x_1x_2) $$</p>
+<p>Unfortunately, we are limited by human biology in this exploration: with $d_x
+= 2$ and $d_y = 1$, we exhaust the three dimensional limitations of our eyes.
+Worry not, however, since we can still learn a few things in the
+three-dimensional setting.</p>
+<h3 id="plots_1">Plots<a class="headerlink" href="#plots_1" title="Permanent link">&para;</a></h3>
+<p>The plotting code, this time, is only slightly more difficult:</p>
+<pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+
+# Generate multivariate data for y = 2 * sin(x1) + 4 * sin(x1 * x2)
+N = 1000  # Number of data points along each axis
+x1 = np.linspace(-np.pi, np.pi, N)
+x2 = np.linspace(-np.pi, np.pi, N)
+X1, X2 = np.meshgrid(x1, x2)
+Y = 2 * np.sin(X1) + 4 * np.sin(X1 * X2)
+
+fig = plt.figure(figsize=(14, 7))
+ax = fig.add_subplot(121, projection='3d')
+ax.plot_surface(X1, X2, Y, cmap='viridis', alpha=0.7)
+ax.set_title('$y=2 \sin(x_1) + 4 \sin(x_1 x_2)$')
+</code></pre>
+<p><img src="posts/rff/rff_2d.png" alt="2D target function surface plot"/></p>
+<h3 id="fitting-with-rff">Fitting with RFF<a class="headerlink" href="#fitting-with-rff" title="Permanent link">&para;</a></h3>
+<p>The code for RFF is more-or-less the same as before except we have to &ldquo;flatten&rdquo;
+the $x$ and $y$ dimensions from a grid to a vector of examples.</p>
+<pre><code class="language-python"># Setup
+np.random.seed(0)  # Set the random seed for reproducability
+R = 10             # Number of RFF samples
+gamma = 1          # Kernel &quot;width&quot; parameter
+llambda = 0.1      # Regularization parameter
+
+# Flatten the inputs and outputs
+X1_flat = X1.flatten().reshape(-1, 1)
+X2_flat = X2.flatten().reshape(-1, 1)
+X_flat = np.hstack((X1_flat, X2_flat))
+Y_flat = Y.flatten()
+
+# Random Fourier feature mapping for Gaussian kernel
+kernel = np.random.normal(size=(R, 2))
+bias = 2 * np.pi * np.random.rand(R, 1)
+proj = np.cos(gamma * (X_flat.dot(kernel.T)) + bias.T)
+weights = np.linalg.solve(
+  proj.T.dot(proj) + llambda * np.eye(R),
+  proj.T.dot(Y_flat),
+)
+y_hat = proj.dot(weights).reshape(N, N)
+
+ax2 = fig.add_subplot(122, projection='3d')
+ax2.plot_surface(X1, X2, y_hat, cmap='viridis', alpha=0.7)
+ax2.set_title(f'RFF Approximation; R={R}')
+plt.show()
+</code></pre>
+<p>Which, for different values of $R$ yields:</p>
+<figure>
+<img src="posts/rff/rff_2d_2.png" alt="R=2"/>
+<figcaption>R=2</figcaption>
+</figure>
+
+<figure>
+<img src="posts/rff/rff_2d_5.png" alt="R=5"/>
+<figcaption>R=5</figcaption>
+</figure>
+
+<figure>
+<img src="posts/rff/rff_2d_10.png" alt="R=10"/>
+<figcaption>R=10</figcaption>
+</figure>
+
+<figure>
+<img src="posts/rff/rff_2d_100.png" alt="R=100"/>
+<figcaption>R=100</figcaption>
+</figure>
+
+<figure>
+<img src="posts/rff/rff_2d_200.png" alt="R=200"/>
+<figcaption>R=200</figcaption>
+</figure>
+  </article>
+</body>
+</html>

@@ -1,0 +1,539 @@
+/* tufte.css — Tufte-inspired layout with structured proof styling */
+
+/* ---- Web fonts ---- */
+/* Uncomment ONE @import line to use a web font, or leave all commented for system Palatino. */
+
+/* Option A: Crimson Pro — wider Garamond-style, great screen readability, true small caps */
+/* @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap'); */
+
+/* Option B: Libertinus Serif — successor to Linux Libertine, closest match to KaTeX math */
+@import url('https://fonts.googleapis.com/css2?family=Libertinus+Serif:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap');
+
+/* ---- Base typography ---- */
+html {
+  font-size: 15px;
+}
+
+body {
+  /* To switch fonts, uncomment the matching @import above and put that font first below */
+  /* font-family: 'Crimson Pro', Palatino, 'Palatino Linotype', 'Book Antiqua', Georgia, serif; */
+  /* font-family: 'Libertinus Serif', Palatino, 'Palatino Linotype', 'Book Antiqua', Georgia, serif; */
+  font-family: Palatino, 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+  color: #111;
+  width: 87.5%;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 12.5%;
+  background-color: #fffff8;
+  counter-reset: sidenote-counter;
+}
+
+h1 {
+  font-weight: 400;
+  font-style: italic;
+  margin-top: 4rem;
+  margin-bottom: 0.5rem;
+  font-size: 3.2rem;
+  line-height: 1;
+}
+
+h2 {
+  font-style: italic;
+  font-weight: 400;
+  margin-top: 2.1rem;
+  margin-bottom: 1.4rem;
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+h3 {
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.5rem;
+  margin-top: 2rem;
+  margin-bottom: 1.4rem;
+  line-height: 1;
+}
+
+p,
+ol,
+ul,
+dl {
+  font-size: 1.4rem;
+  line-height: 2rem;
+}
+
+p {
+  margin-top: 0.8rem;
+  margin-bottom: 0.8rem;
+  padding-right: 0;
+  vertical-align: baseline;
+}
+
+blockquote {
+  font-size: 1.4rem;
+  border-left: 3px solid #ccc;
+  padding-left: 1rem;
+  margin-left: 0;
+}
+
+/* ---- Article layout (Tufte wide margin) ---- */
+article {
+  position: relative;
+  padding: 5rem 0;
+}
+
+section {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+article>*,
+section>* {
+  width: 55%;
+}
+
+/* ---- Subtitle / metadata ---- */
+.subtitle {
+  font-style: italic;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+  display: block;
+  line-height: 1;
+}
+
+.byline {
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+  color: #555;
+  margin-top: 0.2rem;
+  margin-bottom: 0.2rem;
+}
+
+/* ---- Abstract ---- */
+.abstract {
+  font-size: 1.2rem;
+  width: 55%;
+  margin: 1rem 0;
+  padding: 0.8rem 0;
+  border-top: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+}
+
+/* ---- Links ---- */
+a:link,
+a:visited {
+  color: inherit;
+}
+
+a:link {
+  text-decoration: none;
+  background: -webkit-linear-gradient(#fffff8, #fffff8),
+    -webkit-linear-gradient(#fffff8, #fffff8),
+    -webkit-linear-gradient(currentColor, currentColor);
+  background: linear-gradient(#fffff8, #fffff8),
+    linear-gradient(#fffff8, #fffff8),
+    linear-gradient(currentColor, currentColor);
+  -webkit-background-size: 0.05em 1px, 0.05em 1px, 1px 1px;
+  background-size: 0.05em 1px, 0.05em 1px, 1px 1px;
+  background-repeat: no-repeat, no-repeat, repeat-x;
+  background-position: 0% 93%, 100% 93%, 0% 93%;
+}
+
+/* ---- Sidenotes & Margin notes ---- */
+.sidenote,
+.marginnote {
+  float: right;
+  clear: right;
+  margin-right: -60%;
+  width: 50%;
+  margin-top: 0.3rem;
+  margin-bottom: 0;
+  font-size: 1.1rem;
+  line-height: 1.3;
+  vertical-align: baseline;
+  position: relative;
+}
+
+.sidenote-number {
+  counter-increment: sidenote-counter;
+}
+
+.sidenote-number:after,
+.sidenote:before {
+  font-family: 'Libertinus Serif', 'ET Book', serif;
+  position: relative;
+  vertical-align: baseline;
+}
+
+.sidenote-number:after {
+  content: counter(sidenote-counter);
+  font-size: 1rem;
+  top: -0.5rem;
+  left: 0.1rem;
+}
+
+.sidenote:before {
+  content: counter(sidenote-counter) " ";
+  font-size: 1rem;
+  top: -0.5rem;
+}
+
+/* Margin note indicator */
+.marginnote-ind {
+  margin-right: 0;
+}
+
+/* ---- Code ---- */
+pre,
+code {
+  font-family: 'Libertinus Mono', Consolas, 'Liberation Mono', Menlo,
+    Courier, monospace;
+  font-size: 1.0rem;
+  line-height: 1.42;
+  -webkit-text-size-adjust: 100%;
+}
+
+pre {
+  width: 52.5%;
+  margin-left: 2.5%;
+  overflow-x: auto;
+  padding: 1rem;
+  background: #f7f7f7;
+  border-radius: 3px;
+}
+
+code {
+  background: #f0f0f0;
+  padding: 0.1em 0.3em;
+  border-radius: 2px;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+}
+
+/* ---- Tables ---- */
+table {
+  border-collapse: collapse;
+  font-size: 1.2rem;
+  width: 55%;
+}
+
+th,
+td {
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid #ccc;
+  text-align: left;
+}
+
+th {
+  border-bottom: 2px solid #333;
+}
+
+/* ---- Images & Figures ---- */
+article img {
+  max-width: 100%;
+  height: auto;
+}
+
+figure {
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline;
+  max-width: 55%;
+  -webkit-margin-start: 0;
+  -webkit-margin-end: 0;
+  margin: 0 0 3em 0;
+  text-align: center;
+}
+
+figure img {
+  display: block;
+  margin: 0 auto;
+}
+
+figcaption {
+  float: none;
+  clear: both;
+  text-align: center;
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+  font-size: 1.0rem;
+  font-weight: 600;
+  line-height: 1.6;
+  color: #333;
+  background-color: #f0f0f0;
+  padding: 0.25rem 0.75rem;
+  border-radius: 3px;
+  display: inline-block;
+  position: relative;
+  max-width: 100%;
+}
+
+figure.fullwidth {
+  max-width: 90%;
+  clear: both;
+}
+
+/* ---- Permalink anchors (from TOC) ---- */
+.headerlink {
+  text-decoration: none;
+  font-size: 0.6em;
+  vertical-align: super;
+  color: #ccc;
+  padding-left: 0.3em;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+h2:hover .headerlink,
+h3:hover .headerlink {
+  opacity: 1;
+}
+
+/* ---- KaTeX overrides ---- */
+.katex {
+  font-size: 1.0em !important;
+  /* KaTeX default is 1.21em, this brings it down to match body */
+  font-weight: normal;
+}
+
+.katex .mathnormal,
+.katex .mathit,
+.katex .mathrm,
+.katex .mathbf,
+.katex .mathsf,
+.katex .mathtt,
+.katex .mathdefault {
+  font-weight: normal;
+}
+
+.katex-display {
+  margin: 0.3rem 0 !important;
+  text-align: center !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* ---- Structured Proofs (pf2-style) ---- */
+.proof-block {
+  width: 55%;
+  margin: 1.5rem 0;
+  padding: 1rem 0;
+  border-left: 3px solid #666;
+  padding-left: 1.2rem;
+}
+
+.proof-block .proof-block {
+  margin: 0.8rem 0 0.8rem 0;
+  border-left-color: #999;
+}
+
+.proof-block .proof-block .proof-block {
+  border-left-color: #ccc;
+}
+
+.proof-label {
+  font-variant: small-caps;
+  text-transform: lowercase;
+  letter-spacing: 0.05em;
+  font-weight: 400;
+  font-size: 1.6rem;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.step {
+  margin: 0.6rem 0;
+  padding: 0.3rem 0;
+  font-size: 1.4rem;
+  line-height: 2rem;
+}
+
+.step-number {
+  font-variant: small-caps;
+  font-weight: normal;
+  color: #111;
+  margin-right: 0.5rem;
+  font-size: 1.4rem;
+}
+
+.step-ref {
+  font-variant: small-caps;
+  font-weight: normal;
+  color: #111;
+  font-size: 1.4rem;
+}
+
+.subproof {
+  margin: 0.4rem 0 0.4rem 1.5rem;
+  padding-left: 1rem;
+  border-left: 2px solid #bbb;
+  font-size: 1.3rem;
+  line-height: 1.9rem;
+}
+
+.subproof .subproof {
+  border-left-color: #ddd;
+}
+
+.proof-block>em,
+.subproof>em {
+  font-size: 1.4rem;
+  line-height: 2rem;
+}
+
+.proof-sketch {
+  font-style: italic;
+  color: #555;
+  margin-bottom: 0.5rem;
+}
+
+.proof-justification {
+  font-style: italic;
+  color: #444;
+}
+
+.qed-step {
+  margin-top: 0.8rem;
+  padding-top: 0.4rem;
+  font-size: 1.4rem;
+  line-height: 2rem;
+}
+
+.source-line {
+  margin: 0.4rem 0 0.4rem 1.5rem;
+  padding-left: 1rem;
+  border-left: 2px solid #bbb;
+  font-size: 1.4rem;
+  line-height: 2rem;
+}
+
+/* ---- Collapsible proof steps ---- */
+.step-details {
+  margin: 0.4rem 0;
+}
+
+.step-details>summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.step-details>summary::-webkit-details-marker {
+  display: none;
+}
+
+.step-details>summary::before {
+  content: "▶";
+  display: inline-block;
+  font-size: 0.7em;
+  margin-right: 0.5rem;
+  transition: transform 0.2s ease;
+  color: #999;
+}
+
+.step-details[open]>summary::before {
+  transform: rotate(90deg);
+}
+
+/* ---- Index / Post list ---- */
+.about {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #ccc;
+  margin-bottom: 1rem;
+}
+
+.about p {
+  font-size: 1.3rem;
+  line-height: 1.8rem;
+}
+
+ul.posts {
+  list-style: none;
+  padding: 0;
+  width: 55%;
+}
+
+ul.posts li {
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+
+ul.posts li a {
+  font-size: 1.4rem;
+  font-weight: 400;
+}
+
+.post-subtitle {
+  font-size: 1.1rem;
+  font-style: italic;
+  color: #555;
+}
+
+.post-date {
+  display: block;
+  font-size: 1.0rem;
+  color: #888;
+  margin-top: 0.2rem;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 760px) {
+  html {
+    font-size: 12px;
+  }
+
+  body {
+    width: 92%;
+    padding-left: 4%;
+    padding-right: 4%;
+  }
+
+  h1 {
+    font-size: 2.4rem;
+  }
+
+  article>*,
+  section>* {
+    width: 100%;
+  }
+
+  .sidenote,
+  .marginnote {
+    display: block;
+    float: none;
+    margin: 1rem 0;
+    width: 100%;
+    clear: both;
+    background: #f9f9f2;
+    padding: 0.5rem 1rem;
+    border-radius: 3px;
+  }
+
+  pre {
+    width: 97%;
+    margin-left: 0;
+  }
+
+  .katex-display {
+    width: 100%;
+  }
+
+  .proof-block {
+    width: 100%;
+  }
+
+  .abstract {
+    width: 100%;
+  }
+
+  ul.posts {
+    width: 100%;
+  }
+}

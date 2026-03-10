@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>{{title}}</title>
+  <link rel="stylesheet" href="{{css_path}}"/>
+  <!-- KaTeX for math rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+        crossorigin="anonymous"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+          crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+          crossorigin="anonymous"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false},
+          {left: "\\(", right: "\\)", display: false},
+          {left: "\\[", right: "\\]", display: true}
+        ],
+        throwOnError: false,
+        ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"],
+        ignoredClasses: ["sidenote", "marginnote"]
+      });
+
+      // CSS counters break inside <details> elements (Chrome/Safari bug).
+      // Fix sidenote numbering with JS instead.
+      var nums = document.querySelectorAll('.sidenote-number');
+      var notes = document.querySelectorAll('.sidenote');
+      for (var i = 0; i < nums.length; i++) {
+        nums[i].setAttribute('data-sn', i + 1);
+        if (notes[i]) notes[i].setAttribute('data-sn', i + 1);
+      }
+    });
+  </script>
+  <style>
+    /* JS-driven sidenote numbering (replaces broken CSS counters in <details>) */
+    .sidenote-number { counter-increment: none; }
+    .sidenote-number:after { content: attr(data-sn); }
+    .sidenote:before { content: attr(data-sn) " "; }
+  </style>
+</head>
+<body>
+  <article>
+    <h1>{{title}}</h1>
+    {{#author}}<p class="byline"><span class="author">{{author}}</span>{{#date}} &middot; <span class="date">{{date}}</span>{{/date}}</p>{{/author}}
+    {{content}}
+  </article>
+</body>
+</html>
