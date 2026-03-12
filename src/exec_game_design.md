@@ -1,9 +1,11 @@
 ---
-title: "Great Teams Play Great Games"
+title: "♟️ Great Teams Play Great Games"
 subtitle: "An executive's only job is to set the players, rules, and incentives"
 date: 2026-03-10
 author: Mark Kurzeja
 ---
+
+*Design the game, not the strategy.*
 
 When I was on Wall Street, I once asked my managing director how he created high-performing teams. He described his entire role as that of a game designer. His job was to set up the players, rules, and incentives so that doing great work felt natural. It's stuck with me ever since. I've had the chance to observe a lot of teams (some high-performing, some not) and the better teams tend to have better games.
 
