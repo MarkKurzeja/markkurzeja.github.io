@@ -75,11 +75,14 @@ def restore_math(html: str, placeholders: list[tuple[str, str]]) -> str:
   return html
 
 
-def render_template(template_str: str, meta: dict, content: str, css_path: str) -> str:
+def render_template(
+  template_str: str, meta: dict, content: str, css_path: str, index_path: str = "index.html"
+) -> str:
   """Simple mustache-like template rendering."""
   html = template_str
   html = html.replace("{{title}}", meta.get("title", "Untitled"))
   html = html.replace("{{css_path}}", f"{css_path}?v={int(time.time())}")
+  html = html.replace("{{index_path}}", index_path)
   html = html.replace("{{content}}", content)
 
   # Conditional sections: {{#key}}...{{/key}}
@@ -99,6 +102,7 @@ def build_post(
   output_dir: Path,
   template_path: Path,
   css_path: str,
+  index_path: str = "index.html",
 ) -> tuple[Path, dict]:
   """Convert a single Markdown file to HTML. Returns (output_path, metadata)."""
   text = source.read_text(encoding="utf-8")
@@ -122,7 +126,7 @@ def build_post(
 
   # Load and render template
   template_str = template_path.read_text(encoding="utf-8")
-  full_html = render_template(template_str, meta, content_html, css_path)
+  full_html = render_template(template_str, meta, content_html, css_path, index_path)
 
   # Write output
   output_dir.mkdir(parents=True, exist_ok=True)
@@ -186,6 +190,19 @@ def copy_static(output_dir: Path):
     shutil.copy2(css_file, output_dir / css_file.name)
 
 
+def clean_posts(output_dir: Path, src_dir: Path):
+  """Remove all previously built post HTML files (both published and draft)."""
+  post_stems = {f.stem for f in src_dir.glob("*.md")}
+  # Clean published posts from root (preserves index.html and other non-post files)
+  for html_file in output_dir.glob("*.html"):
+    if html_file.stem in post_stems:
+      html_file.unlink()
+  # Clean entire drafts directory
+  drafts_dir = output_dir / "drafts"
+  if drafts_dir.exists():
+    shutil.rmtree(drafts_dir)
+
+
 def main():
   parser = argparse.ArgumentParser(
     description="Build static HTML blog from Markdown.",
@@ -233,34 +250,51 @@ def main():
   if build_all:
     args.sources = sorted((ROOT / "src").glob("*.md"))
     args.index = True
+    clean_posts(args.output, ROOT / "src")
 
   # Copy static assets
   copy_static(args.output)
 
-  # Build posts
-  post_metas = []
+  # Build posts, routing by publish field
+  published_metas = []
   for source in args.sources:
     if not source.exists():
       print(f"Error: {source} not found", file=sys.stderr)
       sys.exit(1)
-    out, meta = build_post(source, args.output, args.template, args.css)
-    post_metas.append((out.name, meta))
+
+    text = source.read_text(encoding="utf-8")
+    meta, _ = parse_front_matter(text)
+    is_published = meta.get("publish", False)
+
+    if is_published:
+      out_dir = args.output
+      css = args.css
+      idx = "index.html"
+    else:
+      out_dir = args.output / "drafts"
+      css = f"../{args.css}"
+      idx = "../index.html"
+
+    out, meta = build_post(source, out_dir, args.template, css, idx)
+    if is_published:
+      published_metas.append((out.name, meta))
     print(f"Built: {out}")
 
-  # Build index
+  # Build index (published posts only)
   if args.index:
     if not args.about.exists():
       print(f"Warning: {args.about} not found, skipping index", file=sys.stderr)
     else:
-      # If we didn't build all posts, scan posts/ for metadata to populate the index
+      # If we didn't build all posts, scan src/ for metadata to populate the index
       if not build_all:
-        post_metas = []
+        published_metas = []
         for md_file in sorted((ROOT / "src").glob("*.md")):
           text = md_file.read_text(encoding="utf-8")
           meta, _ = parse_front_matter(text)
-          html_name = md_file.with_suffix(".html").name
-          post_metas.append((html_name, meta))
-      out = build_index(post_metas, args.output, args.about, args.css)
+          if meta.get("publish", False):
+            html_name = md_file.with_suffix(".html").name
+            published_metas.append((html_name, meta))
+      out = build_index(published_metas, args.output, args.about, args.css)
       print(f"Built: {out}")
 
 

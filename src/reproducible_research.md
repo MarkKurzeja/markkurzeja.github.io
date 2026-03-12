@@ -3,6 +3,7 @@ title: "🔶 The AMBER Workflow"
 subtitle: "Twelve principles for preserving research in amber"
 date: 2026-03-10
 author: Mark Kurzeja
+publish: true
 ---
 
 <div class="abstract">

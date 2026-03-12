@@ -3,6 +3,7 @@ title: "Random Fourier Features"
 subtitle: "RFFs deserve to be your method-of-choice for baselines"
 date: 2024-03-23
 author: Mark Kurzeja
+publish: true
 ---
 
 <div class="abstract">

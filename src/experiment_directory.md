@@ -3,6 +3,7 @@ title: "🔶 The AMBER Directory"
 subtitle: "A concrete directory layout for ambered experiments"
 date: 2026-03-12
 author: Mark Kurzeja
+publish: true
 ---
 
 <div class="abstract">

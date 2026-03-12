@@ -3,6 +3,7 @@ title: "Learning Orthonormal Matrices For Deep Learning Pipelines"
 subtitle: "Fast orthonormal matrix parametrization"
 date: 2024-03-27
 author: Mark Kurzeja
+publish: true
 ---
 
 <div class="abstract">
