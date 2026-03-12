@@ -6,17 +6,17 @@ author: Mark Kurzeja
 ---
 
 <div class="abstract">
-An opinionated guide for recording and reproducing research results<span class="sidenote-number"></span><span class="sidenote">Amber preserves things perfectly: an insect trapped in resin 40 million years ago is still there, every leg, every wing vein, frozen exactly as it was. That is what a good research workflow does to experiments. Adapted from a workflow I learned from <a href="https://www.linkedin.com/in/john-aslanides/">John Aslanides</a>.</span>.
+An opinionated guide for recording and reproducing research results.<span class="sidenote-number"></span><span class="sidenote">Adapted from a workflow I learned from <a href="https://www.linkedin.com/in/john-aslanides/">John Aslanides</a>.</span>
 </div>
 
 Good empirical research should be:
 
-- **Statistically reproducible.** Anyone can re-run an experiment and get statistically indistinguishable results<span class="sidenote-number"></span><span class="sidenote">Put differently, A/A testing is easy to pull off: re-run the same experiment and confirm your pipeline produces stable results.</span>.
+- **Durable.** Results still make sense and still run months or years later, without bit rot or dependency decay.<span class="sidenote-number"></span><span class="sidenote">Amber preserves things perfectly: an insect trapped in resin 40 million years ago is still there, every leg, every wing vein, frozen exactly as it was. That is what a good research workflow does to experiments.</span>
+- **Statistically reproducible.** Anyone can re-run an experiment and get statistically indistinguishable results.<span class="sidenote-number"></span><span class="sidenote">Put differently, A/A testing is easy to pull off: re-run the same experiment and confirm your pipeline produces stable results.</span>
 - **Traceable.** Every result points back to the exact code and config that produced it.
 - **Shareable.** A colleague can pick up where you left off with minimal questioning.
-- **Durable.** Results still make sense and still run months or years later, without bit rot or dependency decay.
 
-In practice, most research workflows fail at least one of these<span class="sidenote-number"></span><span class="sidenote">The standard pathologies: (1) the config was in a Slack message and nobody can find it, (2) the code has drifted and nobody recorded which commit produced the result, (3) the analysis notebook imported a helper that's since been refactored, (4) training and eval used separate codebases and a preprocessing change didn't propagate, (5) the pipeline was run with shell commands that lived in someone's terminal history and that person is on vacation.</span>. You iterate in a development branch, try dozens of things, and eventually land on a result. But the lineage is lost. Tribal knowledge accumulates in people's heads instead of in the repo. 
+In practice, most research workflows fail at least one of these.<span class="sidenote-number"></span><span class="sidenote">The standard pathologies: (1) the config was in a Slack message and nobody can find it, (2) the code has drifted and nobody recorded which commit produced the result, (3) the analysis notebook imported a helper that's since been refactored, (4) training and eval used separate codebases and a preprocessing change didn't propagate, (5) the pipeline was run with shell commands that lived in someone's terminal history and that person is on vacation.</span> You iterate in a development branch, try dozens of things, and eventually land on a result. But the lineage is lost. Tribal knowledge accumulates in people's heads instead of in the repo. 
 The workflow below is a set of habits, not a tool, that ended up producing much better research.
 
 ## The Setup
@@ -40,7 +40,7 @@ This workflow relies on five things:
 Check everything into version control.
 </summary>
 <div class="subproof">
-Version control is the single source of truth. Not your memory, not Slack, not a shared drive. Code, config, analysis, results: if it matters, it lives in the repo<span class="sidenote-number"></span><span class="sidenote">This idea isn't new. Knuth's literate programming is the most famous articulation. This workflow is a pragmatic distillation for anyone running experiments.</span>.
+Version control is the single source of truth. Not your memory, not Slack, not a shared drive. Code, config, analysis, results: if it matters, it lives in the repo.<span class="sidenote-number"></span><span class="sidenote">This idea isn't new. Knuth's literate programming is the most famous articulation. This workflow is a pragmatic distillation for anyone running experiments.</span>
 </div>
 </details>
 
@@ -50,7 +50,7 @@ Version control is the single source of truth. Not your memory, not Slack, not a
 Use one codebase.
 </summary>
 <div class="subproof">
-Training, evaluation, preprocessing, analysis: all in one repo. The config determines what runs, not which code runs<span class="sidenote-number"></span><span class="sidenote">This is how you avoid the most insidious class of bugs: silent divergence between training and evaluation code, where a preprocessing change propagates to one but not the other.</span>.
+Training, evaluation, preprocessing, analysis: all in one repo. The config determines what runs, not which code runs.<span class="sidenote-number"></span><span class="sidenote">This is how you avoid the most insidious class of bugs: silent divergence between training and evaluation code, where a preprocessing change propagates to one but not the other.</span>
 </div>
 </details>
 
@@ -60,7 +60,7 @@ Training, evaluation, preprocessing, analysis: all in one repo. The config deter
 Make dependencies explicit.
 </summary>
 <div class="subproof">
-Pin your dependencies and use a lockfile<span class="sidenote-number"></span><span class="sidenote"><code>uv</code> handles this well for Python. The point is that anyone checking out your repo can recreate your environment exactly, not approximately.</span>. A colleague should be able to clone, install, and run without asking you a single question.
+Pin your dependencies and use a lockfile.<span class="sidenote-number"></span><span class="sidenote"><code>uv</code> handles this well for Python. The point is that anyone checking out your repo can recreate your environment exactly, not approximately.</span> A colleague should be able to clone, install, and run without asking you a single question.
 </div>
 </details>
 
@@ -70,7 +70,7 @@ Pin your dependencies and use a lockfile<span class="sidenote-number"></span><sp
 Make configs complete.
 </summary>
 <div class="subproof">
-The config file should be sufficient to reproduce an experiment from scratch, with no ambient state: hyperparameters, data paths, preprocessing steps, random seeds, etc<span class="sidenote-number"></span><span class="sidenote">A useful litmus test: can a colleague reproduce your experiment using only the config and the README, with minimal questioning?</span>. If you need to know anything beyond the config to re-run, the config is incomplete.
+The config file should be sufficient to reproduce an experiment from scratch, with no ambient state: hyperparameters, data paths, preprocessing steps, random seeds, etc.<span class="sidenote-number"></span><span class="sidenote">A useful litmus test: can a colleague reproduce your experiment using only the config and the README, with minimal questioning?</span> If you need to know anything beyond the config to re-run, the config is incomplete.
 
 The common failures: missing data paths, hardcoded paths that only work on one machine, missing random seeds, and behavior controlled by command-line flags that nobody saved down.
 </div>
@@ -82,7 +82,7 @@ The common failures: missing data paths, hardcoded paths that only work on one m
 Put commands in runfiles.
 </summary>
 <div class="subproof">
-Every shell command needed to execute a pipeline lives in a checked-in script: a Makefile, a Justfile, a shell script<span class="sidenote-number"></span><span class="sidenote">The format doesn't matter. What matters is that the commands are recorded. No one should have to reverse-engineer your pipeline from terminal history.</span>. The config defines <em>what</em> to run, and the runfile defines <em>how</em>.
+Every shell command needed to execute a pipeline lives in a checked-in script: a Makefile, a Justfile, a shell script.<span class="sidenote-number"></span><span class="sidenote">The format doesn't matter. What matters is that the commands are recorded. No one should have to reverse-engineer your pipeline from terminal history.</span> The config defines <em>what</em> to run, and the runfile defines <em>how</em>.
 </div>
 </details>
 
@@ -102,7 +102,7 @@ Each run lands in a dedicated output directory: the config, the <code>HEAD</code
 Record the code state with every run.
 </summary>
 <div class="subproof">
-Every run records the <code>HEAD</code> commit hash, the <code>git diff</code> (if the working tree is dirty), and the config used. An experiment's identity is (code state, config). If you have both, you can reproduce. If you're missing either, you're guessing<span class="sidenote-number"></span><span class="sidenote">Ideally, you run all experiments from a clean <code>HEAD</code> with different configs rather than relying on uncommitted changes. Large <code>git diff</code>s are a smell: if you need to change the code, commit first, then run. The discipline of committing before running keeps your experiments tied to real, recoverable code states.</span>.
+Every run records the <code>HEAD</code> commit hash, the <code>git diff</code> (if the working tree is dirty), and the config used. An experiment's identity is (code state, config). If you have both, you can reproduce. If you're missing either, you're guessing.<span class="sidenote-number"></span><span class="sidenote">Ideally, you run all experiments from a clean <code>HEAD</code> with different configs rather than relying on uncommitted changes. Large <code>git diff</code>s are a smell: if you need to change the code, commit first, then run. The discipline of committing before running keeps your experiments tied to real, recoverable code states.</span>
 </div>
 </details>
 
@@ -112,7 +112,7 @@ Every run records the <code>HEAD</code> commit hash, the <code>git diff</code> (
 Make reports durable and standalone.
 </summary>
 <div class="subproof">
-Results go into a report: a notebook (<a href="https://colab.research.google.com/">Colab</a>, <a href="https://jupyter.org/">Jupyter</a>, <a href="https://quarto.org/">Quarto</a>, <a href="https://blog.alexalemi.com/plaque.html">Plaque</a>), a static HTML file, a script that renders plots. The format doesn't matter. What matters is that the statistical analysis, plots, and outputs all live in the same place, the report reads from frozen run artifacts, and it does not import from your experiment codebase<span class="sidenote-number"></span><span class="sidenote">Standard library and third-party imports (<code>numpy</code>, <code>pandas</code>) are fine. The problem is importing from your own project. If you need a helper function, copy it into the report. Duplication here is a feature: it freezes the behavior at the time of analysis. As Rob Pike <a href="https://www.youtube.com/watch?v=PAAkCSZUG1c&t=568s">put it</a>, "a little copying is better than a little dependency."</span>. Your code will change. A report that depends on it has an expiration date you can't predict.
+Results go into a report: a notebook (<a href="https://colab.research.google.com/">Colab</a>, <a href="https://jupyter.org/">Jupyter</a>, <a href="https://quarto.org/">Quarto</a>, <a href="https://blog.alexalemi.com/plaque.html">Plaque</a>), a static HTML file, a script that renders plots. The format doesn't matter. What matters is that the statistical analysis, plots, and outputs all live in the same place, the report reads from frozen run artifacts, and it does not import from your experiment codebase.<span class="sidenote-number"></span><span class="sidenote">Standard library and third-party imports (<code>numpy</code>, <code>pandas</code>) are fine. The problem is importing from your own project. If you need a helper function, copy it into the report. Duplication here is a feature: it freezes the behavior at the time of analysis. As Rob Pike <a href="https://www.youtube.com/watch?v=PAAkCSZUG1c&t=568s">put it</a>, "a little copying is better than a little dependency."</span> Your code will change. A report that depends on it has an expiration date you can't predict.
 </div>
 </details>
 
@@ -132,7 +132,7 @@ A report should be re-runnable from its own directory at any point in the future
 Keep a README log.
 </summary>
 <div class="subproof">
-Write a running summary: what was tried, what the results were, key plots, brief interpretation. Screenshot key results and embed them directly, especially if your screenshot tool generates shareable links<span class="sidenote-number"></span><span class="sidenote">The discipline of writing a one-paragraph summary after each experiment dramatically improves your own understanding of what you're learning over the course of a project.</span>. This is a lab notebook, not a formal report. Its audience is future-you and your collaborators.
+Write a running summary: what was tried, what the results were, key plots, brief interpretation. Screenshot key results and embed them directly, especially if your screenshot tool generates shareable links.<span class="sidenote-number"></span><span class="sidenote">The discipline of writing a one-paragraph summary after each experiment dramatically improves your own understanding of what you're learning over the course of a project.</span> This is a lab notebook, not a formal report. Its audience is future-you and your collaborators.
 </div>
 </details>
 

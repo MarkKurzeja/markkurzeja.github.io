@@ -64,6 +64,23 @@ dl {
   line-height: 2rem;
 }
 
+/* Keep lists flush with paragraphs so sidenotes align */
+article>ul,
+article>ol {
+  padding-left: 1.5rem;
+}
+
+/* Compensate sidenote positioning inside list items.
+   <li> is narrower than <p> by the <ul> padding-left (1.5rem),
+   so percentage-based margin-right/width resolve to wrong values.
+   Math: margin-right needs extra -0.6*1.5rem = -0.9rem;
+         width needs extra 0.5*1.5rem = 0.75rem. */
+li>.sidenote,
+li>.marginnote {
+  margin-right: calc(-60% - 0.9rem);
+  width: calc(50% + 0.75rem);
+}
+
 p {
   margin-top: 0.8rem;
   margin-bottom: 0.8rem;
