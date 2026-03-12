@@ -157,8 +157,28 @@ a:link {
   position: relative;
 }
 
+.sidenote-number {
+  counter-increment: sidenote-counter;
+}
+
+.sidenote-number:after,
 .sidenote:before {
   font-family: 'Libertinus Serif', 'ET Book', serif;
+  position: relative;
+  vertical-align: baseline;
+}
+
+.sidenote-number:after {
+  content: counter(sidenote-counter);
+  font-size: 1rem;
+  top: -0.5rem;
+  left: 0.1rem;
+}
+
+.sidenote:before {
+  content: counter(sidenote-counter) " ";
+  font-size: 1rem;
+  top: -0.5rem;
 }
 
 /* ---- Code ---- */
@@ -416,6 +436,54 @@ h3:hover .headerlink {
 
 .step-details[open]>summary::before {
   transform: rotate(90deg);
+}
+
+/* ---- Knuth-style Algorithm ---- */
+.algorithm {
+  width: 55%;
+  margin: 1.5rem 0;
+}
+
+.algorithm-header {
+  font-size: 1.4rem;
+  line-height: 2rem;
+  margin-bottom: 0.8rem;
+}
+
+.algorithm-header strong {
+  font-variant: small-caps;
+  text-transform: lowercase;
+  letter-spacing: 0.05em;
+  font-weight: 400;
+  font-size: 1.6rem;
+}
+
+.algorithm-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0 1.5rem;
+}
+
+.algorithm-steps li {
+  display: flex;
+  margin-bottom: 0.6rem;
+  font-size: 1.4rem;
+  line-height: 2rem;
+}
+
+.algorithm-step-label {
+  font-weight: bold;
+  white-space: nowrap;
+  min-width: 2.5rem;
+  flex-shrink: 0;
+}
+
+.algorithm-step-body {
+  flex: 1;
+}
+
+.algorithm-step-body .step-action {
+  font-style: italic;
 }
 
 /* ---- Index / Post list ---- */

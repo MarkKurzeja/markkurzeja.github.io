@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Random Fourier Features</title>
-  <link rel="stylesheet" href="tufte.css?v=1773285732"/>
+  <link rel="stylesheet" href="tufte.css?v=1773278099"/>
   <!-- KaTeX for math rendering -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
         crossorigin="anonymous"/>
@@ -27,15 +27,19 @@
       });
 
       // Number sidenotes sequentially via data attributes.
+      var nums = document.querySelectorAll('.sidenote-number');
       var notes = document.querySelectorAll('.sidenote');
-      for (var i = 0; i < notes.length; i++) {
-        notes[i].setAttribute('data-sn', i + 1);
+      for (var i = 0; i < nums.length; i++) {
+        nums[i].setAttribute('data-sn', i + 1);
+        if (notes[i]) notes[i].setAttribute('data-sn', i + 1);
       }
     });
   </script>
   <style>
-    /* JS-driven sidenote numbering */
-    .sidenote:before { content: attr(data-sn) " "; font-size: 0.8rem; vertical-align: super; }
+    /* JS-driven sidenote numbering (replaces broken CSS counters in <details>) */
+    .sidenote-number { counter-increment: none; }
+    .sidenote-number:after { content: attr(data-sn); }
+    .sidenote:before { content: attr(data-sn) " "; }
   </style>
 </head>
 <body>
@@ -51,7 +55,7 @@ performance-to-cost tradeoffs in machine learning techniques today. Simple to
 code, cheap to fit, and unreasonably effective, they have been my
 bread-and-butter for small-to-medium multi-dimensional learning tasks and serve
 as a decent baseline for more complex systems.</p>
-<p>This post builds intuition for RFF through low-dimensional examples &mdash; through code, we will get a &ldquo;feel&rdquo; for the approximations they afford.<span class="sidenote">This post focuses on examples, code, and visuals rather than mathematical derivations. For the math, I highly recommend Gregory Gundersen&rsquo;s <a href="https://gregorygundersen.com/blog/2019/12/23/random-fourier-features/">blog post</a> or Rahimi and Recht&rsquo;s <a href="https://archives.argmin.net/2017/12/05/kitchen-sinks/">Reflections on Random Kitchen Sinks</a>.</span></p>
+<p>This post builds intuition for RFF through low-dimensional examples &mdash; through code, we will get a &ldquo;feel&rdquo; for the approximations they afford.<span class="sidenote-number"></span><span class="sidenote">This post focuses on examples, code, and visuals rather than mathematical derivations. For the math, I highly recommend Gregory Gundersen&rsquo;s <a href="https://gregorygundersen.com/blog/2019/12/23/random-fourier-features/">blog post</a> or Rahimi and Recht&rsquo;s <a href="https://archives.argmin.net/2017/12/05/kitchen-sinks/">Reflections on Random Kitchen Sinks</a>.</span></p>
 <h2 id="the-setup">The Setup<a class="headerlink" href="#the-setup" title="Permanent link">&para;</a></h2>
 <p>Imagine you have a learning problem where you are given a vector $x$. You need
 to predict a vector $y$. Your goal is to find a function such that the
@@ -112,7 +116,7 @@ plt.title('$f(x) = I[X < 0](x \sin(3x)) + I[x\geq 0](1 + x)$')
 <p>This code is nothing special.
 1. We start with $N_{data}$ points
 2. Our input, $x$ has domain $x \in [-\pi, \pi]$.
-3. We set $y = \mathbb{I}[X < 0](x \sin(3x)) + \mathbb{I}[x \geq 0](1 + x)$.<span class="sidenote">$\mathbb{I}[\cdot]$ is the <a href="https://en.wikipedia.org/wiki/Iverson_bracket">Iverson bracket</a>. For simplicity, we assume all data fits in memory. This is not a constraint of RFF in general &mdash; it can also be trained in a streaming fashion via SGD.</span></p>
+3. We set $y = \mathbb{I}[X < 0](x \sin(3x)) + \mathbb{I}[x \geq 0](1 + x)$.<span class="sidenote-number"></span><span class="sidenote">$\mathbb{I}[\cdot]$ is the <a href="https://en.wikipedia.org/wiki/Iverson_bracket">Iverson bracket</a>. For simplicity, we assume all data fits in memory. This is not a constraint of RFF in general &mdash; it can also be trained in a streaming fashion via SGD.</span></p>
 <p><img src="posts/rff/rff_goal.png" alt="Target function plot"/></p>
 <h3 id="rff-is-five-lines-of-code">RFF is Five Lines of Code<a class="headerlink" href="#rff-is-five-lines-of-code" title="Permanent link">&para;</a></h3>
 <p>The first amazing fact about RFF is that it is four lines of setup and five
@@ -144,7 +148,7 @@ lines of &ldquo;modeling&rdquo; code.</p>
 </tr>
 </tbody>
 </table>
-<p>And now, RFF:<span class="sidenote">In some settings, $\gamma$ and $\lambda$ can be generalized to vectors. For this blog post, we assume they are scalar here, though the generalization is straightforward.</span></p>
+<p>And now, RFF:<span class="sidenote-number"></span><span class="sidenote">In some settings, $\gamma$ and $\lambda$ can be generalized to vectors. For this blog post, we assume they are scalar here, though the generalization is straightforward.</span></p>
 <pre><code class="language-python"># Setup
 np.random.seed(0)  # Set the random seed for reproducibility
 R = 100            # Number of RFF samples
@@ -232,12 +236,12 @@ a lot of data, we will scale $\gamma$ with $R$ to allow for more flexible fits.<
 <figcaption>R=100</figcaption>
 </figure>
 
-<p>We can see a minor ringing effect in the fit,<span class="sidenote">The ringing is akin to <a href="https://en.wikipedia.org/wiki/Gibbs_phenomenon">Gibbs phenomenon</a>.</span> but the approximation fits decently well and handles the discontinuities easily.</p>
+<p>We can see a minor ringing effect in the fit,<span class="sidenote-number"></span><span class="sidenote">The ringing is akin to <a href="https://en.wikipedia.org/wiki/Gibbs_phenomenon">Gibbs phenomenon</a>.</span> but the approximation fits decently well and handles the discontinuities easily.</p>
 <h2 id="underspecification">Underspecification<a class="headerlink" href="#underspecification" title="Permanent link">&para;</a></h2>
 <p>The function above was difficult to fit, but we had a large amount of data.
 What happens if we reduce the data significantly but keep the fit heavily
 overparameterized? A good approximation should (a) improve with more
-parameters and (b) self-regularize when it is over-parameterized.<span class="sidenote">Methods which fail to self-regularize can &ldquo;blow up&rdquo; without intervention. If you have ever fit a high-degree polynomial, you may have experienced <a href="https://www.johndcook.com/blog/2017/11/18/runge-phenomena/">Runge phenomena</a> &mdash; one such pathology.</span></p>
+parameters and (b) self-regularize when it is over-parameterized.<span class="sidenote-number"></span><span class="sidenote">Methods which fail to self-regularize can &ldquo;blow up&rdquo; without intervention. If you have ever fit a high-degree polynomial, you may have experienced <a href="https://www.johndcook.com/blog/2017/11/18/runge-phenomena/">Runge phenomena</a> &mdash; one such pathology.</span></p>
 <p>RFF has regularization built in. The parameters $\gamma$ and $\lambda$ jointly
 determine how flexible the fit will be in the limit. For a fixed $\gamma$ and
 $\lambda$, we can observe this &ldquo;limiting&rdquo; effect by increasing $R$.</p>
@@ -332,7 +336,7 @@ regularizes itself via the $\gamma$ and $\lambda$ parameters.</p>
 <p>The worst fits occur when $\lambda \rightarrow 0$ and $\gamma$ exceeds the
 intrinsic variance of the function. Since $\lambda$ controls regularization,
 as $\lambda \rightarrow 0$ the model fits the data perfectly but at the cost
-of larger variance.<span class="sidenote">In practice, I typically start with somewhat larger values of $\lambda$ and somewhat smaller values of $\gamma$ and adjust them accordingly depending on the type of fit I want and how it performs on validation data.</span></p>
+of larger variance.<span class="sidenote-number"></span><span class="sidenote">In practice, I typically start with somewhat larger values of $\lambda$ and somewhat smaller values of $\gamma$ and adjust them accordingly depending on the type of fit I want and how it performs on validation data.</span></p>
 <h2 id="learning-by-example-higher-dimensions">Learning by Example: Higher Dimensions<a class="headerlink" href="#learning-by-example-higher-dimensions" title="Permanent link">&para;</a></h2>
 <p>Most analytic curve-fitting methods work well in one dimension but quickly
 become unwieldy in higher dimensions. RFF handles multidimensional inputs
@@ -342,7 +346,7 @@ unnoticeable.</p>
 <p>As before, we are going to learn-by-example and teach RFF to approximate the
 function:</p>
 <p>$$ y = 2 \sin(x_1) + 4 \sin(x_1x_2) $$</p>
-<h3 id="plotswith-math68-and-math69-we-exhaust-our-three-dimensional-visual-limits-but-we-can-still-learn-a-few-things">Plots<span class="sidenote">With $d_x = 2$ and $d_y = 1$, we exhaust our three-dimensional visual limits, but we can still learn a few things.</span><a class="headerlink" href="#plotswith-math68-and-math69-we-exhaust-our-three-dimensional-visual-limits-but-we-can-still-learn-a-few-things" title="Permanent link">&para;</a></h3>
+<h3 id="plotswith-math68-and-math69-we-exhaust-our-three-dimensional-visual-limits-but-we-can-still-learn-a-few-things">Plots<span class="sidenote-number"></span><span class="sidenote">With $d_x = 2$ and $d_y = 1$, we exhaust our three-dimensional visual limits, but we can still learn a few things.</span><a class="headerlink" href="#plotswith-math68-and-math69-we-exhaust-our-three-dimensional-visual-limits-but-we-can-still-learn-a-few-things" title="Permanent link">&para;</a></h3>
 <p>The plotting code, this time, is only slightly more difficult:</p>
 <pre><code class="language-python">import numpy as np
 import matplotlib.pyplot as plt

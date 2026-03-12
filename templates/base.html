@@ -27,15 +27,19 @@
       });
 
       // Number sidenotes sequentially via data attributes.
+      var nums = document.querySelectorAll('.sidenote-number');
       var notes = document.querySelectorAll('.sidenote');
-      for (var i = 0; i < notes.length; i++) {
-        notes[i].setAttribute('data-sn', i + 1);
+      for (var i = 0; i < nums.length; i++) {
+        nums[i].setAttribute('data-sn', i + 1);
+        if (notes[i]) notes[i].setAttribute('data-sn', i + 1);
       }
     });
   </script>
   <style>
-    /* JS-driven sidenote numbering */
-    .sidenote:before { content: attr(data-sn) " "; font-size: 0.8rem; vertical-align: super; }
+    /* JS-driven sidenote numbering (replaces broken CSS counters in <details>) */
+    .sidenote-number { counter-increment: none; }
+    .sidenote-number:after { content: attr(data-sn); }
+    .sidenote:before { content: attr(data-sn) " "; }
   </style>
 </head>
 <body>

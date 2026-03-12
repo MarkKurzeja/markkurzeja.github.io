@@ -86,7 +86,7 @@ Clearly $A$ is random and not orthonormal since the magnitude of $A$'s eigenvalu
 
 ## Doesn't Jax Already have functions which do this?
 
-Jax has functions which initialize parameter matrices as orthonormal matrices such as [`jax.nn.initalizers.orthogonal`](https://jax.readthedocs.io/en/latest/_autosummary/jax.nn.initializers.orthogonal.html).<span class="sidenote">However, these are initializers and not invariants: a dense transform can start orthonormal but quickly be pulled away due to training dynamics unless care is taken with the updates.</span>
+Jax has functions which initialize parameter matrices as orthonormal matrices such as [`jax.nn.initalizers.orthogonal`](https://jax.readthedocs.io/en/latest/_autosummary/jax.nn.initializers.orthogonal.html).<span class="sidenote-number"></span><span class="sidenote">However, these are initializers and not invariants: a dense transform can start orthonormal but quickly be pulled away due to training dynamics unless care is taken with the updates.</span>
 
 ## Take One: QR Decomposition
 
@@ -118,7 +118,7 @@ Orthonormal Check:
   Max: 1.000000238418579
 ```
 
-As expected, the eigenvalues are all near one in magnitude indicating this matrix is near orthonormal.<span class="sidenote">We could print out $Q^TQ$ and check to see how close it is to the identity matrix, but I have found visually this can be difficult.</span>
+As expected, the eigenvalues are all near one in magnitude indicating this matrix is near orthonormal.<span class="sidenote-number"></span><span class="sidenote">We could print out $Q^TQ$ and check to see how close it is to the identity matrix, but I have found visually this can be difficult.</span>
 
 ## Take Two: Householder Transforms
 
@@ -152,7 +152,7 @@ Orthonormal Check:
   Max: 1.0
 ```
 
-This, however, does not fully utilize $A$: it only uses its first column. Luckily, we can build more flexible matrices by multiplying multiple Householder transforms together.<span class="sidenote">The product of two orthonormal matrices is itself orthonormal, so chaining Householder reflections preserves orthonormality.</span> We multiply the Householder transforms of a subset of, or all of, the columns of $A$:
+This, however, does not fully utilize $A$: it only uses its first column. Luckily, we can build more flexible matrices by multiplying multiple Householder transforms together.<span class="sidenote-number"></span><span class="sidenote">The product of two orthonormal matrices is itself orthonormal, so chaining Householder reflections preserves orthonormality.</span> We multiply the Householder transforms of a subset of, or all of, the columns of $A$:
 
 $$
 Q \leftarrow \prod_{i = 0}^{order} I - 2A_i^TA_i
@@ -211,7 +211,7 @@ There are two ways parameterize a skew-symmetric matrix $S$ from an arbitary mat
 | Use all of $A$ directly | $ S \leftarrow A - A^T $
 | Use the lower-tri components of $A$ | $$ \begin{align*} A_{\text{lower}} &\leftarrow \text{Tril}(A, \text{diag = false}) \\\\ S &\leftarrow A_{\text{lower}} - A_{\text{lower}}^T \end{align*} $$ |
 
-With $S$ in hand, we can generate $Q$:<span class="sidenote">The second formulation is preferred, when possible, since it allows us to get two orthonormal matrices out of $A$ instead of one. The second matrix can be created using the upper triangular portion of $A$ instead.</span>
+With $S$ in hand, we can generate $Q$:<span class="sidenote-number"></span><span class="sidenote">The second formulation is preferred, when possible, since it allows us to get two orthonormal matrices out of $A$ instead of one. The second matrix can be created using the upper triangular portion of $A$ instead.</span>
 
 $$
 \begin{align*}
@@ -261,7 +261,7 @@ $$
 (I - S)^{-1} \approx \sum_{i = 0}^\infty A^i
 $$
 
-If we can ensure $S$ has a small norm, then $Q$ can be expressed as:<span class="sidenote">The Neumann approximation converges iff $||S|| < 1$ where $||\cdot||$ denotes the matrix norm.</span>
+If we can ensure $S$ has a small norm, then $Q$ can be expressed as:<span class="sidenote-number"></span><span class="sidenote">The Neumann approximation converges iff $||S|| < 1$ where $||\cdot||$ denotes the matrix norm.</span>
 
 $$
 \begin{align*}
@@ -272,7 +272,7 @@ Q &\leftarrow \text{CayleyTransform}(S) \\\\
 \end{align*}
 $$
 
-The code is straightforward:<span class="sidenote">In practice, I've found using odd order, $order=1$ or $order=3$, to work best and the approximation also tends to improve in higher dimensions. While not perfect, it is often "good enough for government work".</span>
+The code is straightforward:<span class="sidenote-number"></span><span class="sidenote">In practice, I've found using odd order, $order=1$ or $order=3$, to work best and the approximation also tends to improve in higher dimensions. While not perfect, it is often "good enough for government work".</span>
 
 ```python
 @functools.partial(jax.jit, static_argnames=["order"])

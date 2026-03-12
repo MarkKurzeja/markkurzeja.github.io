@@ -15,7 +15,7 @@ code, cheap to fit, and unreasonably effective, they have been my
 bread-and-butter for small-to-medium multi-dimensional learning tasks and serve
 as a decent baseline for more complex systems.
 
-This post builds intuition for RFF through low-dimensional examples &mdash; through code, we will get a "feel" for the approximations they afford.<span class="sidenote">This post focuses on examples, code, and visuals rather than mathematical derivations. For the math, I highly recommend Gregory Gundersen's <a href="https://gregorygundersen.com/blog/2019/12/23/random-fourier-features/">blog post</a> or Rahimi and Recht's <a href="https://archives.argmin.net/2017/12/05/kitchen-sinks/">Reflections on Random Kitchen Sinks</a>.</span>
+This post builds intuition for RFF through low-dimensional examples &mdash; through code, we will get a "feel" for the approximations they afford.<span class="sidenote-number"></span><span class="sidenote">This post focuses on examples, code, and visuals rather than mathematical derivations. For the math, I highly recommend Gregory Gundersen's <a href="https://gregorygundersen.com/blog/2019/12/23/random-fourier-features/">blog post</a> or Rahimi and Recht's <a href="https://archives.argmin.net/2017/12/05/kitchen-sinks/">Reflections on Random Kitchen Sinks</a>.</span>
 
 ## The Setup
 
@@ -90,7 +90,7 @@ plt.title('$f(x) = I[X < 0](x \sin(3x)) + I[x\geq 0](1 + x)$')
 This code is nothing special.
 1. We start with $N_{data}$ points
 2. Our input, $x$ has domain $x \in [-\pi, \pi]$.
-3. We set $y = \mathbb{I}[X < 0](x \sin(3x)) + \mathbb{I}[x \geq 0](1 + x)$.<span class="sidenote">$\mathbb{I}[\cdot]$ is the <a href="https://en.wikipedia.org/wiki/Iverson_bracket">Iverson bracket</a>. For simplicity, we assume all data fits in memory. This is not a constraint of RFF in general &mdash; it can also be trained in a streaming fashion via SGD.</span>
+3. We set $y = \mathbb{I}[X < 0](x \sin(3x)) + \mathbb{I}[x \geq 0](1 + x)$.<span class="sidenote-number"></span><span class="sidenote">$\mathbb{I}[\cdot]$ is the <a href="https://en.wikipedia.org/wiki/Iverson_bracket">Iverson bracket</a>. For simplicity, we assume all data fits in memory. This is not a constraint of RFF in general &mdash; it can also be trained in a streaming fashion via SGD.</span>
 
 <img src="posts/rff/rff_goal.png" alt="Target function plot"/>
 
@@ -107,7 +107,7 @@ There are three parameters which define the RFF approximation:
 | $\gamma$  | $\mathbb{R} $ | $ \gamma $ acts as the "width" or "frequency" of the kernel approximation. Larger values  of $\gamma$ favor more "local" approximations while smaller values of $ \gamma $ prefer more "global" approximations. I've heuristically found increasing $\gamma$ as a function of R can improve the fit at the cost of larger variance.|
 | $\lambda$ | $\mathbb{R} $ | $ \lambda $ acts as a regularization term. Larger values of $ \lambda $ favor simpler functions. |
 
-And now, RFF:<span class="sidenote">In some settings, $\gamma$ and $\lambda$ can be generalized to vectors. For this blog post, we assume they are scalar here, though the generalization is straightforward.</span>
+And now, RFF:<span class="sidenote-number"></span><span class="sidenote">In some settings, $\gamma$ and $\lambda$ can be generalized to vectors. For this blog post, we assume they are scalar here, though the generalization is straightforward.</span>
 
 ```python
 # Setup
@@ -173,14 +173,14 @@ a lot of data, we will scale $\gamma$ with $R$ to allow for more flexible fits.
 <figcaption>R=100</figcaption>
 </figure>
 
-We can see a minor ringing effect in the fit,<span class="sidenote">The ringing is akin to <a href="https://en.wikipedia.org/wiki/Gibbs_phenomenon">Gibbs phenomenon</a>.</span> but the approximation fits decently well and handles the discontinuities easily.
+We can see a minor ringing effect in the fit,<span class="sidenote-number"></span><span class="sidenote">The ringing is akin to <a href="https://en.wikipedia.org/wiki/Gibbs_phenomenon">Gibbs phenomenon</a>.</span> but the approximation fits decently well and handles the discontinuities easily.
 
 ## Underspecification
 
 The function above was difficult to fit, but we had a large amount of data.
 What happens if we reduce the data significantly but keep the fit heavily
 overparameterized? A good approximation should (a) improve with more
-parameters and (b) self-regularize when it is over-parameterized.<span class="sidenote">Methods which fail to self-regularize can "blow up" without intervention. If you have ever fit a high-degree polynomial, you may have experienced <a href="https://www.johndcook.com/blog/2017/11/18/runge-phenomena/">Runge phenomena</a> &mdash; one such pathology.</span>
+parameters and (b) self-regularize when it is over-parameterized.<span class="sidenote-number"></span><span class="sidenote">Methods which fail to self-regularize can "blow up" without intervention. If you have ever fit a high-degree polynomial, you may have experienced <a href="https://www.johndcook.com/blog/2017/11/18/runge-phenomena/">Runge phenomena</a> &mdash; one such pathology.</span>
 
 RFF has regularization built in. The parameters $\gamma$ and $\lambda$ jointly
 determine how flexible the fit will be in the limit. For a fixed $\gamma$ and
@@ -282,7 +282,7 @@ What happens if $\gamma$ or $\lambda$ are misspecified?
 The worst fits occur when $\lambda \rightarrow 0$ and $\gamma$ exceeds the
 intrinsic variance of the function. Since $\lambda$ controls regularization,
 as $\lambda \rightarrow 0$ the model fits the data perfectly but at the cost
-of larger variance.<span class="sidenote">In practice, I typically start with somewhat larger values of $\lambda$ and somewhat smaller values of $\gamma$ and adjust them accordingly depending on the type of fit I want and how it performs on validation data.</span>
+of larger variance.<span class="sidenote-number"></span><span class="sidenote">In practice, I typically start with somewhat larger values of $\lambda$ and somewhat smaller values of $\gamma$ and adjust them accordingly depending on the type of fit I want and how it performs on validation data.</span>
 
 ## Learning by Example: Higher Dimensions
 
@@ -298,7 +298,7 @@ function:
 
 $$ y = 2 \sin(x_1) + 4 \sin(x_1x_2) $$
 
-### Plots<span class="sidenote">With $d_x = 2$ and $d_y = 1$, we exhaust our three-dimensional visual limits, but we can still learn a few things.</span>
+### Plots<span class="sidenote-number"></span><span class="sidenote">With $d_x = 2$ and $d_y = 1$, we exhaust our three-dimensional visual limits, but we can still learn a few things.</span>
 The plotting code, this time, is only slightly more difficult:
 
 ```python

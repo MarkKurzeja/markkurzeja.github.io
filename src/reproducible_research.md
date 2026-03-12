@@ -6,152 +6,162 @@ author: Mark Kurzeja
 ---
 
 <div class="abstract">
-A short how-to guide for running experiments that are always reproducible, always traceable, and always ready to share. The entire workflow reduces to one rule: if it isn't checked in, it doesn't exist.
+An opinionated guide for recording and reproducing research results<span class="sidenote-number"></span><span class="sidenote">Adapted from a workflow I learned from <a href="https://www.linkedin.com/in/john-aslanides/">John Aslanides</a>.</span>.
 </div>
 
-If you've done any empirical research &mdash; stats, ML, computational science, bench experiments with code &mdash; you've been burned by a failed reproduction. Someone asks about a result from two months ago. The config was in a Slack message. The code has drifted. The notebook imported a helper that's since been refactored. You spend a day reconstructing what should have taken five minutes to look up.
+Good empirical research should be:
 
-I've lost count of how many times I've seen this happen in my own statistics work, and in published papers where the authors themselves couldn't reproduce their own numbers. Adopting the habits in this post has saved me hundreds of hours of debugging. The investment is small; the compounding returns are enormous.
+- **Statistically reproducible.** Anyone can re-run an experiment and get statistically indistinguishable results<span class="sidenote-number"></span><span class="sidenote">Put differently, A/A testing is easy to pull off: re-run the same experiment and confirm your pipeline produces stable results.</span>.
+- **Traceable.** Every result points back to the exact code and config that produced it.
+- **Shareable.** A colleague can pick up where you left off with minimal questioning.
+- **Durable.** Results still make sense and still run months or years later, without bit rot or dependency decay.
 
-This post describes a lightweight workflow that prevents these failures. It's a set of habits, not a tool &mdash; and every habit serves the same principle.
+In practice, most research workflows fail at least one of these<span class="sidenote-number"></span><span class="sidenote">The standard pathologies: (1) the config was in a Slack message and nobody can find it, (2) the code has drifted and nobody recorded which commit produced the result, (3) the analysis notebook imported a helper that's since been refactored, (4) training and eval used separate codebases and a preprocessing change didn't propagate, (5) the pipeline was run with shell commands that lived in someone's terminal history and that person is on vacation.</span>. You iterate in a development branch, try dozens of things, and eventually land on a result. But the lineage is lost. Tribal knowledge accumulates in people's heads instead of in the repo. 
+The workflow below is a set of habits, not a tool, that ended up producing much better research.
 
-## The One Rule
+## The Twelve Principles
 
-**If it isn't checked in, it doesn't exist.**
+<div class="proof-block">
+<div class="proof-label">The Twelve Principles of Reproducible Research</div>
 
-Version control is the single source of truth. Not your memory, not Slack, not a shared drive. Code, config, analysis, results &mdash; if it matters, it lives in the repo.<span class="sidenote">This idea isn't new. Knuth's literate programming, Claerbout's reproducible research, and the broader open-science movement all share this DNA. This workflow is a pragmatic distillation for anyone running experiments.</span>
+<details class="step-details" open>
+<summary class="step">
+<span class="step-number" id="repro:1">1.</span>
+Check everything into version control.
+</summary>
+<div class="subproof">
+Version control is the single source of truth. Not your memory, not Slack, not a shared drive. Code, config, analysis, results: if it matters, it lives in the repo<span class="sidenote-number"></span><span class="sidenote">This idea isn't new. Knuth's literate programming, Claerbout's reproducible research, and the broader open-science movement all share this DNA. This workflow is a pragmatic distillation for anyone running experiments.</span>
+</div>
+</details>
 
-Everything below is a consequence of this one rule.
+<details class="step-details" open>
+<summary class="step">
+<span class="step-number" id="repro:2">2.</span>
+One codebase.
+</summary>
+<div class="subproof">
+Training, evaluation, preprocessing, analysis: all in one repo. The config determines what runs, not which code runs<span class="sidenote-number"></span><span class="sidenote">This is how you avoid the most insidious class of bugs: silent divergence between training and evaluation code, where a preprocessing change propagates to one but not the other.</span>.
+</div>
+</details>
 
-## The Workflow
+<details class="step-details" open>
+<summary class="step">
+<span class="step-number" id="repro:3">3.</span>
+Explicit dependencies.
+</summary>
+<div class="subproof">
+Pin your dependencies and use a lockfile<span class="sidenote-number"></span><span class="sidenote"><code>uv</code> handles this well for Python. The point is that anyone checking out your repo can recreate your environment exactly, not approximately.</span>. A colleague should be able to clone, install, and run without asking you a single question.
+</div>
+</details>
 
-Here's the full loop at a glance:
+<details class="step-details" open>
+<summary class="step">
+<span class="step-number" id="repro:4">4.</span>
+Complete configs.
+</summary>
+<div class="subproof">
+The config file should be sufficient to reproduce an experiment from scratch, with no ambient state: hyperparameters, data paths, preprocessing steps, random seeds, etc<span class="sidenote-number"></span><span class="sidenote">A useful litmus test: can a colleague reproduce your experiment using only the config and the README, with minimal questioning?</span>. If you need to know anything beyond the config to re-run, the config is incomplete.
 
-```
- Config ──→ Runfile ──→ Experiment ──→ Notebook ──→ README
-   │           │            │              │           │
-   │           │            │              │           │
-   ▼           ▼            ▼              ▼           ▼
- checked     checked    HEAD + diff     standalone   experiment
-   in          in        captured      with saved     summary
-                                        outputs      and plots
-                          ╲               │           ╱
-                           ╲              │          ╱
-                            ▼             ▼         ▼
-                         ┌──────────────────────────┐
-                         │  Only share what's in     │
-                         │  the repo as a report     │
-                         └──────────────────────────┘
-```
+The common failures: missing data paths, hardcoded paths that only work on one machine, missing random seeds, and behavior controlled by command-line flags that nobody saved down<span class="sidenote-number"></span><span class="sidenote">The worst version of this I've seen: <code>"data": "/home/mark/Desktop/thursday_data_final_v2.csv"</code>. Good luck running that on any other machine.</span>.
+</div>
+</details>
 
-Each step below maps to a habit.
+<details class="step-details" open>
+<summary class="step">
+<span class="step-number" id="repro:5">5.</span>
+Commands live in runfiles.
+</summary>
+<div class="subproof">
+Every shell command needed to execute a pipeline lives in a checked-in script: a Makefile, a Justfile, a shell script<span class="sidenote-number"></span><span class="sidenote">The format doesn't matter. What matters is that the commands are recorded. No one should have to reverse-engineer your pipeline from terminal history.</span>. The config defines <em>what</em> to run, and the runfile defines <em>how</em>.
+</div>
+</details>
 
-## Make Config Complete
+<details class="step-details" open>
+<summary class="step">
+<span class="step-number" id="repro:6">6.</span>
+Every run produces a folder of artifacts.
+</summary>
+<div class="subproof">
+Each run lands in a dedicated output directory with all its artifacts: logs, metrics, outputs. Everything a run produces lives in one place, traceable back to the code and config that produced it.
+</div>
+</details>
 
-The config file should be sufficient to reproduce an experiment from scratch, with no ambient state. If you need to know anything beyond the config to re-run, the config is incomplete.<span class="sidenote">A useful litmus test: can a colleague reproduce your experiment using only the config and the README, without asking you a single question?</span>
+<details class="step-details" open>
+<summary class="step">
+<span class="step-number" id="repro:7">7.</span>
+Capture the code state.
+</summary>
+<div class="subproof">
+Every run records the <code>HEAD</code> commit hash, the <code>git diff</code> (if the working tree is dirty), and the config used. An experiment's identity is (code state, config). If you have both, you can reproduce. If you're missing either, you're guessing<span class="sidenote-number"></span><span class="sidenote">Ideally, you run all experiments from a clean <code>HEAD</code> with different configs rather than relying on uncommitted changes. Large <code>git diff</code>s are a smell: if you need to change the code, commit first, then run. The discipline of committing before running keeps your experiments tied to real, recoverable code states.</span>.
+</div>
+</details>
 
-This is the hardest habit to adopt and the most valuable. It forces you to be explicit about every decision: hyperparameters, data paths, preprocessing steps, random seeds, all of it.
+<details class="step-details" open>
+<summary class="step">
+<span class="step-number" id="repro:8">8.</span>
+Reports are durable and standalone.
+</summary>
+<div class="subproof">
+Results go into a report: a notebook (<a href="https://colab.research.google.com/">Colab</a>, <a href="https://jupyter.org/">Jupyter</a>, <a href="https://quarto.org/">Quarto</a>, <a href="https://blog.alexalemi.com/plaque.html">Plaque</a>), a static HTML file, a script that renders plots. The format doesn't matter. What matters is that the statistical analysis, plots, and outputs all live in the same place, and the report does not import from your experiment codebase<span class="sidenote-number"></span><span class="sidenote">Standard library and third-party imports (<code>numpy</code>, <code>pandas</code>) are fine. The problem is importing from your own project. If you need a helper function, copy it into the report. Duplication here is a feature: it freezes the behavior at the time of analysis. As Rob Pike <a href="https://www.youtube.com/watch?v=PAAkCSZUG1c&t=568s">put it</a>, "a little copying is better than a little dependency."</span>. Your code will change. A report that depends on it has an expiration date you can't predict.
+</div>
+</details>
 
-Here's what a complete config looks like:
+<details class="step-details" open>
+<summary class="step">
+<span class="step-number" id="repro:9">9.</span>
+Reports are easy to re-run.
+</summary>
+<div class="subproof">
+A report should be re-runnable from its own directory at any point in the future and produce exactly the same results. Save the outputs alongside the code that produced them, and check everything into the repo. Your statistical analysis is inherently durable: a standalone report with frozen outputs is a time capsule.
+</div>
+</details>
 
-```toml
-# Good: everything needed to reproduce from scratch
-[experiment]
-name = "baseline_v3"
-seed = 42
+<details class="step-details" open>
+<summary class="step">
+<span class="step-number" id="repro:10">10.</span>
+Keep a README log.
+</summary>
+<div class="subproof">
+Write a running summary: what was tried, what the results were, key plots, brief interpretation. Screenshot key results and embed them directly, especially if your screenshot tool generates shareable links<span class="sidenote-number"></span><span class="sidenote">The discipline of writing a one-paragraph summary after each experiment dramatically improves your own understanding of what you're learning over the course of a project.</span>. This is a lab notebook, not a formal report. Its audience is future-you and your collaborators.
+</div>
+</details>
 
-[data]
-path = "data/processed/train.parquet"
-val_path = "data/processed/val.parquet"
-preprocessing = "standardize"  # no ambient assumptions
+<details class="step-details" open>
+<summary class="step">
+<span class="step-number" id="repro:11">11.</span>
+Share results from committed reports.
+</summary>
+<div class="subproof">
+When you share results (in a meeting, a paper, a design doc) share only what exists as a committed report. If it's worth sharing, it's worth committing<span class="marginnote">This habit also protects you. When someone questions a number six months later, you point them to the commit.</span>.
+</div>
+</details>
 
-[model]
-type = "ridge"
-alpha = 0.1
-features = ["age", "income", "region"]
+<details class="step-details" open>
+<summary class="step">
+<span class="step-number" id="repro:12">12.</span>
+Use each experiment to design the next one.
+</summary>
+<div class="subproof">
+The loop closes when you take what you learned and use it to design the next experiment. Good research is a clean sequence of runs, each building on the last, each fully traceable.
+</div>
+</details>
 
-[output]
-dir = "results/baseline_v3"
-```
+</div>
 
-And here are three common ways configs fall short:
+## The Loop
 
-```python
-# Bad #1: Missing the data path — relies on whoever runs it
-#   to "just know" which file to use
-config = {
-    "model": "ridge",
-    "alpha": 0.1,
-}
-# Where's the data? Who knows. Ask Mark, he might remember.
-```
+In practice, the principles above produce a tight loop:
 
-```python
-# Bad #2: Hardcoded paths that only work on one machine
-config = {
-    "data": "/home/mark/Desktop/thursday_data_final_v2.csv",
-    "model": "ridge",
-    "alpha": 0.1,
-}
-# Good luck running this on any other machine.
-```
+<div class="algorithm">
+<div class="algorithm-header"><strong>Algorithm E</strong> (Experiment). Given a codebase and a config, produce a traceable result.</div>
+<ol class="algorithm-steps">
+<li><span class="algorithm-step-label">E1.</span><span class="algorithm-step-body"><span class="step-action">[Configure.]</span> Write the config. Ensure it is complete (principle 4). Check it in.</span></li>
+<li><span class="algorithm-step-label">E2.</span><span class="algorithm-step-body"><span class="step-action">[Run.]</span> Execute the pipeline via the runfile (principle 5). Save all artifacts to a dedicated output directory (principle 6). Record HEAD, git diff, and config alongside the artifacts (principle 7).</span></li>
+<li><span class="algorithm-step-label">E3.</span><span class="algorithm-step-body"><span class="step-action">[Report.]</span> Write a standalone notebook with frozen outputs (principles 8, 9). Check it in.</span></li>
+<li><span class="algorithm-step-label">E4.</span><span class="algorithm-step-body"><span class="step-action">[Learn.]</span> Update the README log with results and interpretation (principle 10). Commit everything (principle 1).</span></li>
+<li><span class="algorithm-step-label">E5.</span><span class="algorithm-step-body"><span class="step-action">[Share.]</span> If the result is worth sharing, share only from the repo (principle 11).</span></li>
+<li><span class="algorithm-step-label">E6.</span><span class="algorithm-step-body"><span class="step-action">[Iterate.]</span> Design the next config from what you learned (principle 12). Return to E1.</span></li>
+</ol>
+</div>
 
-```python
-# Bad #3: Missing the random seed and preprocessing details
-config = {
-    "data": "data/train.parquet",
-    "model": "ridge",
-    "alpha": 0.1,
-    # No seed — results will differ every run.
-    # No mention of preprocessing — was the data standardized?
-    #   Log-transformed? Filtered? Hope you remember.
-}
-```
-
-## Capture the Code State
-
-Prefer to check in the code at the commit that produced the result. When that isn't practical &mdash; you're iterating quickly, the working tree is dirty &mdash; save three things as experiment artifacts:
-
-1. **HEAD** commit hash
-2. **git diff** (the uncommitted changes)
-3. **Config** used for the run
-
-An experiment's identity is (code state, config). If you have both, you can reproduce. If you're missing either, you're guessing.<span class="marginnote">In practice, I use branch-per-experiment or tag conventions, but the specific Git workflow matters less than the discipline of always recording the code state.</span>
-
-## Use One Codebase for Train and Eval
-
-Separate codebases for training and evaluation are a common source of silent divergence. When eval code drifts from training code, your metrics become unreliable and you won't notice.<span class="sidenote">This is especially insidious when eval involves preprocessing or feature engineering. A mismatch between train-time and eval-time preprocessing is one of the most common and hardest-to-catch bugs in empirical work.</span>
-
-One codebase. The config determines which mode runs, not which code runs.
-
-## Save Commands in Runfiles
-
-Every shell command needed to execute a pipeline lives in a checked-in "runfile" &mdash; a script that captures the exact invocation.<span class="sidenote">You could use Make, Just, a shell script, or a plain text file with copy-pasteable commands. The format doesn't matter. What matters is that the commands are recorded.</span>
-
-Runfiles aren't fancy. Their value is being explicit, version-controlled, and runnable. No one has to reverse-engineer your pipeline from memory.
-
-## Analyze in Standalone Notebooks
-
-Results go into a notebook &mdash; Colab, Jupyter, Quarto, Plaque, whatever you prefer &mdash; saved with its outputs. The critical rule: **the notebook does not import from your custom experiment codebase.** It is self-contained.<span class="sidenote">The specific tool doesn't matter. What matters is the contract: the notebook is a standalone document with saved outputs that you can re-read (and re-run) years later.</span>
-
-To be clear: standard library and third-party imports (`numpy`, `pandas`, `matplotlib`, etc.) are fine. The problem is importing from your own project &mdash; your custom analysis library, your plotting utilities, your data loading helpers.
-
-Why? Because your code will change. If your analysis notebook imports a plotting helper from your experiment codebase, and someone refactors that module next month, your saved analysis becomes un-runnable. Worse, if the function's *behavior* changes silently, re-running the notebook produces different results with no indication that anything changed. Over time, internal code drifts in ways that break backwards compatibility &mdash; renamed arguments, changed defaults, deleted functions. A notebook that depends on your codebase has an expiration date you can't predict.<span class="marginnote">If you find yourself wanting to import code into your analysis notebook, copy the relevant function directly into the notebook. Duplication here is a feature, not a bug &mdash; it freezes the behavior at the time of analysis.</span>
-
-A standalone notebook with frozen outputs is a time capsule. Check the notebooks into the repo. Results, plots, and analysis are now versioned alongside the code and config that produced them.
-
-## Maintain a README Log
-
-Keep a running summary in the README: what was tried, what the results were, key plots, brief interpretation. This is a lab notebook, not a formal report. Its audience is future-you and your collaborators.<span class="sidenote">The discipline of writing a one-paragraph summary after each experiment dramatically improves your own understanding of what you're learning over the course of a project.</span>
-
-## Only Share What's Checked In
-
-The final habit ties it all together: when you share results &mdash; in a meeting, a paper, a design doc &mdash; share only what exists as a checked-in report.
-
-This creates a forcing function. If a result is worth sharing, it's worth checking in properly. If it isn't checked in, it's provisional.<span class="marginnote">This habit also protects you. When someone questions a number six months later, you don't need to reconstruct anything. You point them to the commit.</span>
-
-## That's It
-
-None of these habits are heavy. A complete config, a runfile, a standalone notebook, a README entry, and a commit. The power is in the composition &mdash; together they make reproducibility a byproduct of the workflow rather than an afterthought.
-
-The goal isn't perfection. The goal is that when future-you needs to understand an experiment, everything is in one place, and it still runs.
+None of this needs to be perfect. The point is that when future-you needs to understand an experiment, everything is in one place, and it still runs.
