@@ -1,12 +1,12 @@
 ---
-title: "The AMBER Workflow"
+title: "🔶 The AMBER Workflow"
 subtitle: "Twelve principles for preserving research in amber"
 date: 2026-03-10
 author: Mark Kurzeja
 ---
 
 <div class="abstract">
-An opinionated guide for recording and reproducing research results<span class="sidenote-number"></span><span class="sidenote">Adapted from a workflow I learned from <a href="https://www.linkedin.com/in/john-aslanides/">John Aslanides</a>.</span>. I call it AMBER: Archived, Managed, Benchmarked Experiment Records.
+An opinionated guide for recording and reproducing research results<span class="sidenote-number"></span><span class="sidenote">Adapted from a workflow I learned from <a href="https://www.linkedin.com/in/john-aslanides/">John Aslanides</a>.</span>. I call it the 🔶 AMBER workflow.
 </div>
 
 Amber preserves things perfectly. An insect trapped in resin 40 million years ago is still there: every leg, every wing vein, frozen exactly as it was. That is what a good research workflow does to experiments. Every config, every line of code, every artifact, preserved so that anyone can return to it later and find it exactly as it was left.
@@ -21,7 +21,7 @@ Good empirical research - ambered research - should be:
 - **Durable.** Results still make sense and still run months or years later, without bit rot or dependency decay.
 
 In practice, most research workflows fail at least one of these<span class="sidenote-number"></span><span class="sidenote">The standard pathologies: (1) the config was in a Slack message and nobody can find it, (2) the code has drifted and nobody recorded which commit produced the result, (3) the analysis notebook imported a helper that's since been refactored, (4) training and eval used separate codebases and a preprocessing change didn't propagate, (5) the pipeline was run with shell commands that lived in someone's terminal history and that person is on vacation.</span>. You iterate in a development branch, try dozens of things, and eventually land on a result. But the lineage is lost. Tribal knowledge accumulates in people's heads instead of in the repo. 
-The AMBER workflow below is a set of habits, not a tool, that ended up producing much better research. The goal: amber your experiments.
+The 🔶 AMBER workflow below is a set of habits, not a tool, that ended up producing much better research. The goal: amber your experiments.
 
 ## The Setup
 
@@ -36,7 +36,7 @@ This workflow relies on five things:
 ## The Twelve Principles
 
 <div class="proof-block">
-<div class="proof-label">The Twelve Principles of AMBER</div>
+<div class="proof-label">The Twelve Principles of 🔶 AMBER</div>
 
 <details class="step-details" open>
 <summary class="step">
@@ -167,7 +167,7 @@ The loop closes when you take what you learned and use it to design the next exp
 In practice, the principles above produce a tight loop:
 
 <div class="algorithm">
-<div class="algorithm-header"><strong>Algorithm A</strong> (AMBER). Given a codebase and a config, produce a traceable result.</div>
+<div class="algorithm-header"><strong>Algorithm A</strong> (🔶 AMBER). Given a codebase and a config, produce a traceable result.</div>
 <ol class="algorithm-steps">
 <li><span class="algorithm-step-label">A1.</span><span class="algorithm-step-body"><span class="step-action">[Configure]</span> Write a complete config. Check it in.</span></li>
 <li><span class="algorithm-step-label">A2.</span><span class="algorithm-step-body"><span class="step-action">[Run]</span> Execute the pipeline via the runfile. Save all artifacts to a dedicated output directory. Record the code state alongside the artifacts.</span></li>
@@ -178,4 +178,4 @@ In practice, the principles above produce a tight loop:
 </ol>
 </div>
 
-The goal is simple: when future-you revisits an experiment, everything is in one place, and it still runs. The experiment is in amber.
+The goal is simple: when future-you revisits an experiment, everything is in one place, and it still runs. The experiment is in 🔶 amber.
