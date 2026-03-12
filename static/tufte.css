@@ -480,21 +480,24 @@ h3:hover .headerlink {
 }
 
 .algorithm-steps li {
-  display: flex;
+  position: relative;
+  padding-left: 2.5rem;
   margin-bottom: 0.6rem;
   font-size: 1.4rem;
   line-height: 2rem;
 }
 
 .algorithm-step-label {
+  position: absolute;
+  left: 0;
+  top: 0;
   font-weight: bold;
   white-space: nowrap;
-  min-width: 2.5rem;
-  flex-shrink: 0;
 }
 
-.algorithm-step-body {
-  flex: 1;
+.algorithm-step-body>.sidenote,
+.algorithm-step-body>.marginnote {
+  margin-right: calc(-60% - 0.4rem);
 }
 
 .algorithm-step-body .step-action {

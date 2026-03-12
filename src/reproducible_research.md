@@ -1,6 +1,6 @@
 ---
 title: "🔶 The AMBER Workflow"
-subtitle: "Twelve principles for preserving research in amber"
+subtitle: "A simple workflow for preserving research in amber"
 date: 2026-03-10
 author: Mark Kurzeja
 ---
@@ -11,28 +11,50 @@ An opinionated guide for recording and reproducing research results.<span class=
 
 Good empirical research should be:
 
-- **Durable.** Results still make sense and still run months or years later, without bit rot or dependency decay.<span class="sidenote-number"></span><span class="sidenote">Amber preserves things perfectly: an insect trapped in resin 40 million years ago is still there, every leg, every wing vein, frozen exactly as it was. That is what a good research workflow does to experiments.</span>
-- **Statistically reproducible.** Anyone can re-run an experiment and get statistically indistinguishable results.<span class="sidenote-number"></span><span class="sidenote">Put differently, A/A testing is easy to pull off: re-run the same experiment and confirm your pipeline produces stable results.</span>
-- **Traceable.** Every result points back to the exact code and config that produced it.
+- **Durable.** Results still make sense and still run months or years later, without bit rot or dependency decay.<span class="sidenote-number"></span><span class="sidenote">Amber preserves things perfectly: something trapped in resin 40 million years ago is still there, frozen exactly as it was. That is what a good research workflow does to experiments.</span>
+- **Statistically reproducible.** Anyone can re-run an experiment and get statistically indistinguishable results.<span class="sidenote-number"></span><span class="sidenote">This facilitates A/A testing: re-run the same experiment twice and you should not be able to statistically distinguish between the results.</span>
+- **Traceable.** Every result points back to the exact code and config that produced it.<span class="sidenote-number"></span><span class="sidenote">Being able to recover the exact code that produced a run is always helpful, and in practice this means version control becomes non-negotiable.</span>
 - **Shareable.** A colleague can pick up where you left off with minimal questioning.
 
-In practice, most research workflows fail at least one of these.<span class="sidenote-number"></span><span class="sidenote">The standard pathologies: (1) the config was in a Slack message and nobody can find it, (2) the code has drifted and nobody recorded which commit produced the result, (3) the analysis notebook imported a helper that's since been refactored, (4) training and eval used separate codebases and a preprocessing change didn't propagate, (5) the pipeline was run with shell commands that lived in someone's terminal history and that person is on vacation.</span> You iterate in a development branch, try dozens of things, and eventually land on a result. But the lineage is lost. Tribal knowledge accumulates in people's heads instead of in the repo. 
-The workflow below is a set of habits, not a tool, that ended up producing much better research.
+In practice, most research workflows fail at least one of these.<span class="sidenote-number"></span><span class="sidenote">The standard pathologies: (1) the config was in a Slack message and nobody can find it, (2) the code has drifted and nobody recorded which commit produced the result, (3) the analysis notebook imported a helper that's since been refactored, (4) training and eval used separate codebases and a preprocessing change didn't propagate, (5) the pipeline was run with shell commands that lived in someone's terminal history and that person is on vacation.</span> The workflow below is a set of habits, not a tool, that ended up producing much better research.
 
-## The Setup
+## The Workflow
 
-This workflow relies on five things:
+The core of 🔶 AMBER is a four-step loop. Everything else in this document exists to make these steps easier.
 
-- **A codebase.** One repo containing all code for training, evaluation, preprocessing, and analysis.
-- **A config.** A file (JSON, YAML, TOML) that fully specifies an experiment: hyperparameters, data paths, preprocessing steps, random seeds.
-- **A runfile.** A checked-in script (Makefile, Justfile, shell script) that records every command needed to execute the pipeline.
-- **A run directory.** A dedicated output folder per experiment containing the config, the code state (<code>HEAD</code> hash and <code>git diff</code>), and every artifact the run produces. Once complete, this folder is read-only: a frozen snapshot of exactly what happened.
-- **A report.** A standalone notebook or script (<a href="https://colab.research.google.com/">Colab</a>, <a href="https://jupyter.org/">Jupyter</a>, <a href="https://quarto.org/">Quarto</a>, <a href="https://blog.alexalemi.com/plaque.html">Plaque</a>, static HTML) that reads from a run directory and contains all statistical analysis, plots, and interpretation in one place.
+<div class="algorithm">
+<ol class="algorithm-steps">
+<li><span class="algorithm-step-label">A1.</span><span class="algorithm-step-body"><span class="step-action">[Run]</span> Execute the experiment. Save all artifacts to a dedicated, durable output directory: the config, the code state, logs, metrics, and outputs. Once complete, the directory is frozen.<span class="sidenote-number"></span><span class="sidenote">The key constraints are durability and reproducibility. This could be a checked-in folder, a cloud bucket, an artifact store. What matters is that it's immutable and that it contains everything someone would need to rerun the experiment exactly.</span></span></li>
+<li><span class="algorithm-step-label">A2.</span><span class="algorithm-step-body"><span class="step-action">[Report]</span> Write a standalone report that reads from the frozen run directory. It contains all statistical analysis, plots, and interpretation in one place. Check it in.</span></li>
+<li><span class="algorithm-step-label">A3.</span><span class="algorithm-step-body"><span class="step-action">[Log]</span> Update a running markdown log with results and interpretation. Commit everything.</span></li>
+<li><span class="algorithm-step-label">A4.</span><span class="algorithm-step-body"><span class="step-action">[Iterate]</span> Design the next experiment from what you learned. Return to A1.</span></li>
+</ol>
+</div>
 
-## The Twelve Principles
+The goal is simple: when future-you revisits an experiment, everything is in one place, and it still runs. The rest of this document is best practices that make each step easier.
+
+## Recommended Directory Layout
+
+A concrete starting point. Not every project needs all of this, but this structure makes the four steps of AMBER natural.
+
+```
+project/
+├── configs/                         # one config per experiment variant
+├── runs/                            # durable archive of frozen run artifacts
+│   └── baseline_config-a3f8b2c1/    # config, code state, logs, outputs, etc.
+└── reports/
+    ├── README.md                    # running log of experiments
+    └── 20260105a_baseline.ipynb     # standalone report per experiment
+```
+
+<span class="sidenote-number"></span><span class="sidenote">The naming convention `YYYYMMDD` + letter suffix (`a`, `b`, ...) for reports keeps them sorted chronologically and handles multiple reports in a single day.</span>
+
+The `runs/` directory is the frozen record (step A1). Each subdirectory is self-contained and immutable: the config, the code state, the exact command, and every output. Reports in `reports/` read from these frozen directories (step A2), and `README.md` is the running log (step A3).
+
+## Best Practices
 
 <div class="proof-block">
-<div class="proof-label">The Twelve Principles of Reproducible Research</div>
+<div class="proof-label">Codebase hygiene</div>
 
 <details class="step-details" open>
 <summary class="step">
@@ -64,15 +86,18 @@ Pin your dependencies and use a lockfile.<span class="sidenote-number"></span><s
 </div>
 </details>
 
+</div>
+
+<div class="proof-block">
+<div class="proof-label">Experiment setup</div>
+
 <details class="step-details" open>
 <summary class="step">
 <span class="step-number" id="repro:4">4.</span>
 Make configs complete.
 </summary>
 <div class="subproof">
-The config file should be sufficient to reproduce an experiment from scratch, with no ambient state: hyperparameters, data paths, preprocessing steps, random seeds, etc.<span class="sidenote-number"></span><span class="sidenote">A useful litmus test: can a colleague reproduce your experiment using only the config and the README, with minimal questioning?</span> If you need to know anything beyond the config to re-run, the config is incomplete.
-
-The common failures: missing data paths, hardcoded paths that only work on one machine, missing random seeds, and behavior controlled by command-line flags that nobody saved down.
+The config file should be sufficient to reproduce an experiment from scratch, with no ambient state: hyperparameters, data paths, preprocessing steps, random seeds, etc.<span class="sidenote-number"></span><span class="sidenote">A useful litmus test: can a colleague reproduce your experiment using only the config and the README, with minimal questioning?</span> If you need to know anything beyond the config to re-run, the config is incomplete.<span class="sidenote-number"></span><span class="sidenote">The common failures: missing data paths, hardcoded paths that only work on one machine, missing random seeds, and behavior controlled by command-line flags that nobody saved down.</span>
 </div>
 </details>
 
@@ -85,6 +110,11 @@ Put commands in runfiles.
 Every shell command needed to execute a pipeline lives in a checked-in script: a Makefile, a Justfile, a shell script.<span class="sidenote-number"></span><span class="sidenote">The format doesn't matter. What matters is that the commands are recorded. No one should have to reverse-engineer your pipeline from terminal history.</span> The config defines <em>what</em> to run, and the runfile defines <em>how</em>.
 </div>
 </details>
+
+</div>
+
+<div class="proof-block">
+<div class="proof-label">Run discipline</div>
 
 <details class="step-details" open>
 <summary class="step">
@@ -106,6 +136,11 @@ Every run records the <code>HEAD</code> commit hash, the <code>git diff</code> (
 </div>
 </details>
 
+</div>
+
+<div class="proof-block">
+<div class="proof-label">Reporting</div>
+
 <details class="step-details" open>
 <summary class="step">
 <span class="step-number" id="repro:8">8.</span>
@@ -126,6 +161,11 @@ A report should be re-runnable from its own directory at any point in the future
 </div>
 </details>
 
+</div>
+
+<div class="proof-block">
+<div class="proof-label">Communication</div>
+
 <details class="step-details" open>
 <summary class="step">
 <span class="step-number" id="repro:10">10.</span>
@@ -142,7 +182,7 @@ Write a running summary: what was tried, what the results were, key plots, brief
 Share results from committed reports.
 </summary>
 <div class="subproof">
-When you share results (in a meeting, a paper, a design doc) share only what exists as a committed report. If it's worth sharing, it's worth committing.<span class="marginnote">This habit also protects you. When someone questions a number six months later, you point them to the commit.</span>
+When you share results (in a meeting, a paper, a design doc) share only what exists as a committed report. If it's worth sharing, it's worth committing.<span class="sidenote-number"></span><span class="sidenote">This habit also protects you. When someone questions a number six months later, you point them to the commit.</span>
 </div>
 </details>
 
@@ -157,21 +197,3 @@ The loop closes when you take what you learned and use it to design the next exp
 </details>
 
 </div>
-
-## The Loop
-
-In practice, the principles above produce a tight loop:
-
-<div class="algorithm">
-<div class="algorithm-header"><strong>Algorithm A</strong> (AMBER). Given a codebase and a config, produce a traceable result.</div>
-<ol class="algorithm-steps">
-<li><span class="algorithm-step-label">A1.</span><span class="algorithm-step-body"><span class="step-action">[Configure]</span> Write a complete config. Check it in.</span></li>
-<li><span class="algorithm-step-label">A2.</span><span class="algorithm-step-body"><span class="step-action">[Run]</span> Execute the pipeline via the runfile. Save all artifacts to a dedicated output directory. Record the code state alongside the artifacts.</span></li>
-<li><span class="algorithm-step-label">A3.</span><span class="algorithm-step-body"><span class="step-action">[Report]</span> Write a standalone report with frozen outputs. Check it in.</span></li>
-<li><span class="algorithm-step-label">A4.</span><span class="algorithm-step-body"><span class="step-action">[Learn]</span> Update the README log with results and interpretation. Commit everything.</span></li>
-<li><span class="algorithm-step-label">A5.</span><span class="algorithm-step-body"><span class="step-action">[Share]</span> If the result is worth sharing, share only from the repo.</span></li>
-<li><span class="algorithm-step-label">A6.</span><span class="algorithm-step-body"><span class="step-action">[Iterate]</span> Design the next config from what you learned. Return to A1.</span></li>
-</ol>
-</div>
-
-The goal is simple: when future-you revisits an experiment, everything is in one place, and it still runs.
