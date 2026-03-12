@@ -1,6 +1,6 @@
 ---
 name: tufte-patterns
-description: Reference patterns for Tufte-style blog HTML - sidenotes, marginnotes, proof blocks, algorithms, figures
+description: Copy-paste HTML patterns for Tufte-style blog posts. Use when writing or editing blog content in src/*.md files that needs sidenotes, marginnotes, proof blocks, algorithm blocks, figures, or math. Do NOT use for non-blog files.
 user-invocable: false
 ---
 
