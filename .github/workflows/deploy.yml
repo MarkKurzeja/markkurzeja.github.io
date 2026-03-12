@@ -21,7 +21,8 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           version: "latest"
-      - run: uv sync
+      - run: uv python install
+      - run: uv sync --locked
       - run: uv run python build.py
       - run: uv run python test_build.py
       - uses: actions/configure-pages@v5
