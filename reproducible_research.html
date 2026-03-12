@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>The Checked-In Experiment</title>
-  <link rel="stylesheet" href="tufte.css?v=1773159305"/>
+  <link rel="stylesheet" href="tufte.css?v=1773285732"/>
   <!-- KaTeX for math rendering -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
         crossorigin="anonymous"/>
@@ -43,14 +43,15 @@
     <h1>The Checked-In Experiment</h1>
     <p class="byline"><span class="author">Mark Kurzeja</span> &middot; <span class="date">2026-03-10</span></p>
     <div class="abstract">
-A short how-to guide for running ML experiments that are always reproducible, always traceable, and always ready to share. The entire workflow reduces to one rule: if it isn't checked in, it doesn't exist.
+A short how-to guide for running experiments that are always reproducible, always traceable, and always ready to share. The entire workflow reduces to one rule: if it isn't checked in, it doesn't exist.
 </div>
 
-<p>You&rsquo;ve been here before: someone asks about a result from two months ago. The config was in a Slack message. The code has drifted. The notebook imported a helper that&rsquo;s since been refactored. You spend a day reconstructing what should have taken five minutes to look up.</p>
-<p>This post describes a lightweight workflow that prevents this. It&rsquo;s a set of habits, not a tool &mdash; and every habit serves the same principle.</p>
+<p>If you&rsquo;ve done any empirical research &mdash; stats, ML, computational science, bench experiments with code &mdash; you&rsquo;ve been burned by a failed reproduction. Someone asks about a result from two months ago. The config was in a Slack message. The code has drifted. The notebook imported a helper that&rsquo;s since been refactored. You spend a day reconstructing what should have taken five minutes to look up.</p>
+<p>I&rsquo;ve lost count of how many times I&rsquo;ve seen this happen in my own statistics work, and in published papers where the authors themselves couldn&rsquo;t reproduce their own numbers. Adopting the habits in this post has saved me hundreds of hours of debugging. The investment is small; the compounding returns are enormous.</p>
+<p>This post describes a lightweight workflow that prevents these failures. It&rsquo;s a set of habits, not a tool &mdash; and every habit serves the same principle.</p>
 <h2 id="the-one-rule">The One Rule<a class="headerlink" href="#the-one-rule" title="Permanent link">&para;</a></h2>
 <p><strong>If it isn&rsquo;t checked in, it doesn&rsquo;t exist.</strong></p>
-<p>Version control is the single source of truth. Not your memory, not Slack, not a shared drive. Code, config, analysis, results &mdash; if it matters, it lives in the repo.<span class="sidenote">This idea isn&rsquo;t new. Knuth&rsquo;s literate programming, Claerbout&rsquo;s reproducible research, and the broader open-science movement all share this DNA. This workflow is a pragmatic distillation for ML practitioners.</span></p>
+<p>Version control is the single source of truth. Not your memory, not Slack, not a shared drive. Code, config, analysis, results &mdash; if it matters, it lives in the repo.<span class="sidenote">This idea isn&rsquo;t new. Knuth&rsquo;s literate programming, Claerbout&rsquo;s reproducible research, and the broader open-science movement all share this DNA. This workflow is a pragmatic distillation for anyone running experiments.</span></p>
 <p>Everything below is a consequence of this one rule.</p>
 <h2 id="the-workflow">The Workflow<a class="headerlink" href="#the-workflow" title="Permanent link">&para;</a></h2>
 <p>Here&rsquo;s the full loop at a glance:</p>
@@ -73,6 +74,52 @@ A short how-to guide for running ML experiments that are always reproducible, al
 <h2 id="make-config-complete">Make Config Complete<a class="headerlink" href="#make-config-complete" title="Permanent link">&para;</a></h2>
 <p>The config file should be sufficient to reproduce an experiment from scratch, with no ambient state. If you need to know anything beyond the config to re-run, the config is incomplete.<span class="sidenote">A useful litmus test: can a colleague reproduce your experiment using only the config and the README, without asking you a single question?</span></p>
 <p>This is the hardest habit to adopt and the most valuable. It forces you to be explicit about every decision: hyperparameters, data paths, preprocessing steps, random seeds, all of it.</p>
+<p>Here&rsquo;s what a complete config looks like:</p>
+<pre><code class="language-toml"># Good: everything needed to reproduce from scratch
+[experiment]
+name = &quot;baseline_v3&quot;
+seed = 42
+
+[data]
+path = &quot;data/processed/train.parquet&quot;
+val_path = &quot;data/processed/val.parquet&quot;
+preprocessing = &quot;standardize&quot;  # no ambient assumptions
+
+[model]
+type = &quot;ridge&quot;
+alpha = 0.1
+features = [&quot;age&quot;, &quot;income&quot;, &quot;region&quot;]
+
+[output]
+dir = &quot;results/baseline_v3&quot;
+</code></pre>
+<p>And here are three common ways configs fall short:</p>
+<pre><code class="language-python"># Bad #1: Missing the data path — relies on whoever runs it
+#   to &quot;just know&quot; which file to use
+config = {
+    &quot;model&quot;: &quot;ridge&quot;,
+    &quot;alpha&quot;: 0.1,
+}
+# Where's the data? Who knows. Ask Mark, he might remember.
+</code></pre>
+<pre><code class="language-python"># Bad #2: Hardcoded paths that only work on one machine
+config = {
+    &quot;data&quot;: &quot;/home/mark/Desktop/thursday_data_final_v2.csv&quot;,
+    &quot;model&quot;: &quot;ridge&quot;,
+    &quot;alpha&quot;: 0.1,
+}
+# Good luck running this on any other machine.
+</code></pre>
+<pre><code class="language-python"># Bad #3: Missing the random seed and preprocessing details
+config = {
+    &quot;data&quot;: &quot;data/train.parquet&quot;,
+    &quot;model&quot;: &quot;ridge&quot;,
+    &quot;alpha&quot;: 0.1,
+    # No seed — results will differ every run.
+    # No mention of preprocessing — was the data standardized?
+    #   Log-transformed? Filtered? Hope you remember.
+}
+</code></pre>
 <h2 id="capture-the-code-state">Capture the Code State<a class="headerlink" href="#capture-the-code-state" title="Permanent link">&para;</a></h2>
 <p>Prefer to check in the code at the commit that produced the result. When that isn&rsquo;t practical &mdash; you&rsquo;re iterating quickly, the working tree is dirty &mdash; save three things as experiment artifacts:</p>
 <ol>
@@ -82,15 +129,16 @@ A short how-to guide for running ML experiments that are always reproducible, al
 </ol>
 <p>An experiment&rsquo;s identity is (code state, config). If you have both, you can reproduce. If you&rsquo;re missing either, you&rsquo;re guessing.<span class="marginnote">In practice, I use branch-per-experiment or tag conventions, but the specific Git workflow matters less than the discipline of always recording the code state.</span></p>
 <h2 id="use-one-codebase-for-train-and-eval">Use One Codebase for Train and Eval<a class="headerlink" href="#use-one-codebase-for-train-and-eval" title="Permanent link">&para;</a></h2>
-<p>Separate codebases for training and evaluation are a common source of silent divergence. When eval code drifts from training code, your metrics become unreliable and you won&rsquo;t notice.<span class="sidenote">This is especially important when eval involves preprocessing or feature engineering. A mismatch between train-time and eval-time preprocessing is one of the most common and hardest-to-catch bugs in ML.</span></p>
+<p>Separate codebases for training and evaluation are a common source of silent divergence. When eval code drifts from training code, your metrics become unreliable and you won&rsquo;t notice.<span class="sidenote">This is especially insidious when eval involves preprocessing or feature engineering. A mismatch between train-time and eval-time preprocessing is one of the most common and hardest-to-catch bugs in empirical work.</span></p>
 <p>One codebase. The config determines which mode runs, not which code runs.</p>
 <h2 id="save-commands-in-runfiles">Save Commands in Runfiles<a class="headerlink" href="#save-commands-in-runfiles" title="Permanent link">&para;</a></h2>
 <p>Every shell command needed to execute a pipeline lives in a checked-in &ldquo;runfile&rdquo; &mdash; a script that captures the exact invocation.<span class="sidenote">You could use Make, Just, a shell script, or a plain text file with copy-pasteable commands. The format doesn&rsquo;t matter. What matters is that the commands are recorded.</span></p>
 <p>Runfiles aren&rsquo;t fancy. Their value is being explicit, version-controlled, and runnable. No one has to reverse-engineer your pipeline from memory.</p>
 <h2 id="analyze-in-standalone-notebooks">Analyze in Standalone Notebooks<a class="headerlink" href="#analyze-in-standalone-notebooks" title="Permanent link">&para;</a></h2>
-<p>Results go into a notebook &mdash; Colab, Jupyter, Quarto, Plaque, whatever you prefer &mdash; saved with its outputs. The critical rule: <strong>the notebook does not import from the experiment codebase.</strong> It is self-contained.<span class="sidenote">The specific tool doesn&rsquo;t matter. What matters is the contract: the notebook is a standalone document with saved outputs that you can re-read (and re-run) years later.</span></p>
-<p>Why? Because the experiment code will change. If your analysis notebook imports a plotting helper that someone refactors next month, your saved outputs become unre-runnable. A standalone notebook with frozen outputs is a time capsule.<span class="marginnote">If you find yourself wanting to import code into your analysis notebook, copy the relevant function directly into the notebook. Duplication here is a feature, not a bug.</span></p>
-<p>Check the notebooks into the repo. Results, plots, and analysis are now versioned alongside the code and config that produced them.</p>
+<p>Results go into a notebook &mdash; Colab, Jupyter, Quarto, Plaque, whatever you prefer &mdash; saved with its outputs. The critical rule: <strong>the notebook does not import from your custom experiment codebase.</strong> It is self-contained.<span class="sidenote">The specific tool doesn&rsquo;t matter. What matters is the contract: the notebook is a standalone document with saved outputs that you can re-read (and re-run) years later.</span></p>
+<p>To be clear: standard library and third-party imports (<code>numpy</code>, <code>pandas</code>, <code>matplotlib</code>, etc.) are fine. The problem is importing from your own project &mdash; your custom analysis library, your plotting utilities, your data loading helpers.</p>
+<p>Why? Because your code will change. If your analysis notebook imports a plotting helper from your experiment codebase, and someone refactors that module next month, your saved analysis becomes un-runnable. Worse, if the function&rsquo;s <em>behavior</em> changes silently, re-running the notebook produces different results with no indication that anything changed. Over time, internal code drifts in ways that break backwards compatibility &mdash; renamed arguments, changed defaults, deleted functions. A notebook that depends on your codebase has an expiration date you can&rsquo;t predict.<span class="marginnote">If you find yourself wanting to import code into your analysis notebook, copy the relevant function directly into the notebook. Duplication here is a feature, not a bug &mdash; it freezes the behavior at the time of analysis.</span></p>
+<p>A standalone notebook with frozen outputs is a time capsule. Check the notebooks into the repo. Results, plots, and analysis are now versioned alongside the code and config that produced them.</p>
 <h2 id="maintain-a-readme-log">Maintain a README Log<a class="headerlink" href="#maintain-a-readme-log" title="Permanent link">&para;</a></h2>
 <p>Keep a running summary in the README: what was tried, what the results were, key plots, brief interpretation. This is a lab notebook, not a formal report. Its audience is future-you and your collaborators.<span class="sidenote">The discipline of writing a one-paragraph summary after each experiment dramatically improves your own understanding of what you&rsquo;re learning over the course of a project.</span></p>
 <h2 id="only-share-whats-checked-in">Only Share What&rsquo;s Checked In<a class="headerlink" href="#only-share-whats-checked-in" title="Permanent link">&para;</a></h2>
