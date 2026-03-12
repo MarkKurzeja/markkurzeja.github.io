@@ -19,6 +19,16 @@ Good empirical research should be:
 In practice, most research workflows fail at least one of these<span class="sidenote-number"></span><span class="sidenote">The standard pathologies: (1) the config was in a Slack message and nobody can find it, (2) the code has drifted and nobody recorded which commit produced the result, (3) the analysis notebook imported a helper that's since been refactored, (4) training and eval used separate codebases and a preprocessing change didn't propagate, (5) the pipeline was run with shell commands that lived in someone's terminal history and that person is on vacation.</span>. You iterate in a development branch, try dozens of things, and eventually land on a result. But the lineage is lost. Tribal knowledge accumulates in people's heads instead of in the repo. 
 The workflow below is a set of habits, not a tool, that ended up producing much better research.
 
+## The Setup
+
+This workflow relies on five things:
+
+- **A codebase.** One repo containing all code for training, evaluation, preprocessing, and analysis.
+- **A config.** A file (JSON, YAML, TOML) that fully specifies an experiment: hyperparameters, data paths, preprocessing steps, random seeds.
+- **A runfile.** A checked-in script (Makefile, Justfile, shell script) that records every command needed to execute the pipeline.
+- **A run directory.** A dedicated output folder per experiment containing the config, the code state (<code>HEAD</code> hash and <code>git diff</code>), and every artifact the run produces. Once complete, this folder is read-only: a frozen snapshot of exactly what happened.
+- **A report.** A standalone notebook or script (<a href="https://colab.research.google.com/">Colab</a>, <a href="https://jupyter.org/">Jupyter</a>, <a href="https://quarto.org/">Quarto</a>, <a href="https://blog.alexalemi.com/plaque.html">Plaque</a>, static HTML) that reads from a run directory and contains all statistical analysis, plots, and interpretation in one place.
+
 ## The Twelve Principles
 
 <div class="proof-block">
@@ -82,7 +92,7 @@ Every shell command needed to execute a pipeline lives in a checked-in script: a
 Produce a folder of artifacts per run.
 </summary>
 <div class="subproof">
-Each run lands in a dedicated output directory with all its artifacts: logs, metrics, outputs. Once a run is complete, its output folder is an archive. Nothing in it changes. Reports read from these frozen artifacts, which is what makes them durable.
+Each run lands in a dedicated output directory: the config, the <code>HEAD</code> commit hash, the <code>git diff</code>, and every artifact the run produces (logs, metrics, outputs). Once a run is complete, this folder is read-only. Nothing in it changes. It is a frozen snapshot of exactly what happened, and reports read directly from it.
 </div>
 </details>
 
@@ -102,7 +112,7 @@ Every run records the <code>HEAD</code> commit hash, the <code>git diff</code> (
 Make reports durable and standalone.
 </summary>
 <div class="subproof">
-Results go into a report: a notebook (<a href="https://colab.research.google.com/">Colab</a>, <a href="https://jupyter.org/">Jupyter</a>, <a href="https://quarto.org/">Quarto</a>, <a href="https://blog.alexalemi.com/plaque.html">Plaque</a>), a static HTML file, a script that renders plots. The format doesn't matter. What matters is that the statistical analysis, plots, and outputs all live in the same place, the report reads from frozen run artifacts (principle 6), and it does not import from your experiment codebase<span class="sidenote-number"></span><span class="sidenote">Standard library and third-party imports (<code>numpy</code>, <code>pandas</code>) are fine. The problem is importing from your own project. If you need a helper function, copy it into the report. Duplication here is a feature: it freezes the behavior at the time of analysis. As Rob Pike <a href="https://www.youtube.com/watch?v=PAAkCSZUG1c&t=568s">put it</a>, "a little copying is better than a little dependency."</span>. Your code will change. A report that depends on it has an expiration date you can't predict.
+Results go into a report: a notebook (<a href="https://colab.research.google.com/">Colab</a>, <a href="https://jupyter.org/">Jupyter</a>, <a href="https://quarto.org/">Quarto</a>, <a href="https://blog.alexalemi.com/plaque.html">Plaque</a>), a static HTML file, a script that renders plots. The format doesn't matter. What matters is that the statistical analysis, plots, and outputs all live in the same place, the report reads from frozen run artifacts, and it does not import from your experiment codebase<span class="sidenote-number"></span><span class="sidenote">Standard library and third-party imports (<code>numpy</code>, <code>pandas</code>) are fine. The problem is importing from your own project. If you need a helper function, copy it into the report. Duplication here is a feature: it freezes the behavior at the time of analysis. As Rob Pike <a href="https://www.youtube.com/watch?v=PAAkCSZUG1c&t=568s">put it</a>, "a little copying is better than a little dependency."</span>. Your code will change. A report that depends on it has an expiration date you can't predict.
 </div>
 </details>
 
@@ -155,12 +165,12 @@ In practice, the principles above produce a tight loop:
 <div class="algorithm">
 <div class="algorithm-header"><strong>Algorithm E</strong> (Experiment). Given a codebase and a config, produce a traceable result.</div>
 <ol class="algorithm-steps">
-<li><span class="algorithm-step-label">E1.</span><span class="algorithm-step-body"><span class="step-action">[Configure]</span> Write the config. Ensure it is complete (principle 4). Check it in.</span></li>
-<li><span class="algorithm-step-label">E2.</span><span class="algorithm-step-body"><span class="step-action">[Run]</span> Execute the pipeline via the runfile (principle 5). Save all artifacts to a dedicated output directory (principle 6). Record HEAD, git diff, and config alongside the artifacts (principle 7).</span></li>
-<li><span class="algorithm-step-label">E3.</span><span class="algorithm-step-body"><span class="step-action">[Report]</span> Write a standalone notebook with frozen outputs (principles 8, 9). Check it in.</span></li>
-<li><span class="algorithm-step-label">E4.</span><span class="algorithm-step-body"><span class="step-action">[Learn]</span> Update the README log with results and interpretation (principle 10). Commit everything (principle 1).</span></li>
-<li><span class="algorithm-step-label">E5.</span><span class="algorithm-step-body"><span class="step-action">[Share]</span> If the result is worth sharing, share only from the repo (principle 11).</span></li>
-<li><span class="algorithm-step-label">E6.</span><span class="algorithm-step-body"><span class="step-action">[Iterate]</span> Design the next config from what you learned (principle 12). Return to E1.</span></li>
+<li><span class="algorithm-step-label">E1.</span><span class="algorithm-step-body"><span class="step-action">[Configure]</span> Write a complete config. Check it in.</span></li>
+<li><span class="algorithm-step-label">E2.</span><span class="algorithm-step-body"><span class="step-action">[Run]</span> Execute the pipeline via the runfile. Save all artifacts to a dedicated output directory. Record the code state alongside the artifacts.</span></li>
+<li><span class="algorithm-step-label">E3.</span><span class="algorithm-step-body"><span class="step-action">[Report]</span> Write a standalone report with frozen outputs. Check it in.</span></li>
+<li><span class="algorithm-step-label">E4.</span><span class="algorithm-step-body"><span class="step-action">[Learn]</span> Update the README log with results and interpretation. Commit everything.</span></li>
+<li><span class="algorithm-step-label">E5.</span><span class="algorithm-step-body"><span class="step-action">[Share]</span> If the result is worth sharing, share only from the repo.</span></li>
+<li><span class="algorithm-step-label">E6.</span><span class="algorithm-step-body"><span class="step-action">[Iterate]</span> Design the next config from what you learned. Return to E1.</span></li>
 </ol>
 </div>
 
