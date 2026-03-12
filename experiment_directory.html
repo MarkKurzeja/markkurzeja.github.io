@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>🔶 The AMBER Directory</title>
-  <link rel="stylesheet" href="tufte.css?v=1773332955"/>
+  <link rel="stylesheet" href="tufte.css?v=1773333115"/>
   <!-- KaTeX for math rendering -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
         crossorigin="anonymous"/>
@@ -81,7 +81,7 @@ A short companion to <a href="reproducible_research.html">The AMBER Workflow</a>
 </code></pre>
 <h2 id="what-each-piece-does">What Each Piece Does<a class="headerlink" href="#what-each-piece-does" title="Permanent link">&para;</a></h2>
 <p><strong><code>main.py</code></strong> is the single entry point. It takes a config path and runs the full pipeline: data loading, training, evaluation, artifact saving. One command, one config, one run.</p>
-<p><strong><code>run.sh</code></strong> records the exact shell commands<span class="sidenote-number"></span><span class="sidenote">This can be a Makefile or a Justfile. The format does not matter. What matters is that the commands are checked in, not living in your terminal history.</span>. A typical <code>run.sh</code> looks like this:</p>
+<p><strong><code>run.sh</code></strong> records the exact shell commands.<span class="sidenote-number"></span><span class="sidenote">This can be a Makefile or a Justfile. The format does not matter. What matters is that the commands are checked in, not living in your terminal history.</span> A typical <code>run.sh</code> looks like this:</p>
 <pre><code class="language-bash">#!/bin/bash
 set -euo pipefail
 CONFIG=${1:?Usage: ./run.sh configs/my_config.yaml}
@@ -92,9 +92,9 @@ git log -1 --format=&quot;%H&quot; &gt; &quot;$RUN_DIR/git_state.txt&quot;
 git diff &gt;&gt; &quot;$RUN_DIR/git_state.txt&quot;
 python main.py --config &quot;$CONFIG" --output-dir "$RUN_DIR&quot;
 </code></pre>
-<p><strong><code>configs/</code></strong> holds one YAML file per experiment. The naming convention is <code>YYYYMMDD[a-z]_description.yaml</code>, where the letter suffix distinguishes multiple configs created on the same day<span class="sidenote-number"></span><span class="sidenote">The date prefix makes configs sort chronologically in <code>ls</code>. The letter suffix is just a tiebreaker: <code>a</code>, <code>b</code>, <code>c</code> for the first, second, third config of the day.</span>. Each config is complete: it specifies everything needed to reproduce the run.</p>
+<p><strong><code>configs/</code></strong> holds one YAML file per experiment. The naming convention is <code>YYYYMMDD[a-z]_description.yaml</code>, where the letter suffix distinguishes multiple configs created on the same day.<span class="sidenote-number"></span><span class="sidenote">The date prefix makes configs sort chronologically in <code>ls</code>. The letter suffix is just a tiebreaker: <code>a</code>, <code>b</code>, <code>c</code> for the first, second, third config of the day.</span> Each config is complete: it specifies everything needed to reproduce the run.</p>
 <p><strong><code>runs/</code></strong> holds one folder per completed experiment. Each folder is a frozen snapshot: the config used, the git state at run time, and every artifact the run produced. Once written, nothing in here changes. This is the amber.</p>
-<p><strong><code>reports/</code></strong> holds standalone analysis notebooks. They follow the same date-prefix naming. Each report reads directly from <code>runs/</code> and does not import from <code>src/</code><span class="sidenote-number"></span><span class="sidenote">Standard library and third-party imports are fine. The rule is: do not import from your own project code. If you need a helper, copy it into the report. A little copying is better than a little dependency.</span>.</p>
+<p><strong><code>reports/</code></strong> holds standalone analysis notebooks. They follow the same date-prefix naming. Each report reads directly from <code>runs/</code> and does not import from <code>src/</code>.<span class="sidenote-number"></span><span class="sidenote">Standard library and third-party imports are fine. The rule is: do not import from your own project code. If you need a helper, copy it into the report. A little copying is better than a little dependency.</span></p>
 <p><strong><code>reports/README.md</code></strong> is the lab notebook. It is a running log of what was tried, what the results were, and what to try next. Keep it casual, keep it current.</p>
 <p><strong><code>src/</code></strong> is where the actual code lives: data loading, model definitions, training loops. <code>main.py</code> orchestrates, <code>src/</code> implements.</p>
 <h2 id="the-naming-convention">The Naming Convention<a class="headerlink" href="#the-naming-convention" title="Permanent link">&para;</a></h2>

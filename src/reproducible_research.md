@@ -142,7 +142,7 @@ Write a running summary: what was tried, what the results were, key plots, brief
 Share results from committed reports.
 </summary>
 <div class="subproof">
-When you share results (in a meeting, a paper, a design doc) share only what exists as a committed report. If it's worth sharing, it's worth committing<span class="marginnote">This habit also protects you. When someone questions a number six months later, you point them to the commit.</span>.
+When you share results (in a meeting, a paper, a design doc) share only what exists as a committed report. If it's worth sharing, it's worth committing.<span class="marginnote">This habit also protects you. When someone questions a number six months later, you point them to the commit.</span>
 </div>
 </details>
 

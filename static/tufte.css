@@ -71,14 +71,12 @@ article>ol {
 }
 
 /* Compensate sidenote positioning inside list items.
-   <li> is narrower than <p> by the <ul> padding-left (1.5rem),
-   so percentage-based margin-right/width resolve to wrong values.
-   Math: margin-right needs extra -0.6*1.5rem = -0.9rem;
-         width needs extra 0.5*1.5rem = 0.75rem. */
+   With content-box, <ul> padding-left shifts <li> 1.5rem right
+   while keeping <li> width = <p> width (both 55% of article).
+   The sidenote floats from a position 1.5rem too far right. */
 li>.sidenote,
 li>.marginnote {
-  margin-right: calc(-60% - 0.9rem);
-  width: calc(50% + 0.75rem);
+  margin-right: calc(-60% + 1.5rem);
 }
 
 p {

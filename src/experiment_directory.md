@@ -45,7 +45,7 @@ my-experiment/
 
 **`main.py`** is the single entry point. It takes a config path and runs the full pipeline: data loading, training, evaluation, artifact saving. One command, one config, one run.
 
-**`run.sh`** records the exact shell commands<span class="sidenote-number"></span><span class="sidenote">This can be a Makefile or a Justfile. The format does not matter. What matters is that the commands are checked in, not living in your terminal history.</span>. A typical `run.sh` looks like this:
+**`run.sh`** records the exact shell commands.<span class="sidenote-number"></span><span class="sidenote">This can be a Makefile or a Justfile. The format does not matter. What matters is that the commands are checked in, not living in your terminal history.</span> A typical `run.sh` looks like this:
 
 ```bash
 #!/bin/bash
@@ -59,11 +59,11 @@ git diff >> "$RUN_DIR/git_state.txt"
 python main.py --config "$CONFIG" --output-dir "$RUN_DIR"
 ```
 
-**`configs/`** holds one YAML file per experiment. The naming convention is `YYYYMMDD[a-z]_description.yaml`, where the letter suffix distinguishes multiple configs created on the same day<span class="sidenote-number"></span><span class="sidenote">The date prefix makes configs sort chronologically in `ls`. The letter suffix is just a tiebreaker: `a`, `b`, `c` for the first, second, third config of the day.</span>. Each config is complete: it specifies everything needed to reproduce the run.
+**`configs/`** holds one YAML file per experiment. The naming convention is `YYYYMMDD[a-z]_description.yaml`, where the letter suffix distinguishes multiple configs created on the same day.<span class="sidenote-number"></span><span class="sidenote">The date prefix makes configs sort chronologically in `ls`. The letter suffix is just a tiebreaker: `a`, `b`, `c` for the first, second, third config of the day.</span> Each config is complete: it specifies everything needed to reproduce the run.
 
 **`runs/`** holds one folder per completed experiment. Each folder is a frozen snapshot: the config used, the git state at run time, and every artifact the run produced. Once written, nothing in here changes. This is the amber.
 
-**`reports/`** holds standalone analysis notebooks. They follow the same date-prefix naming. Each report reads directly from `runs/` and does not import from `src/`<span class="sidenote-number"></span><span class="sidenote">Standard library and third-party imports are fine. The rule is: do not import from your own project code. If you need a helper, copy it into the report. A little copying is better than a little dependency.</span>.
+**`reports/`** holds standalone analysis notebooks. They follow the same date-prefix naming. Each report reads directly from `runs/` and does not import from `src/`.<span class="sidenote-number"></span><span class="sidenote">Standard library and third-party imports are fine. The rule is: do not import from your own project code. If you need a helper, copy it into the report. A little copying is better than a little dependency.</span>
 
 **`reports/README.md`** is the lab notebook. It is a running log of what was tried, what the results were, and what to try next. Keep it casual, keep it current.
 
