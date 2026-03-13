@@ -6,7 +6,7 @@ author: Mark Kurzeja
 ---
 
 <div class="abstract">
-An opinionated guide for recording and reproducing research results.<span class="sidenote-number"></span><span class="sidenote">Adapted from a workflow I learned from <a href="https://www.linkedin.com/in/john-aslanides/">John Aslanides</a>.</span>
+An opinionated guide for recording and reproducing research results.<span class="sidenote-number"></span><span class="sidenote">Adapted from a workflow I learned from John Aslanides.</span>
 </div>
 
 Good empirical research should be:
