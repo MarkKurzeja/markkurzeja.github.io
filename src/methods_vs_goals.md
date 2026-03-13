@@ -1,6 +1,6 @@
 ---
-title: "Methods-Forward vs Goal-Backward Research"
-subtitle: "On choosing where to start"
+title: "🔧 Methods-Forward vs 🎯 Goal-Backward Research"
+subtitle: "Prefer goal-backward research"
 date: 2026-03-13
 author: Mark Kurzeja
 ---
