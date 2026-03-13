@@ -1,6 +1,6 @@
 ---
 title: "🔶 The AMBER Workflow"
-subtitle: "A simple workflow for preserving research in amber"
+subtitle: "An opinionated loop for durable empirical research"
 date: 2026-03-10
 author: Mark Kurzeja
 ---

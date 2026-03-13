@@ -1,6 +1,6 @@
 ---
 title: "♟️ Great Teams Play Great Games"
-subtitle: "An executive's only job is to set the players, rules, and incentives"
+subtitle: "Design the game, not the strategy"
 date: 2026-03-10
 author: Mark Kurzeja
 ---
