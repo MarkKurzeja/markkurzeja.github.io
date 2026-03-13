@@ -10,6 +10,7 @@
 - Margin notes: `<span class="marginnote">...</span>`
 - Place periods BEFORE sidenote spans, never after: `text.<span class="sidenote-number"></span><span class="sidenote">...</span>` not `text<span class="sidenote-number"></span><span class="sidenote">...</span>.` (trailing periods after sidenotes render poorly on mobile)
 - If something is in parentheses, consider whether it should be a sidenote instead
+- **New thoughts:** Use `<span class="newthought">Leading phrase.</span>` for introducing key points within a section (Tufte-style small caps). Prefer this over `**bold**` for paragraph-leading phrases. Renders as uniform lowercase small caps via `text-transform: lowercase`.
 
 ## Writing Style
 
@@ -17,6 +18,7 @@
 - Gender-neutral language (they/them, "salesperson" not "salesman")
 - Active voice preferred
 - IC perspective (the author is not an executive)
+- **Avoid grandiosity.** Don't use sweeping claims ("changes everything", "uniquely", "extraordinary", "revolutionary"). Prefer hedged, precise language ("has started to shift", "is comfortable with a wide range", "rapid"). If a claim sounds like a keynote talk, tone it down. The writing should feel like a thoughtful colleague explaining something, not a manifesto.
 
 ## KaTeX & Math
 
@@ -40,6 +42,7 @@
 
 ## CSS Notes
 
+- `.newthought` -- small caps, lowercase, 1.2em, 0.05em letter-spacing (for paragraph-leading phrases)
 - `.byline` -- plain text at 1.1rem
 - `.proof-block > em, .subproof > em` -- explicit 1.4rem for "Proof." labels
 - `.qed-step` -- no border-top
